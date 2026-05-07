@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1f7a6e">
+<title>HANDS — 한국 생활 동반자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+:root {
+  --teal-50: #e8f3f1;
+  --teal-500: #1f7a6e;
+  --teal-600: #176158;
+  --teal-700: #114841;
+  --orange-200: #ffd2a8;
+  --orange-500: #e87b35;
+  --rose-100: #ffe1e1;
+  --sand-50: #faf6f1;
+  --sand-100: #f4ede3;
+  --sand-200: #e8ddcd;
+  --ink-900: #0f1f1d;
+  --ink-700: #1a3633;
+  --ink-500: #4a6260;
+  --ink-400: #6f8682;
+  --ink-300: #9aaba8;
+  --ink-200: #c4cfcd;
+  --display: 'Manrope', 'Pretendard', system-ui, sans-serif;
+  --body: 'Pretendard', 'Manrope', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overscroll-behavior: none; }
+body {
+  font-family: var(--body);
+  background: var(--sand-50);
+  color: var(--ink-900);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select { font-family: inherit; color: inherit; }
+input:focus, select:focus { outline: none; }
+.app {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--sand-50);
+  overflow-x: hidden;
+}
+.screen { display: none; flex-direction: column; min-height: 100vh; position: relative; }
+.screen.active { display: flex; }
+.lang-switcher {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 100;
+  border-radius: 999px;
+  padding: 4px;
+  display: flex;
+  gap: 2px;
+  transition: all 0.2s;
+}
+.lang-switcher.on-dark {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.lang-switcher.on-light {
+  background: white;
+  box-shadow: 0 2px 8px rgba(15,31,29,0.06);
+}
+.lang-btn {
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  transition: all 0.15s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.lang-switcher.on-dark .lang-btn { color: rgba(255,255,255,0.75); }
+.lang-switcher.on-dark .lang-btn.active { background: rgba(255,255,255,0.95); color: var(--teal-700); }
+.lang-switcher.on-light .lang-btn { color: var(--ink-400); }
+.lang-switcher.on-light .lang-btn.active { background: var(--teal-500); color: white; }
+#welcome {
+  background: linear-gradient(165deg, #114841 0%, #1f7a6e 60%, #2d8d7b 100%);
+  color: white;
+  padding: 60px 28px 32px;
+  position: relative;
+  overflow: hidden;
+}
+#welcome::before {
+  content: "";
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(232,123,53,0.45), transparent 65%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+#welcome::after {
+  content: "";
+  position: absolute;
+  bottom: -120px; left: -80px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.welcome-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 92px);
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: auto;
+  opacity: 0;
+  animation: fadeUp 0.7s ease-out 0.1s forwards;
+}
+.logo-mark {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.25);
+  font-size: 22px;
+}
+.logo-text {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.logo-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+  margin-top: 3px;
+}
+.welcome-headline {
+  margin-top: 56px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease-out 0.3s forwards;
+}
+.welcome-title {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  margin-bottom: 14px;
+}
+.welcome-title .accent {
+  color: var(--orange-200);
+  font-style: italic;
+  font-weight: 700;
+}
+.welcome-sub {
+  font-size: 14px;
+  line-height: 1.55;
+  opacity: 0.85;
+  max-width: 320px;
+}
+.lang-grid {
+  margin-top: auto;
+  padding-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease-out 0.5s forwards;
+}
+.lang-card {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 16px;
+  padding: 18px 12px;
+  text-align: center;
+  transition: all 0.2s;
+  color: white;
+}
+.lang-card:hover, .lang-card:focus-visible {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.4);
+}
+.lang-card.selected {
+  background: rgba(255,255,255,0.95);
+  border-color: rgba(255,255,255,0.95);
+  border-width: 2px;
+  color: var(--teal-700);
+  padding: 17px 11px;
+}
+.lang-card-name {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+.lang-card-en {
+  font-size: 10px;
+  opacity: 0.6;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.welcome-cta {
+  margin-top: 18px;
+  width: 100%;
+  background: white;
+  color: var(--teal-700);
+  padding: 17px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  opacity: 0;
+  animation: fadeUp 0.7s ease-out 0.7s forwards;
+}
+.welcome-cta:active { transform: scale(0.98); }
+#consent, #signup {
+  background: var(--sand-50);
+  padding: 60px 24px 24px;
+  min-height: 100vh;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(15,31,29,0.06);
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  transition: all 0.15s;
+  font-size: 18px;
+  color: var(--ink-700);
+  font-weight: 600;
+}
+.consent-eyebrow {
+  display: inline-block;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--ink-900);
+  margin-bottom: 8px;
+}
+.section-sub {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-500);
+  margin-bottom: 24px;
+}
+.benefit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.benefit {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--sand-200);
+  transition: all 0.15s;
+}
+.benefit-icon {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+.benefit-icon.orange { background: #fff2e6; }
+.benefit-icon.teal { background: var(--teal-50); }
+.benefit-icon.rose { background: var(--rose-100); }
+.benefit-text { flex: 1; min-width: 0; }
+.benefit-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
+}
+.benefit-desc {
+  font-size: 12px;
+  color: var(--ink-500);
+  line-height: 1.45;
+}
+.cta-row {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.cta-secondary {
+  padding: 16px 20px;
+  background: white;
+  color: var(--ink-500);
+  border: 1px solid var(--sand-200);
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.cta-primary {
+  flex: 1;
+  padding: 16px;
+  background: var(--teal-500);
+  color: white;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  transition: all 0.15s;
+  box-shadow: 0 6px 18px rgba(31,122,110,0.25);
+}
+.cta-primary:active { transform: scale(0.98); }
+.cta-primary:disabled {
+  background: var(--ink-200);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.field-group { margin-bottom: 12px; }
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-700);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.field-input, .field-select {
+  width: 100%;
+  background: white;
+  border: 1.5px solid var(--sand-200);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  color: var(--ink-900);
+  transition: all 0.15s;
+}
+.field-input::placeholder { color: var(--ink-300); }
+.field-input:focus, .field-select:focus {
+  border-color: var(--teal-500);
+  box-shadow: 0 0 0 4px rgba(31,122,110,0.08);
+}
+.field-input.passport {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.field-select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%234a6260" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+.consent-card {
+  background: white;
+  border: 1.5px solid var(--sand-200);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.consent-card.checked {
+  border-color: var(--teal-500);
+  background: var(--teal-50);
+}
+.check-box {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--ink-200);
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  background: white;
+  transition: all 0.15s;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+}
+.consent-card.checked .check-box {
+  background: var(--teal-500);
+  border-color: var(--teal-500);
+}
+.consent-card.checked .check-box::before { content: "✓"; }
+.consent-text { flex: 1; }
+.consent-text-main {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-700);
+  line-height: 1.45;
+  margin-bottom: 2px;
+}
+.consent-link {
+  font-size: 11px;
+  color: var(--teal-500);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.signup-info {
+  background: var(--sand-100);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: var(--ink-500);
+  line-height: 1.55;
+  text-align: center;
+}
+#main {
+  background: var(--sand-50);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.main-placeholder {
+  padding: 80px 24px;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.main-placeholder h1 {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--teal-700);
+}
+.main-placeholder p {
+  color: var(--ink-500);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.main-status {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid var(--sand-200);
+  margin: 0 auto;
+  max-width: 320px;
+  text-align: left;
+}
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 12px;
+  align-items: center;
+}
+.status-row .label { color: var(--ink-500); }
+.status-row .value { color: var(--ink-900); font-weight: 700; }
+.live-dot {
+  width: 8px; height: 8px;
+  background: #7ee8a0;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  box-shadow: 0 0 8px #7ee8a0;
+  animation: pulse 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+
+<div class="lang-switcher on-dark" id="langSwitcher">
+  <button class="lang-btn active" data-lang="ko">한</button>
+  <button class="lang-btn" data-lang="en">EN</button>
+  <button class="lang-btn" data-lang="vi">VI</button>
+  <button class="lang-btn" data-lang="id">ID</button>
+</div>
+
+<div class="app">
+
+<section class="screen active" id="welcome">
+  <div class="welcome-inner">
+    <div class="logo-row">
+      <div class="logo-mark">✋</div>
+      <div>
+        <div class="logo-text">HANDS</div>
+        <div class="logo-tag" data-i="logoTag">한국 생활 동반자</div>
+      </div>
+    </div>
+    <div class="welcome-headline">
+      <h1 class="welcome-title">
+        <span data-i="welcomeT1">환영합니다</span><br>
+        <span class="accent" data-i="welcomeT2">한국에 오신 걸</span>
+      </h1>
+      <p class="welcome-sub" data-i="welcomeSub">당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.</p>
+    </div>
+    <div class="lang-grid">
+      <button class="lang-card selected" data-langcard="ko">
+        <div class="lang-card-name">한국어</div>
+        <div class="lang-card-en">KOREAN</div>
+      </button>
+      <button class="lang-card" data-langcard="en">
+        <div class="lang-card-name">English</div>
+        <div class="lang-card-en">ENGLISH</div>
+      </button>
+      <button class="lang-card" data-langcard="vi">
+        <div class="lang-card-name">Tiếng Việt</div>
+        <div class="lang-card-en">VIETNAMESE</div>
+      </button>
+      <button class="lang-card" data-langcard="id">
+        <div class="lang-card-name">Bahasa</div>
+        <div class="lang-card-en">INDONESIAN</div>
+      </button>
+    </div>
+    <button class="welcome-cta" id="goConsent">
+      <span data-i="welcomeCta">시작하기</span>
+      <span style="font-size: 18px;">→</span>
+    </button>
+  </div>
+</section>
+
+<section class="screen" id="consent">
+  <button class="back-btn" data-back="welcome">←</button>
+  <span class="consent-eyebrow" data-i="consentEyebrow">서비스 이용</span>
+  <h2 class="section-title" data-i="consentTitle">한국에서<br>안전하게 지내요</h2>
+  <p class="section-sub" data-i="consentSub">HANDS가 어떻게 도움드리는지 알려드립니다</p>
+
+  <div class="benefit-list">
+    <div class="benefit">
+      <div class="benefit-icon orange">💼</div>
+      <div class="benefit-text">
+        <div class="benefit-title" data-i="b1t">구인구직 정보</div>
+        <div class="benefit-desc" data-i="b1d">공장·농장·식당 일자리를 모국어로</div>
+      </div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon orange">🍱</div>
+      <div class="benefit-text">
+        <div class="benefit-title" data-i="b2t">주변 맛집·편의시설</div>
+        <div class="benefit-desc" data-i="b2d">병원·약국·식당·은행을 모국어로 추천</div>
+      </div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon teal">💬</div>
+      <div class="benefit-text">
+        <div class="benefit-title" data-i="b3t">관리자와 상시 연결</div>
+        <div class="benefit-desc" data-i="b3d">임금·비자·숙소 문의를 1:1 비공개로</div>
+      </div>
+    </div>
+    <div class="benefit">
+      <div class="benefit-icon rose">🆘</div>
+      <div class="benefit-text">
+        <div class="benefit-title" data-i="b4t">긴급 상황 즉시 도움</div>
+        <div class="benefit-desc" data-i="b4d">SOS 한 번으로 관리자에게 안전 알림</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <button class="cta-secondary" data-back="welcome" data-i="laterBtn">나중에</button>
+    <button class="cta-primary" id="goSignup" data-i="agreeBtn">동의하고 시작 →</button>
+  </div>
+</section>
+
+<section class="screen" id="signup">
+  <button class="back-btn" data-back="consent">←</button>
+  <h2 class="section-title" data-i="signupTitle">회원가입</h2>
+  <p class="section-sub" data-i="signupSub">한국 생활을 시작합니다</p>
+
+  <div class="field-group">
+    <label class="field-label" data-i="fName">이름</label>
+    <input type="text" class="field-input" id="fName" placeholder="Nguyen Van A">
+  </div>
+  <div class="field-group">
+    <label class="field-label" data-i="fPhone">전화번호</label>
+    <input type="tel" class="field-input" id="fPhone" placeholder="010-1234-5678">
+  </div>
+  <div class="field-group">
+    <label class="field-label" data-i="fPassport">여권번호</label>
+    <input type="text" class="field-input passport" id="fPassport" placeholder="M12345678">
+  </div>
+  <div class="field-group">
+    <label class="field-label" data-i="fCountry">국적</label>
+    <select class="field-select" id="fCountry">
+      <option value="vn">🇻🇳 Vietnam · Việt Nam</option>
+      <option value="th">🇹🇭 Thailand · ไทย</option>
+      <option value="id">🇮🇩 Indonesia</option>
+      <option value="ph">🇵🇭 Philippines · Pilipinas</option>
+      <option value="np">🇳🇵 Nepal · नेपाल</option>
+      <option value="kh">🇰🇭 Cambodia · កម្ពុជា</option>
+      <option value="mm">🇲🇲 Myanmar · မြန်မာ</option>
+      <option value="lk">🇱🇰 Sri Lanka · ශ්‍රී ලංකා</option>
+      <option value="bd">🇧🇩 Bangladesh · বাংলাদেশ</option>
+      <option value="other" data-i="fOther">기타</option>
+    </select>
+  </div>
+
+  <div class="consent-card" id="consentCard">
+    <div class="check-box"></div>
+    <div class="consent-text">
+      <div class="consent-text-main" data-i="consentText">이용약관 및 개인정보·위치정보 처리방침에 동의합니다</div>
+      <a class="consent-link" id="viewTermsLink" data-i="viewTerms">전문 보기</a>
+    </div>
+  </div>
+
+  <button class="cta-primary" id="btnSignup" disabled style="width: 100%;" data-i="signupBtn">가입하기 →</button>
+
+  <div class="signup-info" data-i="signupInfo">
+    가입 시 위치 권한 요청이 표시됩니다.<br>"허용"을 눌러주세요.
+  </div>
+</section>
+
+<section class="screen" id="main">
+  <div class="main-placeholder">
+    <h1 data-i="mainTitle">가입 완료 ✓</h1>
+    <p data-i="mainDesc">메인 화면은 다음 단계에서 구현됩니다.<br>지금은 회원가입 흐름까지 완성된 상태예요.</p>
+    <div class="main-status">
+      <div class="status-row">
+        <span class="label" data-i="statusName">이름</span>
+        <span class="value" id="vName">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label" data-i="statusCountry">국적</span>
+        <span class="value" id="vCountry">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label" data-i="statusPhone">전화</span>
+        <span class="value" id="vPhone">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label" data-i="statusLoc">위치</span>
+        <span class="value"><span class="live-dot"></span><span id="vLoc" data-i="locWaiting">권한 대기중</span></span>
+      </div>
+    </div>
+    <button class="cta-secondary" style="margin-top: 20px;" id="resetBtn" data-i="resetBtn">처음으로 돌아가기</button>
+  </div>
+</section>
+
+</div>
+
+<script>
+const I18N = {
+  ko: {
+    logoTag: "한국 생활 동반자",
+    welcomeT1: "환영합니다", welcomeT2: "한국에 오신 걸",
+    welcomeSub: "당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.",
+    welcomeCta: "시작하기",
+    consentEyebrow: "서비스 이용",
+    consentTitle: "한국에서<br>안전하게 지내요",
+    consentSub: "HANDS가 어떻게 도움드리는지 알려드립니다",
+    b1t: "구인구직 정보", b1d: "공장·농장·식당 일자리를 모국어로",
+    b2t: "주변 맛집·편의시설", b2d: "병원·약국·식당·은행을 모국어로 추천",
+    b3t: "관리자와 상시 연결", b3d: "임금·비자·숙소 문의를 1:1 비공개로",
+    b4t: "긴급 상황 즉시 도움", b4d: "SOS 한 번으로 관리자에게 안전 알림",
+    laterBtn: "나중에", agreeBtn: "동의하고 시작 →",
+    signupTitle: "회원가입", signupSub: "한국 생활을 시작합니다",
+    fName: "이름", fPhone: "전화번호", fPassport: "여권번호", fCountry: "국적", fOther: "기타",
+    consentText: "이용약관 및 개인정보·위치정보 처리방침에 동의합니다",
+    viewTerms: "전문 보기",
+    signupBtn: "가입하기 →",
+    signupInfo: "가입 시 위치 권한 요청이 표시됩니다.<br>\"허용\"을 눌러주세요.",
+    mainTitle: "가입 완료 ✓",
+    mainDesc: "메인 화면은 다음 단계에서 구현됩니다.<br>지금은 회원가입 흐름까지 완성된 상태예요.",
+    statusName: "이름", statusCountry: "국적", statusPhone: "전화", statusLoc: "위치",
+    locWaiting: "권한 대기중", resetBtn: "처음으로 돌아가기"
+  },
+  en: {
+    logoTag: "Your Korea Companion",
+    welcomeT1: "Welcome", welcomeT2: "to Korea",
+    welcomeSub: "Choose your language. We'll help you settle in Korea.",
+    welcomeCta: "Get started",
+    consentEyebrow: "Using HANDS",
+    consentTitle: "Stay safe<br>in Korea",
+    consentSub: "Here's how HANDS helps you",
+    b1t: "Job listings", b1d: "Factory, farm, restaurant jobs in your language",
+    b2t: "Food & places nearby", b2d: "Hospitals, pharmacies, restaurants nearby",
+    b3t: "Connect with admin", b3d: "Wages, visa, housing — private 1-on-1",
+    b4t: "Emergency support", b4d: "One-tap SOS alerts the admin instantly",
+    laterBtn: "Later", agreeBtn: "Agree and continue →",
+    signupTitle: "Sign up", signupSub: "Start your life in Korea",
+    fName: "Name", fPhone: "Phone", fPassport: "Passport", fCountry: "Nationality", fOther: "Other",
+    consentText: "I agree to terms, privacy & location policies",
+    viewTerms: "View full text",
+    signupBtn: "Sign up →",
+    signupInfo: "Location permission will be requested.<br>Please tap \"Allow\".",
+    mainTitle: "Sign up complete ✓",
+    mainDesc: "Main screen is coming next.<br>For now, the signup flow is done.",
+    statusName: "Name", statusCountry: "Country", statusPhone: "Phone", statusLoc: "Location",
+    locWaiting: "Awaiting permission", resetBtn: "Start over"
+  },
+  vi: {
+    logoTag: "Đồng hành Hàn Quốc",
+    welcomeT1: "Chào mừng", welcomeT2: "đến Hàn Quốc",
+    welcomeSub: "Chọn ngôn ngữ của bạn. Chúng tôi sẽ đồng hành cùng bạn tại Hàn.",
+    welcomeCta: "Bắt đầu",
+    consentEyebrow: "Sử dụng HANDS",
+    consentTitle: "An toàn<br>tại Hàn Quốc",
+    consentSub: "HANDS giúp bạn như thế nào",
+    b1t: "Tin tuyển dụng", b1d: "Việc nhà máy, nông trại, nhà hàng bằng tiếng Việt",
+    b2t: "Quán ăn & tiện ích", b2d: "Bệnh viện, hiệu thuốc, nhà hàng gần đây",
+    b3t: "Kết nối quản trị", b3d: "Lương, visa, nhà ở — riêng tư 1:1",
+    b4t: "Hỗ trợ khẩn cấp", b4d: "SOS một chạm, quản trị nhận tin ngay",
+    laterBtn: "Để sau", agreeBtn: "Đồng ý và tiếp tục →",
+    signupTitle: "Đăng ký", signupSub: "Bắt đầu cuộc sống tại Hàn",
+    fName: "Họ tên", fPhone: "Số điện thoại", fPassport: "Hộ chiếu", fCountry: "Quốc tịch", fOther: "Khác",
+    consentText: "Tôi đồng ý với điều khoản, bảo mật và chính sách vị trí",
+    viewTerms: "Xem toàn văn",
+    signupBtn: "Đăng ký →",
+    signupInfo: "Sẽ có yêu cầu quyền vị trí.<br>Vui lòng nhấn \"Cho phép\".",
+    mainTitle: "Đăng ký hoàn tất ✓",
+    mainDesc: "Màn hình chính sẽ có ở bước tiếp theo.",
+    statusName: "Tên", statusCountry: "Quốc tịch", statusPhone: "Điện thoại", statusLoc: "Vị trí",
+    locWaiting: "Đang chờ quyền", resetBtn: "Bắt đầu lại"
+  },
+  id: {
+    logoTag: "Pendamping Korea",
+    welcomeT1: "Selamat datang", welcomeT2: "ke Korea",
+    welcomeSub: "Pilih bahasa Anda. Kami akan membantu Anda di Korea.",
+    welcomeCta: "Mulai",
+    consentEyebrow: "Pakai HANDS",
+    consentTitle: "Aman<br>di Korea",
+    consentSub: "Bagaimana HANDS membantu Anda",
+    b1t: "Lowongan kerja", b1d: "Pabrik, ladang, restoran dalam bahasa Anda",
+    b2t: "Makanan & tempat", b2d: "Rumah sakit, apotek, restoran terdekat",
+    b3t: "Hubungi admin", b3d: "Gaji, visa, tempat tinggal — privat 1:1",
+    b4t: "Dukungan darurat", b4d: "SOS satu sentuh, admin langsung tahu",
+    laterBtn: "Nanti", agreeBtn: "Setuju dan lanjut →",
+    signupTitle: "Daftar", signupSub: "Mulai kehidupan di Korea",
+    fName: "Nama", fPhone: "Nomor telepon", fPassport: "Paspor", fCountry: "Kewarganegaraan", fOther: "Lainnya",
+    consentText: "Saya setuju dengan ketentuan, privasi & lokasi",
+    viewTerms: "Lihat lengkap",
+    signupBtn: "Daftar →",
+    signupInfo: "Izin lokasi akan diminta.<br>Tekan \"Izinkan\".",
+    mainTitle: "Pendaftaran selesai ✓",
+    mainDesc: "Layar utama akan datang berikutnya.",
+    statusName: "Nama", statusCountry: "Negara", statusPhone: "Telepon", statusLoc: "Lokasi",
+    locWaiting: "Menunggu izin", resetBtn: "Mulai dari awal"
+  }
+};
+
+let currentLang = 'ko';
+let consentChecked = false;
+
+function applyLang() {
+  const d = I18N[currentLang] || I18N.ko;
+  document.querySelectorAll('[data-i]').forEach(el => {
+    const key = el.dataset.i;
+    if (d[key] !== undefined) el.innerHTML = d[key];
+  });
+  document.documentElement.lang = currentLang;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  document.querySelectorAll('.lang-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.langcard === lang);
+  });
+  applyLang();
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+document.querySelectorAll('.lang-card').forEach(card => {
+  card.addEventListener('click', () => setLang(card.dataset.langcard));
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  const sw = document.getElementById('langSwitcher');
+  if (id === 'welcome') {
+    sw.classList.remove('on-light');
+    sw.classList.add('on-dark');
+  } else {
+    sw.classList.remove('on-dark');
+    sw.classList.add('on-light');
+  }
+}
+
+document.getElementById('goConsent').addEventListener('click', () => showScreen('consent'));
+document.getElementById('goSignup').addEventListener('click', () => showScreen('signup'));
+document.querySelectorAll('[data-back]').forEach(b => {
+  b.addEventListener('click', () => showScreen(b.dataset.back));
+});
+
+document.getElementById('fPhone').addEventListener('input', (e) => {
+  let v = e.target.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length > 7) v = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7);
+  else if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3);
+  e.target.value = v;
+});
+
+document.getElementById('fPassport').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+});
+
+document.getElementById('consentCard').addEventListener('click', () => {
+  consentChecked = !consentChecked;
+  document.getElementById('consentCard').classList.toggle('checked', consentChecked);
+  document.getElementById('btnSignup').disabled = !consentChecked;
+});
+
+document.getElementById('viewTermsLink').addEventListener('click', (e) => {
+  e.stopPropagation();
+  alert('약관 전문은 추후 추가 예정입니다.');
+});
+
+document.getElementById('btnSignup').addEventListener('click', () => {
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const passport = document.getElementById('fPassport').value.trim();
+  const country = document.getElementById('fCountry').value;
+  
+  if (!name) { document.getElementById('fName').focus(); return; }
+  if (!phone) { document.getElementById('fPhone').focus(); return; }
+  if (!passport) { document.getElementById('fPassport').focus(); return; }
+  if (!consentChecked) return;
+  
+  document.getElementById('vName').textContent = name;
+  document.getElementById('vPhone').textContent = phone;
+  
+  const countryNames = { 
+    vn: '🇻🇳 Vietnam', th: '🇹🇭 Thailand', id: '🇮🇩 Indonesia', 
+    ph: '🇵🇭 Philippines', np: '🇳🇵 Nepal', kh: '🇰🇭 Cambodia', 
+    mm: '🇲🇲 Myanmar', lk: '🇱🇰 Sri Lanka', bd: '🇧🇩 Bangladesh', other: '—' 
+  };
+  document.getElementById('vCountry').textContent = countryNames[country] || country;
+  
+  showScreen('main');
+  
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        document.getElementById('vLoc').textContent = 
+          pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4);
+      },
+      (err) => {
+        document.getElementById('vLoc').textContent = '권한 거부됨';
+      }
+    );
+  }
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('fName').value = '';
+  document.getElementById('fPhone').value = '';
+  document.getElementById('fPassport').value = '';
+  document.getElementById('fCountry').value = 'vn';
+  consentChecked = false;
+  document.getElementById('consentCard').classList.remove('checked');
+  document.getElementById('btnSignup').disabled = true;
+  showScreen('welcome');
+});
+
+applyLang();
+</script>
+
+</body>
+</html>
