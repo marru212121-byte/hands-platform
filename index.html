@@ -10,15 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
 <style>
-:root {
-  --teal-50:#e8f3f1;--teal-500:#1f7a6e;--teal-600:#176158;--teal-700:#114841;
-  --orange-200:#ffd2a8;--orange-500:#e87b35;
-  --rose-100:#ffe1e1;--rose-500:#d04848;
-  --sand-50:#faf6f1;--sand-100:#f4ede3;--sand-200:#e8ddcd;
-  --ink-900:#0f1f1d;--ink-700:#1a3633;--ink-500:#4a6260;--ink-400:#6f8682;--ink-300:#9aaba8;--ink-200:#c4cfcd;
-  --display:'Manrope','Pretendard',system-ui,sans-serif;
-  --body:'Pretendard','Manrope',system-ui,sans-serif;
-}
+:root{--teal-50:#e8f3f1;--teal-500:#1f7a6e;--teal-600:#176158;--teal-700:#114841;--orange-200:#ffd2a8;--orange-500:#e87b35;--rose-100:#ffe1e1;--rose-500:#d04848;--sand-50:#faf6f1;--sand-100:#f4ede3;--sand-200:#e8ddcd;--ink-900:#0f1f1d;--ink-700:#1a3633;--ink-500:#4a6260;--ink-400:#6f8682;--ink-300:#9aaba8;--ink-200:#c4cfcd;--display:'Manrope','Pretendard',system-ui,sans-serif;--body:'Pretendard','Manrope',system-ui,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overscroll-behavior:none}
 body{font-family:var(--body);background:var(--sand-50);color:var(--ink-900);font-weight:400;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
@@ -56,7 +48,6 @@ input:focus,select:focus,textarea:focus{outline:none}
 .lang-card-name{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px}
 .lang-card-en{font-size:10px;opacity:0.6;font-weight:600;letter-spacing:0.06em}
 .welcome-cta{margin-top:18px;width:100%;background:white;color:var(--teal-700);padding:17px;border-radius:14px;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 8px 24px rgba(0,0,0,0.15);opacity:0;animation:fadeUp 0.7s ease-out 0.7s forwards}
-.welcome-cta:active{transform:scale(0.98)}
 
 #consent,#signup{background:var(--sand-50);padding:60px 24px 24px;min-height:100vh}
 .back-btn{width:40px;height:40px;border-radius:50%;background:white;box-shadow:0 2px 8px rgba(15,31,29,0.06);display:grid;place-items:center;margin-bottom:18px;font-size:18px;color:var(--ink-700);font-weight:600}
@@ -91,11 +82,9 @@ input:focus,select:focus,textarea:focus{outline:none}
 .photo-section{margin-bottom:14px}
 .photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .photo-slot{position:relative;background:white;border:1.5px dashed var(--sand-200);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;overflow:hidden;transition:all 0.15s}
-.photo-slot:hover{border-color:var(--teal-500)}
 .photo-slot.filled{border-style:solid;border-color:var(--teal-500);padding:0}
 .photo-slot.filled .photo-icon,.photo-slot.filled .photo-label,.photo-slot.filled .photo-hint{display:none}
 .photo-slot img{width:100%;height:100%;object-fit:cover}
-.photo-slot input{display:none}
 .photo-icon{font-size:28px;opacity:0.5}
 .photo-label{font-size:12px;font-weight:700;color:var(--ink-700)}
 .photo-hint{font-size:10px;color:var(--ink-400)}
@@ -109,24 +98,54 @@ input:focus,select:focus,textarea:focus{outline:none}
 .consent-card.checked .check-box::before{content:"✓"}
 .consent-text-main{font-size:12.5px;font-weight:600;color:var(--ink-700);line-height:1.45}
 .consent-link{font-size:11px;color:var(--teal-500);font-weight:700;text-decoration:underline;cursor:pointer}
-
 .signup-info{background:var(--sand-100);border-radius:10px;padding:12px 14px;margin-top:14px;font-size:11.5px;color:var(--ink-500);line-height:1.55;text-align:center}
-
-.guide-modal{position:fixed;inset:0;background:rgba(15,31,29,0.7);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0}
-.guide-modal.show{display:flex}
-.guide-content{background:white;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:24px 24px 40px;animation:slideUp 0.3s ease-out}
-.guide-icon{font-size:48px;text-align:center;margin-bottom:12px}
-.guide-title{font-family:var(--display);font-weight:800;font-size:20px;text-align:center;margin-bottom:8px;letter-spacing:-0.02em}
-.guide-desc{font-size:13px;color:var(--ink-500);text-align:center;line-height:1.6;margin-bottom:18px}
-.guide-tips{background:var(--sand-100);border-radius:12px;padding:14px;margin-bottom:18px}
-.guide-tip{font-size:12px;color:var(--ink-700);padding:4px 0;display:flex;gap:8px}
-.guide-tip::before{content:"✓";color:var(--teal-500);font-weight:800}
-.guide-warn{background:#fff5f5;color:var(--rose-500);border-radius:10px;padding:10px 12px;font-size:11px;line-height:1.5;margin-bottom:18px}
 
 .loading-overlay{position:fixed;inset:0;background:rgba(15,31,29,0.85);backdrop-filter:blur(8px);z-index:2000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:white}
 .loading-overlay.show{display:flex}
 .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
 .loading-text{font-size:14px;font-weight:600}
+
+/* CAMERA MODAL */
+.camera-modal{position:fixed;inset:0;background:#000;z-index:3000;display:none;flex-direction:column}
+.camera-modal.show{display:flex}
+.camera-stage{flex:1;position:relative;background:#000;overflow:hidden}
+.camera-video{width:100%;height:100%;object-fit:cover;background:#000}
+.camera-video.flip{transform:scaleX(-1)}
+.camera-overlay{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.guide-doc{width:85%;max-width:340px;aspect-ratio:1.4/1;border:3px solid rgba(255,255,255,0.95);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5);position:relative}
+.guide-doc-corner{position:absolute;width:24px;height:24px;border:3px solid var(--orange-500)}
+.guide-doc-corner.tl{top:-3px;left:-3px;border-right:none;border-bottom:none;border-radius:14px 0 0 0}
+.guide-doc-corner.tr{top:-3px;right:-3px;border-left:none;border-bottom:none;border-radius:0 14px 0 0}
+.guide-doc-corner.bl{bottom:-3px;left:-3px;border-right:none;border-top:none;border-radius:0 0 0 14px}
+.guide-doc-corner.br{bottom:-3px;right:-3px;border-left:none;border-top:none;border-radius:0 0 14px 0}
+
+.guide-face{position:relative;width:65%;max-width:280px}
+.guide-face-svg{width:100%;height:auto;filter:drop-shadow(0 0 9999px rgba(0,0,0,0.5))}
+.guide-face-bg{position:absolute;inset:-100vh;background:rgba(0,0,0,0.5);z-index:-1;-webkit-mask-image:radial-gradient(ellipse 50% 65% at center,transparent 0%,transparent 50%,black 51%);mask-image:radial-gradient(ellipse 50% 65% at center,transparent 0%,transparent 50%,black 51%)}
+
+.camera-tip{position:absolute;top:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);color:white;padding:10px 18px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:90%;text-align:center;z-index:5}
+
+.camera-bottom{position:relative;padding:20px 24px 30px;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#000;flex-shrink:0}
+.camera-cancel,.camera-flip{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.15);color:white;display:grid;place-items:center;font-size:18px;font-weight:600}
+.camera-shoot{width:74px;height:74px;border-radius:50%;background:white;border:4px solid rgba(255,255,255,0.3);box-shadow:0 0 0 4px rgba(255,255,255,0.15);position:relative;cursor:pointer}
+.camera-shoot:active{transform:scale(0.95)}
+.camera-shoot::after{content:"";position:absolute;inset:5px;background:white;border-radius:50%;border:2px solid #ddd}
+
+.camera-preview{position:absolute;inset:0;background:#000;display:none;flex-direction:column;z-index:10}
+.camera-preview.show{display:flex}
+.camera-preview img{flex:1;width:100%;object-fit:contain;background:#000}
+.preview-bottom{padding:20px 24px 30px;display:flex;gap:12px;background:#000}
+.preview-retake{flex:1;padding:14px;background:rgba(255,255,255,0.12);color:white;border-radius:14px;font-weight:700;font-size:14px}
+.preview-confirm{flex:1;padding:14px;background:var(--teal-500);color:white;border-radius:14px;font-weight:800;font-size:14px}
+
+.camera-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;color:white;background:#000;z-index:20}
+.camera-error.show{display:flex}
+.camera-error-icon{font-size:48px;margin-bottom:14px}
+.camera-error-text{font-size:14px;line-height:1.6;margin-bottom:18px;color:rgba(255,255,255,0.85)}
+.camera-error-actions{display:flex;gap:10px;flex-direction:column;width:100%;max-width:280px}
+.camera-error-btn{padding:14px;border-radius:12px;font-weight:700;font-size:13px}
+.camera-error-btn.primary{background:white;color:var(--ink-900)}
+.camera-error-btn.secondary{background:rgba(255,255,255,0.12);color:white}
 
 #main{background:var(--sand-50);display:flex;flex-direction:column;min-height:100vh;padding-bottom:80px}
 .main-header{background:linear-gradient(165deg,#114841 0%,#1f7a6e 70%,#2d8d7b 100%);color:white;padding:56px 24px 80px;border-radius:0 0 32px 32px;position:relative;overflow:hidden}
@@ -139,7 +158,6 @@ input:focus,select:focus,textarea:focus{outline:none}
 .main-content{padding:0 20px;margin-top:-50px;position:relative;z-index:2;flex:1}
 .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
 .menu-card{background:white;border-radius:16px;padding:18px;border:1px solid var(--sand-200);box-shadow:0 4px 16px rgba(15,31,29,0.04);cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
-.menu-card:active{transform:scale(0.98)}
 .menu-card-emoji{font-size:24px;margin-bottom:8px}
 .menu-card-title{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:-0.01em;color:var(--ink-900);margin-bottom:2px}
 .menu-card-desc{font-size:11px;color:var(--ink-500)}
@@ -147,13 +165,11 @@ input:focus,select:focus,textarea:focus{outline:none}
 .menu-card.full{grid-column:1/-1;background:linear-gradient(135deg,#e87b35 0%,#f0a065 100%);color:white;border:none}
 .menu-card.full .menu-card-title,.menu-card.full .menu-card-desc{color:white}
 .menu-card.full .menu-card-desc{opacity:0.9}
-
 .action-row{display:flex;gap:10px;margin-bottom:18px}
 .action-btn{flex:1;background:white;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--sand-200);cursor:pointer}
 .action-btn.sos{background:linear-gradient(135deg,#ff6b6b 0%,#d04848 100%);border-color:transparent;color:white}
 .action-emoji{font-size:20px}
 .action-label{font-size:11.5px;font-weight:700}
-
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--sand-200);padding:10px 0 22px;display:flex;justify-content:space-around;z-index:100}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;color:var(--ink-300);font-size:10px;font-weight:700}
 .nav-item.active{color:var(--teal-500)}
@@ -166,7 +182,6 @@ input:focus,select:focus,textarea:focus{outline:none}
 .board-write-btn{background:var(--teal-500);color:white;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(31,122,110,0.3)}
 .post-list{padding:0 20px;display:flex;flex-direction:column;gap:10px}
 .post-card{background:white;border-radius:14px;padding:16px;border:1px solid var(--sand-200);cursor:pointer;transition:all 0.15s}
-.post-card:active{transform:scale(0.99)}
 .post-cat{display:inline-block;background:var(--teal-50);color:var(--teal-700);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-bottom:8px}
 .post-cat.question{background:#fff2e6;color:var(--orange-500)}
 .post-cat.tip{background:#e8f0ff;color:#3050a0}
@@ -181,13 +196,11 @@ input:focus,select:focus,textarea:focus{outline:none}
 .cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .cat-pill{padding:8px 14px;background:white;border:1px solid var(--sand-200);border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-500)}
 .cat-pill.active{background:var(--teal-500);color:white;border-color:var(--teal-500)}
-
 textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -203,6 +216,67 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">처리 중...</div>
 </div>
+
+<!-- 인앱 카메라 모달 -->
+<div class="camera-modal" id="cameraModal">
+  <div class="camera-stage" id="cameraStage">
+    <video class="camera-video" id="cameraVideo" autoplay playsinline muted></video>
+    <div class="camera-overlay" id="cameraOverlay">
+      <!-- 여권 가이드 -->
+      <div class="guide-doc" id="guideDoc" style="display:none">
+        <div class="guide-doc-corner tl"></div>
+        <div class="guide-doc-corner tr"></div>
+        <div class="guide-doc-corner bl"></div>
+        <div class="guide-doc-corner br"></div>
+      </div>
+      <!-- 셀카 가이드 (얼굴 + 목선) -->
+      <div class="guide-face" id="guideFace" style="display:none">
+        <svg class="guide-face-svg" viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">
+          <!-- 얼굴 타원 -->
+          <ellipse cx="100" cy="110" rx="70" ry="90" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="3" stroke-dasharray="6 6"/>
+          <!-- 얼굴 모서리 강조 -->
+          <path d="M30 110 Q30 50 100 30" fill="none" stroke="#e87b35" stroke-width="3" stroke-linecap="round"/>
+          <path d="M170 110 Q170 50 100 30" fill="none" stroke="#e87b35" stroke-width="3" stroke-linecap="round"/>
+          <!-- 목/어깨 가이드 (V 모양) -->
+          <path d="M30 220 L100 200 L170 220" fill="none" stroke="rgba(255,210,168,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 5"/>
+          <!-- 어깨 라인 -->
+          <path d="M10 270 L50 240 L150 240 L190 270" fill="none" stroke="rgba(255,210,168,0.7)" stroke-width="2" stroke-linecap="round"/>
+          <!-- 라벨 -->
+          <text x="100" y="115" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11" font-weight="600" font-family="sans-serif">FACE</text>
+          <text x="100" y="195" text-anchor="middle" fill="rgba(255,210,168,0.9)" font-size="9" font-weight="600" font-family="sans-serif">NECK</text>
+        </svg>
+      </div>
+    </div>
+    <div class="camera-tip" id="cameraTip">여권 정보 페이지를 사각형 안에 맞춰주세요</div>
+    
+    <!-- 미리보기 -->
+    <div class="camera-preview" id="cameraPreview">
+      <img id="previewImage" alt="">
+      <div class="preview-bottom">
+        <button class="preview-retake" onclick="retakePhoto()">다시 찍기</button>
+        <button class="preview-confirm" onclick="confirmPhoto()">사용하기 →</button>
+      </div>
+    </div>
+    
+    <!-- 에러 폴백 -->
+    <div class="camera-error" id="cameraError">
+      <div class="camera-error-icon">📷</div>
+      <div class="camera-error-text" id="cameraErrorText">카메라를 사용할 수 없습니다.<br>대신 폰의 기본 카메라를 사용합니다.</div>
+      <div class="camera-error-actions">
+        <button class="camera-error-btn primary" id="fallbackBtn">기본 카메라로 찍기</button>
+        <button class="camera-error-btn secondary" onclick="closeCamera()">취소</button>
+      </div>
+    </div>
+  </div>
+  <div class="camera-bottom" id="cameraBottom">
+    <button class="camera-cancel" onclick="closeCamera()">✕</button>
+    <button class="camera-shoot" id="shootBtn" onclick="shootCamera()"></button>
+    <button class="camera-flip" onclick="flipCamera()">🔄</button>
+  </div>
+</div>
+
+<!-- 폴백용 file input (보이지 않음) -->
+<input type="file" id="fallbackInput" accept="image/*" capture="environment" style="display:none">
 
 <div class="app">
 
@@ -224,20 +298,16 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
     </div>
     <div class="lang-grid">
       <button class="lang-card selected" data-langcard="ko">
-        <div class="lang-card-name">한국어</div>
-        <div class="lang-card-en">KOREAN</div>
+        <div class="lang-card-name">한국어</div><div class="lang-card-en">KOREAN</div>
       </button>
       <button class="lang-card" data-langcard="en">
-        <div class="lang-card-name">English</div>
-        <div class="lang-card-en">ENGLISH</div>
+        <div class="lang-card-name">English</div><div class="lang-card-en">ENGLISH</div>
       </button>
       <button class="lang-card" data-langcard="vi">
-        <div class="lang-card-name">Tiếng Việt</div>
-        <div class="lang-card-en">VIETNAMESE</div>
+        <div class="lang-card-name">Tiếng Việt</div><div class="lang-card-en">VIETNAMESE</div>
       </button>
       <button class="lang-card" data-langcard="id">
-        <div class="lang-card-name">Bahasa</div>
-        <div class="lang-card-en">INDONESIAN</div>
+        <div class="lang-card-name">Bahasa</div><div class="lang-card-en">INDONESIAN</div>
       </button>
     </div>
     <button class="welcome-cta" id="goConsent">
@@ -253,34 +323,10 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <h2 class="section-title" data-i="consentTitle">한국에서<br>안전하게 지내요</h2>
   <p class="section-sub" data-i="consentSub">HANDS가 어떻게 도움드리는지 알려드립니다</p>
   <div class="benefit-list">
-    <div class="benefit">
-      <div class="benefit-icon orange">💼</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b1t">근무처 변경</div>
-        <div class="benefit-desc" data-i="b1d">선박 근무 지역 변경</div>
-      </div>
-    </div>
-    <div class="benefit">
-      <div class="benefit-icon orange">🍱</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b2t">주변 맛집·편의시설</div>
-        <div class="benefit-desc" data-i="b2d">병원·약국·식당·은행을 모국어로 추천</div>
-      </div>
-    </div>
-    <div class="benefit">
-      <div class="benefit-icon teal">💬</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b3t">관리자와 상시 연결</div>
-        <div class="benefit-desc" data-i="b3d">임금·비자·숙소 문의를 1:1 비공개로</div>
-      </div>
-    </div>
-    <div class="benefit">
-      <div class="benefit-icon rose">🆘</div>
-      <div class="benefit-text">
-        <div class="benefit-title" data-i="b4t">긴급 상황 즉시 도움</div>
-        <div class="benefit-desc" data-i="b4d">SOS 한 번으로 관리자에게 안전 알림</div>
-      </div>
-    </div>
+    <div class="benefit"><div class="benefit-icon orange">💼</div><div class="benefit-text"><div class="benefit-title" data-i="b1t">근무처 변경</div><div class="benefit-desc" data-i="b1d">선박 근무 지역 변경</div></div></div>
+    <div class="benefit"><div class="benefit-icon orange">🍱</div><div class="benefit-text"><div class="benefit-title" data-i="b2t">주변 맛집·편의시설</div><div class="benefit-desc" data-i="b2d">병원·약국·식당·은행을 모국어로 추천</div></div></div>
+    <div class="benefit"><div class="benefit-icon teal">💬</div><div class="benefit-text"><div class="benefit-title" data-i="b3t">관리자와 상시 연결</div><div class="benefit-desc" data-i="b3d">임금·비자·숙소 문의를 1:1 비공개로</div></div></div>
+    <div class="benefit"><div class="benefit-icon rose">🆘</div><div class="benefit-text"><div class="benefit-title" data-i="b4t">긴급 상황 즉시 도움</div><div class="benefit-desc" data-i="b4d">SOS 한 번으로 관리자에게 안전 알림</div></div></div>
   </div>
   <div class="cta-row">
     <button class="cta-secondary" data-back="welcome" data-i="laterBtn">나중에</button>
@@ -312,7 +358,7 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
       <option value="th">🇹🇭 Thailand · ไทย</option>
       <option value="id">🇮🇩 Indonesia</option>
       <option value="ph">🇵🇭 Philippines · Pilipinas</option>
-      <option value="np">🇳🇵 Nepal · नेपाल</option>
+      <option value="np">🇳🇵 Nepal · नेपाली</option>
       <option value="kh">🇰🇭 Cambodia · កម្ពុជា</option>
       <option value="mm">🇲🇲 Myanmar · မြန်မာ</option>
       <option value="lk">🇱🇰 Sri Lanka · ශ්‍රී ලංකා</option>
@@ -320,7 +366,6 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
       <option value="other" data-i="fOther">기타</option>
     </select>
   </div>
-
   <div class="field-row">
     <div class="field-group">
       <label class="field-label" data-i="fHeight">키 (cm)</label>
@@ -335,20 +380,18 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <div class="photo-section">
     <label class="field-label" data-i="fPhotos">신분 확인 사진</label>
     <div class="photo-grid">
-      <label class="photo-slot" id="passportSlot" for="passportInput">
+      <div class="photo-slot" id="passportSlot" onclick="openCamera('passport')">
         <span class="photo-icon">📷</span>
         <span class="photo-label" data-i="photoPassport">여권 촬영</span>
         <span class="photo-hint" data-i="photoPassportHint">정보 페이지</span>
-        <input type="file" id="passportInput" accept="image/*" capture="environment">
         <span class="photo-retake" data-i="photoRetake">다시 찍기</span>
-      </label>
-      <label class="photo-slot" id="selfieSlot" for="selfieInput">
+      </div>
+      <div class="photo-slot" id="selfieSlot" onclick="openCamera('selfie')">
         <span class="photo-icon">🤳</span>
         <span class="photo-label" data-i="photoSelfie">본인 얼굴</span>
         <span class="photo-hint" data-i="photoSelfieHint">셀카</span>
-        <input type="file" id="selfieInput" accept="image/*" capture="user">
         <span class="photo-retake" data-i="photoRetake">다시 찍기</span>
-      </label>
+      </div>
     </div>
   </div>
 
@@ -361,10 +404,7 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   </div>
 
   <button class="cta-primary" id="btnSignup" disabled style="width:100%" data-i="signupBtn">가입하기 →</button>
-
-  <div class="signup-info" data-i="signupInfo">
-    가입 시 위치 권한 요청이 표시됩니다.<br>"허용"을 눌러주세요.
-  </div>
+  <div class="signup-info" data-i="signupInfo">가입 시 위치 권한 요청이 표시됩니다.<br>"허용"을 눌러주세요.</div>
 </section>
 
 <section class="screen" id="main">
@@ -376,7 +416,6 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
       <span class="meta-pill" id="metaCountry">—</span>
     </div>
   </header>
-
   <main class="main-content">
     <div class="menu-grid">
       <div class="menu-card full" onclick="alert('곧 오픈 예정')">
@@ -398,7 +437,6 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
         <div class="menu-card-soon" data-i="soonTag">SOON</div>
       </div>
     </div>
-
     <div class="action-row">
       <button class="action-btn" onclick="alert('곧 오픈 예정')">
         <div class="action-emoji">💬</div>
@@ -414,24 +452,11 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
       </button>
     </div>
   </main>
-
   <nav class="bottom-nav">
-    <button class="nav-item active" onclick="showMain()">
-      <div class="nav-emoji">🏠</div>
-      <span data-i="navHome">홈</span>
-    </button>
-    <button class="nav-item" onclick="showBoard()">
-      <div class="nav-emoji">📝</div>
-      <span data-i="navBoard">게시판</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">📍</div>
-      <span data-i="navMap">지도</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">👤</div>
-      <span data-i="navMy">내정보</span>
-    </button>
+    <button class="nav-item active" onclick="showMain()"><div class="nav-emoji">🏠</div><span data-i="navHome">홈</span></button>
+    <button class="nav-item" onclick="showBoard()"><div class="nav-emoji">📝</div><span data-i="navBoard">게시판</span></button>
+    <button class="nav-item" onclick="alert('곧 오픈 예정')"><div class="nav-emoji">📍</div><span data-i="navMap">지도</span></button>
+    <button class="nav-item" onclick="alert('곧 오픈 예정')"><div class="nav-emoji">👤</div><span data-i="navMy">내정보</span></button>
   </nav>
 </section>
 
@@ -439,30 +464,17 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <div class="board-header">
     <h2 class="board-title" data-i="boardTitle">게시판</h2>
     <button class="board-write-btn" onclick="showWrite()">
-      <span>✏️</span>
-      <span data-i="writeBtn">글쓰기</span>
+      <span>✏️</span><span data-i="writeBtn">글쓰기</span>
     </button>
   </div>
   <div class="post-list" id="postList">
     <div class="post-empty" data-i="postEmpty">아직 글이 없습니다.<br>첫 글을 작성해보세요!</div>
   </div>
   <nav class="bottom-nav">
-    <button class="nav-item" onclick="showMain()">
-      <div class="nav-emoji">🏠</div>
-      <span data-i="navHome">홈</span>
-    </button>
-    <button class="nav-item active">
-      <div class="nav-emoji">📝</div>
-      <span data-i="navBoard">게시판</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">📍</div>
-      <span data-i="navMap">지도</span>
-    </button>
-    <button class="nav-item" onclick="alert('곧 오픈 예정')">
-      <div class="nav-emoji">👤</div>
-      <span data-i="navMy">내정보</span>
-    </button>
+    <button class="nav-item" onclick="showMain()"><div class="nav-emoji">🏠</div><span data-i="navHome">홈</span></button>
+    <button class="nav-item active"><div class="nav-emoji">📝</div><span data-i="navBoard">게시판</span></button>
+    <button class="nav-item" onclick="alert('곧 오픈 예정')"><div class="nav-emoji">📍</div><span data-i="navMap">지도</span></button>
+    <button class="nav-item" onclick="alert('곧 오픈 예정')"><div class="nav-emoji">👤</div><span data-i="navMy">내정보</span></button>
   </nav>
 </section>
 
@@ -470,7 +482,6 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <button class="back-btn" onclick="showBoard()">←</button>
   <h2 class="section-title" data-i="writeTitle">글쓰기</h2>
   <p class="section-sub" data-i="writeSub">동향 동료들과 정보를 나눠보세요</p>
-
   <div class="field-group">
     <label class="field-label" data-i="postCat">카테고리</label>
     <div class="cat-pills" id="catPills">
@@ -495,455 +506,298 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://wcugfateeuqfcpimoogo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdWdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjM5MTAsImV4cCI6MjA5MzY5OTkxMH0.gYMs71Q0c591W5vZ049HzpKcD2ZICsCLt6-rRCsYbJc';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://wcugfateeuqfcpimoogo.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdWdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjM5MTAsImV4cCI6MjA5MzY5OTkxMH0.gYMs71Q0c591W5vZ049HzpKcD2ZICsCLt6-rRCsYbJc';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const I18N = {
-  ko: {
-    logoTag:"한국 생활 동반자",welcomeT1:"환영합니다",welcomeT2:"한국에 오신 걸",
-    welcomeSub:"당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.",welcomeCta:"시작하기",
-    consentEyebrow:"서비스 이용",consentTitle:"한국에서<br>안전하게 지내요",consentSub:"HANDS가 어떻게 도움드리는지 알려드립니다",
-    b1t:"근무처 변경",b1d:"선박 근무 지역 변경",b2t:"주변 맛집·편의시설",b2d:"병원·약국·식당·은행을 모국어로 추천",
-    b3t:"관리자와 상시 연결",b3d:"임금·비자·숙소 문의를 1:1 비공개로",b4t:"긴급 상황 즉시 도움",b4d:"SOS 한 번으로 관리자에게 안전 알림",
-    laterBtn:"나중에",agreeBtn:"동의하고 시작 →",
-    signupTitle:"회원가입",signupSub:"한국 생활을 시작합니다",
-    fName:"이름",fPhone:"전화번호",fPassport:"여권번호",fCountry:"국적",fOther:"기타",fHeight:"키 (cm)",fWeight:"몸무게 (kg)",
-    fPhotos:"신분 확인 사진",photoPassport:"여권 촬영",photoPassportHint:"정보 페이지",photoSelfie:"본인 얼굴",photoSelfieHint:"셀카",photoRetake:"다시 찍기",
-    consentText:"이용약관 및 개인정보·위치정보 처리방침에 동의합니다",viewTerms:"전문 보기",
-    signupBtn:"가입하기 →",signupInfo:"가입 시 위치 권한 요청이 표시됩니다.<br>\"허용\"을 눌러주세요.",
-    greetHi:"안녕하세요",connected:"연결됨",
-    menuJobs:"근무처 변경",menuJobsDesc:"선박 근무 지역 변경 안내",
-    menuFood:"주변 시설",menuFoodDesc:"맛집·병원",menuInfo:"생활 가이드",menuInfoDesc:"비자·임금",
-    soonTag:"준비중",actInquiry:"관리자 문의",actSOS:"긴급 도움",actSettings:"설정",
-    navHome:"홈",navBoard:"게시판",navMap:"지도",navMy:"내정보",
-    boardTitle:"게시판",writeBtn:"글쓰기",postEmpty:"아직 글이 없습니다.<br>첫 글을 작성해보세요!",
-    writeTitle:"글쓰기",writeSub:"동향 동료들과 정보를 나눠보세요",
-    postCat:"카테고리",postTitle:"제목",postBody:"내용",postSubmit:"게시하기",
-    catGeneral:"일반",catQuestion:"질문",catTip:"꿀팁",catEvent:"행사",
-    loadingSignup:"가입 처리 중...",loadingPhoto:"사진 업로드 중...",loadingPost:"게시 중..."
-  },
-  en: {
-    logoTag:"Your Korea Companion",welcomeT1:"Welcome",welcomeT2:"to Korea",
-    welcomeSub:"Choose your language. We'll help you settle in Korea.",welcomeCta:"Get started",
-    consentEyebrow:"Using HANDS",consentTitle:"Stay safe<br>in Korea",consentSub:"Here's how HANDS helps you",
-    b1t:"Workplace transfer",b1d:"Ship work location changes",b2t:"Food & places nearby",b2d:"Hospitals, pharmacies, restaurants nearby",
-    b3t:"Connect with admin",b3d:"Wages, visa, housing — private 1-on-1",b4t:"Emergency support",b4d:"One-tap SOS alerts the admin instantly",
-    laterBtn:"Later",agreeBtn:"Agree and continue →",
-    signupTitle:"Sign up",signupSub:"Start your life in Korea",
-    fName:"Name",fPhone:"Phone",fPassport:"Passport",fCountry:"Nationality",fOther:"Other",fHeight:"Height (cm)",fWeight:"Weight (kg)",
-    fPhotos:"Identity photos",photoPassport:"Passport photo",photoPassportHint:"Info page",photoSelfie:"Selfie",photoSelfieHint:"Your face",photoRetake:"Retake",
-    consentText:"I agree to terms, privacy & location policies",viewTerms:"View full text",
-    signupBtn:"Sign up →",signupInfo:"Location permission will be requested.<br>Please tap \"Allow\".",
-    greetHi:"Hello",connected:"Connected",
-    menuJobs:"Workplace transfer",menuJobsDesc:"Ship work locations",
-    menuFood:"Nearby",menuFoodDesc:"Food · Hospital",menuInfo:"Life guide",menuInfoDesc:"Visa · Wages",
-    soonTag:"SOON",actInquiry:"Ask admin",actSOS:"Emergency",actSettings:"Settings",
-    navHome:"Home",navBoard:"Board",navMap:"Map",navMy:"Profile",
-    boardTitle:"Community",writeBtn:"Write",postEmpty:"No posts yet.<br>Be the first to write!",
-    writeTitle:"New post",writeSub:"Share with fellow workers",
-    postCat:"Category",postTitle:"Title",postBody:"Body",postSubmit:"Post",
-    catGeneral:"General",catQuestion:"Question",catTip:"Tip",catEvent:"Event",
-    loadingSignup:"Signing up...",loadingPhoto:"Uploading...",loadingPost:"Posting..."
-  },
-  vi: {
-    logoTag:"Đồng hành Hàn Quốc",welcomeT1:"Chào mừng",welcomeT2:"đến Hàn Quốc",
-    welcomeSub:"Chọn ngôn ngữ của bạn.",welcomeCta:"Bắt đầu",
-    consentEyebrow:"Sử dụng HANDS",consentTitle:"An toàn<br>tại Hàn Quốc",consentSub:"HANDS giúp bạn như thế nào",
-    b1t:"Đổi nơi làm việc",b1d:"Thay đổi khu vực làm tàu",b2t:"Quán ăn & tiện ích",b2d:"Bệnh viện, hiệu thuốc gần",
-    b3t:"Kết nối quản trị",b3d:"Lương, visa, nhà ở 1:1",b4t:"Hỗ trợ khẩn cấp",b4d:"SOS một chạm",
-    laterBtn:"Để sau",agreeBtn:"Đồng ý và tiếp tục →",
-    signupTitle:"Đăng ký",signupSub:"Bắt đầu cuộc sống tại Hàn",
-    fName:"Họ tên",fPhone:"Số điện thoại",fPassport:"Hộ chiếu",fCountry:"Quốc tịch",fOther:"Khác",fHeight:"Chiều cao (cm)",fWeight:"Cân nặng (kg)",
-    fPhotos:"Ảnh xác minh",photoPassport:"Ảnh hộ chiếu",photoPassportHint:"Trang thông tin",photoSelfie:"Selfie",photoSelfieHint:"Khuôn mặt",photoRetake:"Chụp lại",
-    consentText:"Tôi đồng ý điều khoản và vị trí",viewTerms:"Xem",
-    signupBtn:"Đăng ký →",signupInfo:"Sẽ yêu cầu quyền vị trí.<br>Nhấn \"Cho phép\".",
-    greetHi:"Xin chào",connected:"Đã kết nối",
-    menuJobs:"Đổi nơi làm việc",menuJobsDesc:"Khu vực tàu",
-    menuFood:"Gần đây",menuFoodDesc:"Ăn uống · BV",menuInfo:"Hướng dẫn",menuInfoDesc:"Visa · Lương",
-    soonTag:"SẮP",actInquiry:"Hỏi admin",actSOS:"Khẩn cấp",actSettings:"Cài đặt",
-    navHome:"Trang chủ",navBoard:"Diễn đàn",navMap:"Bản đồ",navMy:"Hồ sơ",
-    boardTitle:"Diễn đàn",writeBtn:"Viết",postEmpty:"Chưa có bài.<br>Hãy viết đầu tiên!",
-    writeTitle:"Bài mới",writeSub:"Chia sẻ với đồng hương",
-    postCat:"Danh mục",postTitle:"Tiêu đề",postBody:"Nội dung",postSubmit:"Đăng",
-    catGeneral:"Chung",catQuestion:"Hỏi",catTip:"Mẹo",catEvent:"Sự kiện",
-    loadingSignup:"Đang đăng ký...",loadingPhoto:"Đang tải...",loadingPost:"Đang đăng..."
-  },
-  id: {
-    logoTag:"Pendamping Korea",welcomeT1:"Selamat datang",welcomeT2:"ke Korea",
-    welcomeSub:"Pilih bahasa Anda.",welcomeCta:"Mulai",
-    consentEyebrow:"Pakai HANDS",consentTitle:"Aman<br>di Korea",consentSub:"Bagaimana HANDS membantu",
-    b1t:"Pindah tempat kerja",b1d:"Ganti area kerja kapal",b2t:"Makanan & tempat",b2d:"RS, apotek, restoran",
-    b3t:"Hubungi admin",b3d:"Gaji, visa, tempat 1:1",b4t:"Dukungan darurat",b4d:"SOS satu sentuh",
-    laterBtn:"Nanti",agreeBtn:"Setuju dan lanjut →",
-    signupTitle:"Daftar",signupSub:"Mulai di Korea",
-    fName:"Nama",fPhone:"Nomor telepon",fPassport:"Paspor",fCountry:"Kewarganegaraan",fOther:"Lainnya",fHeight:"Tinggi (cm)",fWeight:"Berat (kg)",
-    fPhotos:"Foto identitas",photoPassport:"Foto paspor",photoPassportHint:"Halaman info",photoSelfie:"Selfie",photoSelfieHint:"Wajah",photoRetake:"Ulang",
-    consentText:"Saya setuju ketentuan & lokasi",viewTerms:"Lihat",
-    signupBtn:"Daftar →",signupInfo:"Izin lokasi diminta.<br>Tekan \"Izinkan\".",
-    greetHi:"Halo",connected:"Terhubung",
-    menuJobs:"Pindah tempat kerja",menuJobsDesc:"Area kapal",
-    menuFood:"Sekitar",menuFoodDesc:"Makanan · RS",menuInfo:"Panduan",menuInfoDesc:"Visa · Gaji",
-    soonTag:"SEGERA",actInquiry:"Tanya admin",actSOS:"Darurat",actSettings:"Setting",
-    navHome:"Beranda",navBoard:"Forum",navMap:"Peta",navMy:"Profil",
-    boardTitle:"Forum",writeBtn:"Tulis",postEmpty:"Belum ada postingan.<br>Tulis pertama!",
-    writeTitle:"Tulis baru",writeSub:"Berbagi dengan teman",
-    postCat:"Kategori",postTitle:"Judul",postBody:"Isi",postSubmit:"Kirim",
-    catGeneral:"Umum",catQuestion:"Tanya",catTip:"Tips",catEvent:"Acara",
-    loadingSignup:"Mendaftar...",loadingPhoto:"Upload...",loadingPost:"Mengirim..."
-  }
+const I18N={
+  ko:{logoTag:"한국 생활 동반자",welcomeT1:"환영합니다",welcomeT2:"한국에 오신 걸",welcomeSub:"당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.",welcomeCta:"시작하기",consentEyebrow:"서비스 이용",consentTitle:"한국에서<br>안전하게 지내요",consentSub:"HANDS가 어떻게 도움드리는지 알려드립니다",b1t:"근무처 변경",b1d:"선박 근무 지역 변경",b2t:"주변 맛집·편의시설",b2d:"병원·약국·식당·은행을 모국어로 추천",b3t:"관리자와 상시 연결",b3d:"임금·비자·숙소 문의를 1:1 비공개로",b4t:"긴급 상황 즉시 도움",b4d:"SOS 한 번으로 관리자에게 안전 알림",laterBtn:"나중에",agreeBtn:"동의하고 시작 →",signupTitle:"회원가입",signupSub:"한국 생활을 시작합니다",fName:"이름",fPhone:"전화번호",fPassport:"여권번호",fCountry:"국적",fOther:"기타",fHeight:"키 (cm)",fWeight:"몸무게 (kg)",fPhotos:"신분 확인 사진",photoPassport:"여권 촬영",photoPassportHint:"정보 페이지",photoSelfie:"본인 얼굴",photoSelfieHint:"셀카",photoRetake:"다시 찍기",consentText:"이용약관 및 개인정보·위치정보 처리방침에 동의합니다",viewTerms:"전문 보기",signupBtn:"가입하기 →",signupInfo:'가입 시 위치 권한 요청이 표시됩니다.<br>"허용"을 눌러주세요.',greetHi:"안녕하세요",connected:"연결됨",menuJobs:"근무처 변경",menuJobsDesc:"선박 근무 지역 변경 안내",menuFood:"주변 시설",menuFoodDesc:"맛집·병원",menuInfo:"생활 가이드",menuInfoDesc:"비자·임금",soonTag:"준비중",actInquiry:"관리자 문의",actSOS:"긴급 도움",actSettings:"설정",navHome:"홈",navBoard:"게시판",navMap:"지도",navMy:"내정보",boardTitle:"게시판",writeBtn:"글쓰기",postEmpty:"아직 글이 없습니다.<br>첫 글을 작성해보세요!",writeTitle:"글쓰기",writeSub:"동향 동료들과 정보를 나눠보세요",postCat:"카테고리",postTitle:"제목",postBody:"내용",postSubmit:"게시하기",catGeneral:"일반",catQuestion:"질문",catTip:"꿀팁",catEvent:"행사",loadingSignup:"가입 처리 중...",loadingPhoto:"사진 업로드 중...",loadingPost:"게시 중...",camTipPassport:"여권 정보 페이지를 사각형 안에 맞춰주세요",camTipSelfie:"얼굴을 타원에 맞추고, 어깨까지 보이게",camErrorTitle:"카메라를 사용할 수 없습니다",camErrorDesc:"권한을 거부했거나 지원되지 않는 기기입니다.<br>대신 폰의 기본 카메라로 찍을 수 있어요.",camErrorBtn:"기본 카메라로 찍기",camErrorCancel:"취소",camRetake:"다시 찍기",camConfirm:"사용하기 →"},
+  en:{logoTag:"Your Korea Companion",welcomeT1:"Welcome",welcomeT2:"to Korea",welcomeSub:"Choose your language. We'll help you settle in Korea.",welcomeCta:"Get started",consentEyebrow:"Using HANDS",consentTitle:"Stay safe<br>in Korea",consentSub:"Here's how HANDS helps you",b1t:"Workplace transfer",b1d:"Ship work location changes",b2t:"Food & places nearby",b2d:"Hospitals, pharmacies, restaurants nearby",b3t:"Connect with admin",b3d:"Wages, visa, housing — private 1-on-1",b4t:"Emergency support",b4d:"One-tap SOS alerts the admin instantly",laterBtn:"Later",agreeBtn:"Agree and continue →",signupTitle:"Sign up",signupSub:"Start your life in Korea",fName:"Name",fPhone:"Phone",fPassport:"Passport",fCountry:"Nationality",fOther:"Other",fHeight:"Height (cm)",fWeight:"Weight (kg)",fPhotos:"Identity photos",photoPassport:"Passport photo",photoPassportHint:"Info page",photoSelfie:"Selfie",photoSelfieHint:"Your face",photoRetake:"Retake",consentText:"I agree to terms, privacy & location policies",viewTerms:"View full text",signupBtn:"Sign up →",signupInfo:'Location permission will be requested.<br>Please tap "Allow".',greetHi:"Hello",connected:"Connected",menuJobs:"Workplace transfer",menuJobsDesc:"Ship work locations",menuFood:"Nearby",menuFoodDesc:"Food · Hospital",menuInfo:"Life guide",menuInfoDesc:"Visa · Wages",soonTag:"SOON",actInquiry:"Ask admin",actSOS:"Emergency",actSettings:"Settings",navHome:"Home",navBoard:"Board",navMap:"Map",navMy:"Profile",boardTitle:"Community",writeBtn:"Write",postEmpty:"No posts yet.<br>Be the first to write!",writeTitle:"New post",writeSub:"Share with fellow workers",postCat:"Category",postTitle:"Title",postBody:"Body",postSubmit:"Post",catGeneral:"General",catQuestion:"Question",catTip:"Tip",catEvent:"Event",loadingSignup:"Signing up...",loadingPhoto:"Uploading...",loadingPost:"Posting...",camTipPassport:"Fit your passport info page in the frame",camTipSelfie:"Align your face with the oval, show shoulders",camErrorTitle:"Camera unavailable",camErrorDesc:"Permission denied or unsupported device.<br>You can use your phone's default camera instead.",camErrorBtn:"Use default camera",camErrorCancel:"Cancel",camRetake:"Retake",camConfirm:"Use →"},
+  vi:{logoTag:"Đồng hành Hàn Quốc",welcomeT1:"Chào mừng",welcomeT2:"đến Hàn Quốc",welcomeSub:"Chọn ngôn ngữ của bạn.",welcomeCta:"Bắt đầu",consentEyebrow:"Sử dụng HANDS",consentTitle:"An toàn<br>tại Hàn Quốc",consentSub:"HANDS giúp bạn như thế nào",b1t:"Đổi nơi làm việc",b1d:"Thay đổi khu vực làm tàu",b2t:"Quán ăn & tiện ích",b2d:"Bệnh viện, hiệu thuốc gần",b3t:"Kết nối quản trị",b3d:"Lương, visa, nhà ở 1:1",b4t:"Hỗ trợ khẩn cấp",b4d:"SOS một chạm",laterBtn:"Để sau",agreeBtn:"Đồng ý và tiếp tục →",signupTitle:"Đăng ký",signupSub:"Bắt đầu cuộc sống tại Hàn",fName:"Họ tên",fPhone:"Số điện thoại",fPassport:"Hộ chiếu",fCountry:"Quốc tịch",fOther:"Khác",fHeight:"Chiều cao (cm)",fWeight:"Cân nặng (kg)",fPhotos:"Ảnh xác minh",photoPassport:"Ảnh hộ chiếu",photoPassportHint:"Trang thông tin",photoSelfie:"Selfie",photoSelfieHint:"Khuôn mặt",photoRetake:"Chụp lại",consentText:"Tôi đồng ý điều khoản và vị trí",viewTerms:"Xem",signupBtn:"Đăng ký →",signupInfo:'Sẽ yêu cầu quyền vị trí.<br>Nhấn "Cho phép".',greetHi:"Xin chào",connected:"Đã kết nối",menuJobs:"Đổi nơi làm việc",menuJobsDesc:"Khu vực tàu",menuFood:"Gần đây",menuFoodDesc:"Ăn uống · BV",menuInfo:"Hướng dẫn",menuInfoDesc:"Visa · Lương",soonTag:"SẮP",actInquiry:"Hỏi admin",actSOS:"Khẩn cấp",actSettings:"Cài đặt",navHome:"Trang chủ",navBoard:"Diễn đàn",navMap:"Bản đồ",navMy:"Hồ sơ",boardTitle:"Diễn đàn",writeBtn:"Viết",postEmpty:"Chưa có bài.<br>Hãy viết đầu tiên!",writeTitle:"Bài mới",writeSub:"Chia sẻ với đồng hương",postCat:"Danh mục",postTitle:"Tiêu đề",postBody:"Nội dung",postSubmit:"Đăng",catGeneral:"Chung",catQuestion:"Hỏi",catTip:"Mẹo",catEvent:"Sự kiện",loadingSignup:"Đang đăng ký...",loadingPhoto:"Đang tải...",loadingPost:"Đang đăng...",camTipPassport:"Đặt trang hộ chiếu vào khung",camTipSelfie:"Khuôn mặt vào hình bầu dục, thấy vai",camErrorTitle:"Không dùng được camera",camErrorDesc:"Bị từ chối quyền hoặc không hỗ trợ.<br>Dùng camera mặc định của điện thoại.",camErrorBtn:"Dùng camera mặc định",camErrorCancel:"Hủy",camRetake:"Chụp lại",camConfirm:"Dùng →"},
+  id:{logoTag:"Pendamping Korea",welcomeT1:"Selamat datang",welcomeT2:"ke Korea",welcomeSub:"Pilih bahasa Anda.",welcomeCta:"Mulai",consentEyebrow:"Pakai HANDS",consentTitle:"Aman<br>di Korea",consentSub:"Bagaimana HANDS membantu",b1t:"Pindah tempat kerja",b1d:"Ganti area kerja kapal",b2t:"Makanan & tempat",b2d:"RS, apotek, restoran",b3t:"Hubungi admin",b3d:"Gaji, visa, tempat 1:1",b4t:"Dukungan darurat",b4d:"SOS satu sentuh",laterBtn:"Nanti",agreeBtn:"Setuju dan lanjut →",signupTitle:"Daftar",signupSub:"Mulai di Korea",fName:"Nama",fPhone:"Nomor telepon",fPassport:"Paspor",fCountry:"Kewarganegaraan",fOther:"Lainnya",fHeight:"Tinggi (cm)",fWeight:"Berat (kg)",fPhotos:"Foto identitas",photoPassport:"Foto paspor",photoPassportHint:"Halaman info",photoSelfie:"Selfie",photoSelfieHint:"Wajah",photoRetake:"Ulang",consentText:"Saya setuju ketentuan & lokasi",viewTerms:"Lihat",signupBtn:"Daftar →",signupInfo:'Izin lokasi diminta.<br>Tekan "Izinkan".',greetHi:"Halo",connected:"Terhubung",menuJobs:"Pindah tempat kerja",menuJobsDesc:"Area kapal",menuFood:"Sekitar",menuFoodDesc:"Makanan · RS",menuInfo:"Panduan",menuInfoDesc:"Visa · Gaji",soonTag:"SEGERA",actInquiry:"Tanya admin",actSOS:"Darurat",actSettings:"Setting",navHome:"Beranda",navBoard:"Forum",navMap:"Peta",navMy:"Profil",boardTitle:"Forum",writeBtn:"Tulis",postEmpty:"Belum ada postingan.<br>Tulis pertama!",writeTitle:"Tulis baru",writeSub:"Berbagi dengan teman",postCat:"Kategori",postTitle:"Judul",postBody:"Isi",postSubmit:"Kirim",catGeneral:"Umum",catQuestion:"Tanya",catTip:"Tips",catEvent:"Acara",loadingSignup:"Mendaftar...",loadingPhoto:"Upload...",loadingPost:"Mengirim...",camTipPassport:"Pas paspor di dalam kotak",camTipSelfie:"Wajah di oval, terlihat bahu",camErrorTitle:"Kamera tidak tersedia",camErrorDesc:"Izin ditolak atau tidak didukung.<br>Pakai kamera default ponsel.",camErrorBtn:"Pakai kamera default",camErrorCancel:"Batal",camRetake:"Ulang",camConfirm:"Gunakan →"}
 };
 
-let currentLang = 'ko';
-let consentChecked = false;
-let passportFile = null;
-let selfieFile = null;
-let currentMember = null;
-let currentCategory = 'general';
-let watchPositionId = null;
+let currentLang='ko',consentChecked=false,passportFile=null,selfieFile=null,currentMember=null,currentCategory='general',watchPositionId=null;
+let cameraStream=null,cameraType=null,cameraFacing='environment';
 
-function applyLang() {
-  const d = I18N[currentLang] || I18N.ko;
-  document.querySelectorAll('[data-i]').forEach(el => {
-    const k = el.dataset.i;
-    if (d[k] !== undefined) el.innerHTML = d[k];
-  });
-  document.documentElement.lang = currentLang;
-}
+function applyLang(){const d=I18N[currentLang]||I18N.ko;document.querySelectorAll('[data-i]').forEach(el=>{const k=el.dataset.i;if(d[k]!==undefined)el.innerHTML=d[k]});document.documentElement.lang=currentLang}
+function setLang(lang){currentLang=lang;document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));document.querySelectorAll('.lang-card').forEach(c=>c.classList.toggle('selected',c.dataset.langcard===lang));applyLang()}
+document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+document.querySelectorAll('.lang-card').forEach(c=>c.addEventListener('click',()=>setLang(c.dataset.langcard)));
 
-function setLang(lang) {
-  currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-  document.querySelectorAll('.lang-card').forEach(c => c.classList.toggle('selected', c.dataset.langcard === lang));
-  applyLang();
-}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);const sw=document.getElementById('langSwitcher');sw.classList.toggle('on-dark',id==='welcome');sw.classList.toggle('on-light',id!=='welcome')}
 
-document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
-document.querySelectorAll('.lang-card').forEach(c => c.addEventListener('click', () => setLang(c.dataset.langcard)));
+document.getElementById('goConsent').addEventListener('click',()=>showScreen('consent'));
+document.getElementById('goSignup').addEventListener('click',()=>showScreen('signup'));
+document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.back)));
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-  const sw = document.getElementById('langSwitcher');
-  sw.classList.toggle('on-dark', id === 'welcome');
-  sw.classList.toggle('on-light', id !== 'welcome');
-}
+document.getElementById('fPhone').addEventListener('input',(e)=>{let v=e.target.value.replace(/\D/g,'');if(v.length>11)v=v.slice(0,11);if(v.length>7)v=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7);else if(v.length>3)v=v.slice(0,3)+'-'+v.slice(3);e.target.value=v});
+document.getElementById('fPassport').addEventListener('input',(e)=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)});
 
-document.getElementById('goConsent').addEventListener('click', () => showScreen('consent'));
-document.getElementById('goSignup').addEventListener('click', () => showScreen('signup'));
-document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.back)));
+document.getElementById('consentCard').addEventListener('click',()=>{consentChecked=!consentChecked;document.getElementById('consentCard').classList.toggle('checked',consentChecked);updateSignupButton()});
+document.getElementById('viewTermsLink').addEventListener('click',(e)=>{e.stopPropagation();alert('약관 전문은 추후 추가 예정입니다.\nTerms will be added later.')});
 
-document.getElementById('fPhone').addEventListener('input', (e) => {
-  let v = e.target.value.replace(/\D/g, '');
-  if (v.length > 11) v = v.slice(0, 11);
-  if (v.length > 7) v = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7);
-  else if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3);
-  e.target.value = v;
-});
-document.getElementById('fPassport').addEventListener('input', (e) => {
-  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-});
+function compressImage(blob,maxWidth=1280,quality=0.82){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=(e)=>{const img=new Image();img.onload=()=>{let{width,height}=img;if(width>maxWidth){height=height*(maxWidth/width);width=maxWidth}const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(img,0,0,width,height);canvas.toBlob(resolve,'image/jpeg',quality)};img.src=e.target.result};reader.readAsDataURL(blob)})}
 
-document.getElementById('consentCard').addEventListener('click', () => {
-  consentChecked = !consentChecked;
-  document.getElementById('consentCard').classList.toggle('checked', consentChecked);
-  updateSignupButton();
-});
-document.getElementById('viewTermsLink').addEventListener('click', (e) => {
-  e.stopPropagation();
-  alert('약관 전문은 추후 추가 예정입니다.\nTerms will be added later.');
-});
-
-function compressImage(file, maxWidth = 1280, quality = 0.8) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = height * (maxWidth / width);
-          width = maxWidth;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function handlePhoto(input, slotId, target) {
-  const file = input.files[0];
-  if (!file) return;
-  const blob = await compressImage(file);
-  const url = URL.createObjectURL(blob);
-  const slot = document.getElementById(slotId);
-  let img = slot.querySelector('img');
-  if (!img) {
-    img = document.createElement('img');
-    slot.insertBefore(img, slot.firstChild);
+// ========== 카메라 모듈 ==========
+async function openCamera(type){
+  cameraType=type;
+  cameraFacing=type==='selfie'?'user':'environment';
+  
+  // 가이드 표시
+  document.getElementById('guideDoc').style.display=type==='passport'?'block':'none';
+  document.getElementById('guideFace').style.display=type==='selfie'?'block':'none';
+  document.getElementById('cameraTip').textContent=I18N[currentLang][type==='passport'?'camTipPassport':'camTipSelfie'];
+  
+  // 모달 열기
+  document.getElementById('cameraModal').classList.add('show');
+  document.getElementById('cameraPreview').classList.remove('show');
+  document.getElementById('cameraError').classList.remove('show');
+  
+  // 카메라 시도
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: cameraFacing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    const video = document.getElementById('cameraVideo');
+    video.srcObject = cameraStream;
+    video.classList.toggle('flip', cameraFacing === 'user');
+  } catch (err) {
+    console.warn('Camera error:', err);
+    showCameraError();
   }
-  img.src = url;
+}
+
+function showCameraError(){
+  document.getElementById('cameraError').classList.add('show');
+  document.getElementById('cameraErrorText').innerHTML=I18N[currentLang].camErrorDesc;
+  document.getElementById('fallbackBtn').textContent=I18N[currentLang].camErrorBtn;
+}
+
+document.getElementById('fallbackBtn').addEventListener('click',()=>{
+  closeCamera();
+  // 폴백: 기본 file input 사용
+  const input=document.getElementById('fallbackInput');
+  input.setAttribute('capture',cameraType==='selfie'?'user':'environment');
+  input.value='';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const blob=await compressImage(file);
+    setPhoto(cameraType,blob);
+  };
+  input.click();
+});
+
+async function flipCamera(){
+  cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: cameraFacing },
+      audio: false
+    });
+    const video = document.getElementById('cameraVideo');
+    video.srcObject = cameraStream;
+    video.classList.toggle('flip', cameraFacing === 'user');
+  } catch (err) {
+    showCameraError();
+  }
+}
+
+function closeCamera(){
+  if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+  document.getElementById('cameraModal').classList.remove('show');
+}
+
+let capturedBlob=null;
+async function shootCamera(){
+  const video=document.getElementById('cameraVideo');
+  if(!video.videoWidth)return;
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d');
+  // 셀카는 좌우 반전 적용
+  if(cameraFacing==='user'){
+    ctx.scale(-1,1);
+    ctx.drawImage(video,-canvas.width,0,canvas.width,canvas.height);
+  } else {
+    ctx.drawImage(video,0,0);
+  }
+  const rawBlob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.95));
+  capturedBlob=await compressImage(rawBlob);
+  
+  // 미리보기 표시
+  const url=URL.createObjectURL(capturedBlob);
+  document.getElementById('previewImage').src=url;
+  document.getElementById('cameraPreview').classList.add('show');
+}
+
+function retakePhoto(){
+  document.getElementById('cameraPreview').classList.remove('show');
+  capturedBlob=null;
+}
+
+function confirmPhoto(){
+  if(!capturedBlob)return;
+  setPhoto(cameraType,capturedBlob);
+  closeCamera();
+}
+
+function setPhoto(type,blob){
+  const url=URL.createObjectURL(blob);
+  const slot=document.getElementById(type==='passport'?'passportSlot':'selfieSlot');
+  let img=slot.querySelector('img');
+  if(!img){img=document.createElement('img');slot.insertBefore(img,slot.firstChild)}
+  img.src=url;
   slot.classList.add('filled');
-  if (target === 'passport') passportFile = blob;
-  else selfieFile = blob;
+  if(type==='passport')passportFile=blob;else selfieFile=blob;
   updateSignupButton();
 }
 
-document.getElementById('passportInput').addEventListener('change', (e) => handlePhoto(e.target, 'passportSlot', 'passport'));
-document.getElementById('selfieInput').addEventListener('change', (e) => handlePhoto(e.target, 'selfieSlot', 'selfie'));
-
-function updateSignupButton() {
-  const btn = document.getElementById('btnSignup');
-  const name = document.getElementById('fName').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const passport = document.getElementById('fPassport').value.trim();
-  const valid = consentChecked && name && phone && passport && passportFile && selfieFile;
-  btn.disabled = !valid;
+function updateSignupButton(){
+  const btn=document.getElementById('btnSignup');
+  const name=document.getElementById('fName').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  const passport=document.getElementById('fPassport').value.trim();
+  const valid=consentChecked&&name&&phone&&passport&&passportFile&&selfieFile;
+  btn.disabled=!valid;
 }
-['fName','fPhone','fPassport','fHeight','fWeight'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateSignupButton);
-});
+['fName','fPhone','fPassport','fHeight','fWeight'].forEach(id=>{document.getElementById(id).addEventListener('input',updateSignupButton)});
 
-function showLoading(text) {
-  document.getElementById('loadingText').textContent = text;
-  document.getElementById('loading').classList.add('show');
-}
-function hideLoading() {
-  document.getElementById('loading').classList.remove('show');
-}
+function showLoading(text){document.getElementById('loadingText').textContent=text;document.getElementById('loading').classList.add('show')}
+function hideLoading(){document.getElementById('loading').classList.remove('show')}
 
-async function uploadPhoto(blob, memberId, type) {
-  const path = `${memberId}_${type}.jpg`;
-  const { data, error } = await sb.storage.from('passports').upload(path, blob, {
-    contentType: 'image/jpeg',
-    upsert: true
-  });
-  if (error) throw error;
+async function uploadPhoto(blob,memberId,type){
+  const path=`${memberId}_${type}.jpg`;
+  const{error}=await sb.storage.from('passports').upload(path,blob,{contentType:'image/jpeg',upsert:true});
+  if(error)throw error;
   return path;
 }
 
-document.getElementById('btnSignup').addEventListener('click', async () => {
-  const d = I18N[currentLang];
+document.getElementById('btnSignup').addEventListener('click',async()=>{
+  const d=I18N[currentLang];
   showLoading(d.loadingSignup);
-  
-  try {
-    const name = document.getElementById('fName').value.trim();
-    const phone = document.getElementById('fPhone').value.trim();
-    const passport_number = document.getElementById('fPassport').value.trim();
-    const country = document.getElementById('fCountry').value;
-    const height = parseInt(document.getElementById('fHeight').value) || null;
-    const weight = parseInt(document.getElementById('fWeight').value) || null;
+  try{
+    const name=document.getElementById('fName').value.trim();
+    const phone=document.getElementById('fPhone').value.trim();
+    const passport_number=document.getElementById('fPassport').value.trim();
+    const country=document.getElementById('fCountry').value;
+    const height=parseInt(document.getElementById('fHeight').value)||null;
+    const weight=parseInt(document.getElementById('fWeight').value)||null;
     
-    const { data: member, error: memberErr } = await sb.from('members').insert({
-      name, phone, passport_number, country, language: currentLang,
-      height_cm: height, weight_kg: weight,
-      consent_at: new Date().toISOString()
-    }).select().single();
-    
-    if (memberErr) {
-      if (memberErr.code === '23505') {
-        alert('이미 등록된 전화번호입니다.\nPhone already registered.');
-      } else {
-        throw memberErr;
-      }
-      hideLoading();
-      return;
+    const{data:member,error:memberErr}=await sb.from('members').insert({name,phone,passport_number,country,language:currentLang,height_cm:height,weight_kg:weight,consent_at:new Date().toISOString()}).select().single();
+    if(memberErr){
+      if(memberErr.code==='23505')alert('이미 등록된 전화번호입니다.\nPhone already registered.');
+      else throw memberErr;
+      hideLoading();return;
     }
-    
     showLoading(d.loadingPhoto);
-    const passportPath = await uploadPhoto(passportFile, member.id, 'passport');
-    const selfiePath = await uploadPhoto(selfieFile, member.id, 'selfie');
+    const passportPath=await uploadPhoto(passportFile,member.id,'passport');
+    const selfiePath=await uploadPhoto(selfieFile,member.id,'selfie');
+    await sb.from('members').update({passport_photo_url:passportPath,selfie_photo_url:selfiePath}).eq('id',member.id);
     
-    await sb.from('members').update({
-      passport_photo_url: passportPath,
-      selfie_photo_url: selfiePath
-    }).eq('id', member.id);
+    localStorage.setItem('hands_member_id',member.id);
+    localStorage.setItem('hands_member_name',member.name);
     
-    localStorage.setItem('hands_member_id', member.id);
-    localStorage.setItem('hands_member_name', member.name);
-    localStorage.setItem('hands_member_country', member.country);
-    
-    currentMember = member;
+    currentMember=member;
     hideLoading();
     enterMain();
     startLocationTracking();
-    
-  } catch (err) {
-    console.error('가입 실패:', err);
-    alert('가입 실패: ' + (err.message || '알 수 없는 오류'));
+  }catch(err){
+    console.error('가입 실패:',err);
+    alert('가입 실패: '+(err.message||'알 수 없는 오류'));
     hideLoading();
   }
 });
 
-function enterMain() {
-  document.getElementById('greetName').textContent = currentMember.name;
-  const countryNames = {
-    vn:'🇻🇳 Vietnam',th:'🇹🇭 Thailand',id:'🇮🇩 Indonesia',ph:'🇵🇭 Philippines',
-    np:'🇳🇵 Nepal',kh:'🇰🇭 Cambodia',mm:'🇲🇲 Myanmar',lk:'🇱🇰 Sri Lanka',bd:'🇧🇩 Bangladesh',other:'—'
-  };
-  document.getElementById('metaCountry').textContent = countryNames[currentMember.country] || currentMember.country;
+function enterMain(){
+  document.getElementById('greetName').textContent=currentMember.name;
+  const cn={vn:'🇻🇳 Vietnam',th:'🇹🇭 Thailand',id:'🇮🇩 Indonesia',ph:'🇵🇭 Philippines',np:'🇳🇵 Nepal',kh:'🇰🇭 Cambodia',mm:'🇲🇲 Myanmar',lk:'🇱🇰 Sri Lanka',bd:'🇧🇩 Bangladesh',other:'—'};
+  document.getElementById('metaCountry').textContent=cn[currentMember.country]||currentMember.country;
   showScreen('main');
 }
 
-function startLocationTracking() {
-  if (!('geolocation' in navigator)) return;
-  
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-  }, (err) => console.warn('위치 거부:', err));
-  
-  watchPositionId = navigator.geolocation.watchPosition(async (pos) => {
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-  }, (err) => console.warn('위치 추적 오류:', err), {
-    enableHighAccuracy: true,
-    maximumAge: 5000,
-    timeout: 15000
-  });
+function startLocationTracking(){
+  if(!('geolocation' in navigator))return;
+  navigator.geolocation.getCurrentPosition(async(pos)=>{await saveLocation(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy)},(err)=>console.warn('위치 거부:',err));
+  watchPositionId=navigator.geolocation.watchPosition(async(pos)=>{await saveLocation(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy)},(err)=>console.warn('위치 추적 오류:',err),{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
 }
 
-async function saveLocation(lat, lng, accuracy) {
-  if (!currentMember) return;
-  await sb.from('locations').upsert({
-    member_id: currentMember.id,
-    lat, lng,
-    accuracy: Math.round(accuracy || 0),
-    updated_at: new Date().toISOString()
-  });
+async function saveLocation(lat,lng,accuracy){
+  if(!currentMember)return;
+  await sb.from('locations').upsert({member_id:currentMember.id,lat,lng,accuracy:Math.round(accuracy||0),updated_at:new Date().toISOString()});
 }
 
-async function sendSOS() {
-  if (!currentMember) return;
-  if (!confirm('관리자에게 긴급 도움을 요청합니다. 진행하시겠습니까?\nSend SOS to admin?')) return;
-  
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    await sb.from('sos_alerts').insert({
-      member_id: currentMember.id,
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude
-    });
-    alert('SOS 전송 완료! 관리자가 곧 연락드립니다.\nSOS sent! Admin will contact you soon.');
-  }, () => alert('위치 정보 없이 SOS 전송 불가\nLocation required for SOS'));
+async function sendSOS(){
+  if(!currentMember)return;
+  if(!confirm('관리자에게 긴급 도움을 요청합니다. 진행하시겠습니까?\nSend SOS to admin?'))return;
+  navigator.geolocation.getCurrentPosition(async(pos)=>{
+    await sb.from('sos_alerts').insert({member_id:currentMember.id,lat:pos.coords.latitude,lng:pos.coords.longitude});
+    alert('SOS 전송 완료! 관리자가 곧 연락드립니다.');
+  },()=>alert('위치 정보 없이 SOS 전송 불가'));
 }
 
-async function logout() {
-  if (!confirm('로그아웃 하시겠습니까?\nLog out?')) return;
-  if (watchPositionId) navigator.geolocation.clearWatch(watchPositionId);
+async function logout(){
+  if(!confirm('로그아웃 하시겠습니까?'))return;
+  if(watchPositionId)navigator.geolocation.clearWatch(watchPositionId);
   localStorage.removeItem('hands_member_id');
   localStorage.removeItem('hands_member_name');
-  localStorage.removeItem('hands_member_country');
-  currentMember = null;
+  currentMember=null;
   location.reload();
 }
 
-function showMain() { showScreen('main'); }
-function showBoard() {
-  showScreen('board');
-  loadPosts();
-}
-function showWrite() { showScreen('post-write'); }
+function showMain(){showScreen('main')}
+function showBoard(){showScreen('board');loadPosts()}
+function showWrite(){showScreen('post-write')}
 
-async function loadPosts() {
-  const { data: posts, error } = await sb.from('posts')
-    .select('*, members(name, country)')
-    .order('created_at', { ascending: false })
-    .limit(50);
-  
-  const list = document.getElementById('postList');
-  if (error || !posts || posts.length === 0) {
-    list.innerHTML = `<div class="post-empty" data-i="postEmpty">${I18N[currentLang].postEmpty}</div>`;
-    return;
-  }
-  
-  const catLabels = { general:I18N[currentLang].catGeneral, question:I18N[currentLang].catQuestion, tip:I18N[currentLang].catTip, event:I18N[currentLang].catEvent };
-  
-  list.innerHTML = posts.map(p => {
-    const time = new Date(p.created_at);
-    const ago = timeAgo(time);
-    const author = p.members?.name || '—';
-    return `
-      <div class="post-card">
-        <div class="post-cat ${p.category}">${catLabels[p.category] || p.category}</div>
-        <div class="post-title">${escapeHtml(p.title)}</div>
-        <div class="post-body">${escapeHtml(p.body)}</div>
-        <div class="post-meta"><span>${escapeHtml(author)}</span><span>·</span><span>${ago}</span></div>
-      </div>
-    `;
+async function loadPosts(){
+  const{data:posts,error}=await sb.from('posts').select('*, members(name, country)').order('created_at',{ascending:false}).limit(50);
+  const list=document.getElementById('postList');
+  if(error||!posts||posts.length===0){list.innerHTML=`<div class="post-empty">${I18N[currentLang].postEmpty}</div>`;return}
+  const cl={general:I18N[currentLang].catGeneral,question:I18N[currentLang].catQuestion,tip:I18N[currentLang].catTip,event:I18N[currentLang].catEvent};
+  list.innerHTML=posts.map(p=>{
+    const ago=timeAgo(new Date(p.created_at));
+    const author=p.members?.name||'—';
+    return`<div class="post-card"><div class="post-cat ${p.category}">${cl[p.category]||p.category}</div><div class="post-title">${escapeHtml(p.title)}</div><div class="post-body">${escapeHtml(p.body)}</div><div class="post-meta"><span>${escapeHtml(author)}</span><span>·</span><span>${ago}</span></div></div>`;
   }).join('');
 }
 
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function timeAgo(d){const sec=Math.floor((Date.now()-d.getTime())/1000);if(sec<60)return'방금';if(sec<3600)return Math.floor(sec/60)+'분 전';if(sec<86400)return Math.floor(sec/3600)+'시간 전';return Math.floor(sec/86400)+'일 전'}
 
-function timeAgo(date) {
-  const sec = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (sec < 60) return '방금';
-  if (sec < 3600) return Math.floor(sec/60) + '분 전';
-  if (sec < 86400) return Math.floor(sec/3600) + '시간 전';
-  return Math.floor(sec/86400) + '일 전';
-}
+document.querySelectorAll('.cat-pill').forEach(p=>{p.addEventListener('click',()=>{document.querySelectorAll('.cat-pill').forEach(x=>x.classList.remove('active'));p.classList.add('active');currentCategory=p.dataset.cat})});
 
-document.querySelectorAll('.cat-pill').forEach(p => {
-  p.addEventListener('click', () => {
-    document.querySelectorAll('.cat-pill').forEach(x => x.classList.remove('active'));
-    p.classList.add('active');
-    currentCategory = p.dataset.cat;
-  });
-});
-
-document.getElementById('btnPost').addEventListener('click', async () => {
-  const title = document.getElementById('postTitle').value.trim();
-  const body = document.getElementById('postBody').value.trim();
-  if (!title || !body) { alert('제목과 내용을 입력하세요'); return; }
-  if (!currentMember) { alert('로그인 필요'); return; }
-  
+document.getElementById('btnPost').addEventListener('click',async()=>{
+  const title=document.getElementById('postTitle').value.trim();
+  const body=document.getElementById('postBody').value.trim();
+  if(!title||!body){alert('제목과 내용을 입력하세요');return}
+  if(!currentMember){alert('로그인 필요');return}
   showLoading(I18N[currentLang].loadingPost);
-  try {
-    await sb.from('posts').insert({
-      author_id: currentMember.id,
-      category: currentCategory,
-      title, body,
-      body_lang: currentLang
-    });
-    document.getElementById('postTitle').value = '';
-    document.getElementById('postBody').value = '';
+  try{
+    await sb.from('posts').insert({author_id:currentMember.id,category:currentCategory,title,body,body_lang:currentLang});
+    document.getElementById('postTitle').value='';
+    document.getElementById('postBody').value='';
     hideLoading();
     showBoard();
-  } catch (err) {
-    hideLoading();
-    alert('게시 실패: ' + err.message);
-  }
+  }catch(err){hideLoading();alert('게시 실패: '+err.message)}
 });
 
-async function tryAutoLogin() {
-  const memberId = localStorage.getItem('hands_member_id');
-  if (!memberId) return false;
-  
-  const { data, error } = await sb.from('members').select('*').eq('id', memberId).single();
-  if (error || !data) {
-    localStorage.removeItem('hands_member_id');
-    return false;
-  }
-  
-  await sb.from('members').update({ last_login_at: new Date().toISOString() }).eq('id', memberId);
-  
-  currentMember = data;
+async function tryAutoLogin(){
+  const memberId=localStorage.getItem('hands_member_id');
+  if(!memberId)return false;
+  const{data,error}=await sb.from('members').select('*').eq('id',memberId).single();
+  if(error||!data){localStorage.removeItem('hands_member_id');return false}
+  await sb.from('members').update({last_login_at:new Date().toISOString()}).eq('id',memberId);
+  currentMember=data;
   enterMain();
   startLocationTracking();
   return true;
 }
 
-(async () => {
-  applyLang();
-  await tryAutoLogin();
-})();
+(async()=>{applyLang();await tryAutoLogin()})();
 </script>
 
 </body>
