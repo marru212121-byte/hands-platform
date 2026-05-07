@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HANDS Admin · 관리자 콘솔</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+:root {
+  --teal-50:#e8f3f1;--teal-500:#1f7a6e;--teal-700:#114841;
+  --orange-500:#e87b35;
+  --rose-100:#ffe1e1;--rose-500:#d04848;
+  --green-500:#3a9b6e;
+  --sand-50:#faf6f1;--sand-200:#e8ddcd;
+  --ink-900:#0f1f1d;--ink-700:#1a3633;--ink-500:#4a6260;--ink-400:#6f8682;--ink-300:#9aaba8;--ink-200:#c4cfcd;
+  --display:'Manrope','Pretendard',system-ui,sans-serif;
+  --body:'Pretendard','Manrope',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:#f0eee8;color:var(--ink-900);font-weight:400;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input{font-family:inherit;color:inherit}
+input:focus{outline:none}
+
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(165deg,#114841 0%,#1f7a6e 60%,#2d8d7b 100%)}
+.login-box{background:white;border-radius:24px;padding:40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.login-logo-mark{width:40px;height:40px;background:var(--teal-500);border-radius:12px;display:grid;place-items:center;color:white;font-size:20px}
+.login-logo-name{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-0.02em}
+.login-logo-tag{font-size:10px;color:var(--ink-400);letter-spacing:0.1em;font-weight:600;margin-top:2px}
+.login-title{font-family:var(--display);font-weight:800;font-size:24px;margin-bottom:6px;letter-spacing:-0.02em}
+.login-sub{font-size:13px;color:var(--ink-500);margin-bottom:24px}
+.field-group{margin-bottom:14px}
+.field-label{display:block;font-size:11px;font-weight:700;color:var(--ink-700);margin-bottom:6px;letter-spacing:0.02em}
+.field-input{width:100%;background:#fafafa;border:1.5px solid var(--sand-200);border-radius:12px;padding:14px;font-size:14px}
+.field-input:focus{border-color:var(--teal-500);background:white}
+.cta-primary{width:100%;padding:16px;background:var(--teal-500);color:white;border-radius:12px;font-weight:800;font-size:14px;margin-top:8px;box-shadow:0 6px 18px rgba(31,122,110,0.25)}
+.cta-primary:disabled{background:var(--ink-200);box-shadow:none}
+.error-msg{font-size:12px;color:var(--rose-500);margin-top:8px;display:none}
+.error-msg.show{display:block}
+
+.dashboard{display:none;min-height:100vh}
+.dashboard.show{display:flex}
+.sidebar{width:240px;background:white;padding:24px 16px;border-right:1px solid var(--sand-200);min-height:100vh;flex-shrink:0}
+.side-logo{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px}
+.side-logo-mark{width:32px;height:32px;background:var(--teal-500);border-radius:8px;display:grid;place-items:center;color:white;font-size:16px}
+.side-logo-name{font-family:var(--display);font-weight:800;font-size:14px}
+.side-menu-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer;margin-bottom:4px;transition:all 0.15s}
+.side-menu-item:hover{background:var(--sand-50)}
+.side-menu-item.active{background:var(--teal-500);color:white}
+.side-menu-item .badge{margin-left:auto;background:var(--rose-500);color:white;font-size:10px;padding:1px 6px;border-radius:999px;font-weight:700;display:none}
+.side-menu-item .badge.show{display:inline-block}
+.side-bottom{margin-top:auto;padding-top:24px}
+.side-user{font-size:12px;color:var(--ink-500);padding:0 14px;margin-bottom:8px}
+.side-logout{font-size:12px;color:var(--rose-500);padding:8px 14px;cursor:pointer;font-weight:600}
+
+.main{flex:1;padding:24px 32px;overflow-y:auto}
+.page-title{font-family:var(--display);font-size:28px;font-weight:800;margin-bottom:6px;letter-spacing:-0.025em}
+.page-sub{font-size:13px;color:var(--ink-500);margin-bottom:24px}
+.page{display:none}
+.page.active{display:block}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:white;border-radius:14px;padding:18px;border:1px solid var(--sand-200)}
+.stat-label{font-size:11px;font-weight:700;color:var(--ink-400);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px}
+.stat-value{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-0.02em}
+.stat-detail{font-size:11px;color:var(--ink-500);margin-top:4px}
+.stat-card.urgent{background:linear-gradient(135deg,#ff6b6b 0%,#d04848 100%);color:white;border:none}
+.stat-card.urgent .stat-label{color:rgba(255,255,255,0.8)}
+.stat-card.urgent .stat-detail{color:rgba(255,255,255,0.85)}
+
+.section-card{background:white;border-radius:14px;padding:0;border:1px solid var(--sand-200);overflow:hidden;margin-bottom:24px}
+.section-head{padding:18px 22px;border-bottom:1px solid var(--sand-200);display:flex;justify-content:space-between;align-items:center}
+.section-title{font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-0.02em}
+.section-action{font-size:12px;color:var(--teal-500);font-weight:700;cursor:pointer}
+.section-body{padding:0}
+
+.member-row{display:grid;grid-template-columns:60px 1.5fr 1fr 1fr 1fr 80px;gap:16px;padding:14px 22px;align-items:center;border-bottom:1px solid var(--sand-200);font-size:13px}
+.member-row:hover{background:var(--sand-50)}
+.member-row:last-child{border-bottom:none}
+.member-row.head{background:#fafafa;font-size:11px;font-weight:700;color:var(--ink-400);letter-spacing:0.05em;text-transform:uppercase;cursor:default}
+.member-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700}
+.status-dot{width:7px;height:7px;border-radius:50%}
+.status-dot.online{background:var(--green-500);box-shadow:0 0 8px var(--green-500)}
+.status-dot.recent{background:#f5a623}
+.status-dot.offline{background:var(--ink-300)}
+.member-name{font-weight:700}
+.member-meta{font-size:11px;color:var(--ink-500)}
+.icon-btn{padding:6px 12px;background:var(--sand-50);border-radius:8px;font-size:11px;font-weight:700;color:var(--ink-700)}
+
+.sos-card{background:linear-gradient(135deg,#fff5f5 0%,#ffe1e1 100%);border-radius:14px;padding:16px 18px;margin-bottom:10px;border-left:4px solid var(--rose-500);display:flex;justify-content:space-between;align-items:center}
+.sos-info-name{font-weight:800;font-size:14px;color:var(--rose-700);margin-bottom:2px}
+.sos-info-time{font-size:11px;color:var(--ink-500)}
+.sos-resolve{padding:8px 16px;background:white;border-radius:8px;font-size:12px;font-weight:700;color:var(--rose-500)}
+
+.empty-state{padding:60px 24px;text-align:center;color:var(--ink-400);font-size:13px}
+
+.detail-modal{position:fixed;inset:0;background:rgba(15,31,29,0.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.detail-modal.show{display:flex}
+.detail-content{background:white;border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:24px}
+.detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.detail-name{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px}
+.detail-meta{font-size:12px;color:var(--ink-500)}
+.detail-close{width:32px;height:32px;border-radius:50%;background:var(--sand-50);display:grid;place-items:center;font-size:14px;cursor:pointer}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.detail-item{padding:12px 14px;background:var(--sand-50);border-radius:10px}
+.detail-item-label{font-size:10px;font-weight:700;color:var(--ink-400);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px}
+.detail-item-value{font-size:13px;font-weight:700}
+.detail-photos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.detail-photo{aspect-ratio:1;background:var(--sand-50);border-radius:10px;overflow:hidden;position:relative}
+.detail-photo img{width:100%;height:100%;object-fit:cover}
+.detail-photo-label{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:700}
+.detail-loc{padding:14px;background:var(--teal-50);border-radius:10px;font-size:12px}
+.detail-loc-coord{font-family:'Manrope',monospace;font-size:14px;font-weight:700;color:var(--teal-700);margin-top:4px}
+
+.post-row{padding:16px 22px;border-bottom:1px solid var(--sand-200)}
+.post-row:hover{background:var(--sand-50)}
+.post-row:last-child{border-bottom:none}
+.post-cat{display:inline-block;background:var(--teal-50);color:var(--teal-700);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-bottom:6px}
+.post-cat.question{background:#fff2e6;color:var(--orange-500)}
+.post-cat.tip{background:#e8f0ff;color:#3050a0}
+.post-cat.event{background:var(--rose-100);color:var(--rose-500)}
+.post-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.post-body-text{font-size:12px;color:var(--ink-500);line-height:1.5;margin-bottom:6px}
+.post-meta{font-size:11px;color:var(--ink-400);display:flex;gap:8px;align-items:center}
+.post-delete{margin-left:auto;color:var(--rose-500);font-size:11px;font-weight:700;cursor:pointer}
+
+@media (max-width: 768px) {
+  .sidebar{width:100%;min-height:auto;padding:16px}
+  .dashboard.show{flex-direction:column}
+  .main{padding:20px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .member-row{grid-template-columns:1fr;gap:6px;padding:14px}
+  .member-row.head{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark">✋</div>
+      <div>
+        <div class="login-logo-name">HANDS Admin</div>
+        <div class="login-logo-tag">관리자 콘솔</div>
+      </div>
+    </div>
+    <h1 class="login-title">로그인</h1>
+    <p class="login-sub">관리자 계정으로 접속하세요</p>
+    <div class="field-group">
+      <label class="field-label">이메일</label>
+      <input type="email" class="field-input" id="loginEmail" placeholder="admin@example.com">
+    </div>
+    <div class="field-group">
+      <label class="field-label">비밀번호</label>
+      <input type="password" class="field-input" id="loginPassword">
+    </div>
+    <button class="cta-primary" id="loginBtn">로그인</button>
+    <div class="error-msg" id="loginError">이메일 또는 비밀번호가 일치하지 않습니다</div>
+  </div>
+</div>
+
+<div class="dashboard" id="dashboard">
+  <aside class="sidebar">
+    <div class="side-logo">
+      <div class="side-logo-mark">✋</div>
+      <div>
+        <div class="side-logo-name">HANDS</div>
+        <div class="login-logo-tag">ADMIN</div>
+      </div>
+    </div>
+    <div class="side-menu-item active" data-page="overview">
+      <span>📊</span><span>대시보드</span>
+    </div>
+    <div class="side-menu-item" data-page="members">
+      <span>👥</span><span>회원 목록</span>
+    </div>
+    <div class="side-menu-item" data-page="sos">
+      <span>🆘</span><span>SOS 알림</span>
+      <span class="badge" id="sosBadge">0</span>
+    </div>
+    <div class="side-menu-item" data-page="board">
+      <span>📝</span><span>게시판</span>
+    </div>
+    <div class="side-bottom">
+      <div class="side-user" id="adminEmail">—</div>
+      <div class="side-logout" onclick="adminLogout()">로그아웃</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page active" id="page-overview">
+      <h1 class="page-title">대시보드</h1>
+      <p class="page-sub">전체 회원 현황과 안전 모니터링</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">총 회원</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-detail" id="statNew">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">접속 중</div>
+          <div class="stat-value" id="statOnline">—</div>
+          <div class="stat-detail">최근 5분 이내</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">잠적 의심</div>
+          <div class="stat-value" id="statSilent">—</div>
+          <div class="stat-detail">7일+ 미접속</div>
+        </div>
+        <div class="stat-card urgent">
+          <div class="stat-label">SOS 대기</div>
+          <div class="stat-value" id="statSOS">—</div>
+          <div class="stat-detail">즉시 처리 필요</div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-head">
+          <div class="section-title">최근 가입자</div>
+          <div class="section-action" onclick="goToPage('members')">전체보기 →</div>
+        </div>
+        <div class="section-body" id="recentMembers">
+          <div class="empty-state">로딩 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-members">
+      <h1 class="page-title">회원 목록</h1>
+      <p class="page-sub">전체 등록 회원과 위치 정보</p>
+      <div class="section-card">
+        <div class="section-body" id="membersList">
+          <div class="empty-state">로딩 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-sos">
+      <h1 class="page-title">SOS 알림</h1>
+      <p class="page-sub">긴급 도움 요청 처리</p>
+      <div id="sosList">
+        <div class="empty-state">로딩 중...</div>
+      </div>
+    </div>
+
+    <div class="page" id="page-board">
+      <h1 class="page-title">게시판 관리</h1>
+      <p class="page-sub">회원이 작성한 게시글</p>
+      <div class="section-card">
+        <div class="section-body" id="postsList">
+          <div class="empty-state">로딩 중...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="detail-modal" id="memberDetail">
+  <div class="detail-content" id="detailContent">
+    <!-- 동적 -->
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://wcugfateeuqfcpimoogo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdWdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjM5MTAsImV4cCI6MjA5MzY5OTkxMH0.gYMs71Q0c591W5vZ049HzpKcD2ZICsCLt6-rRCsYbJc';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentAdmin = null;
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.remove('show');
+  
+  const { data, error } = await sb.from('admin_users')
+    .select('*').eq('email', email).eq('password', password).eq('is_active', true).maybeSingle();
+  
+  if (error || !data) {
+    errEl.classList.add('show');
+    return;
+  }
+  
+  currentAdmin = data;
+  localStorage.setItem('hands_admin_id', data.id);
+  localStorage.setItem('hands_admin_email', data.email);
+  await sb.from('admin_users').update({ last_login_at: new Date().toISOString() }).eq('id', data.id);
+  enterDashboard();
+});
+
+document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+function adminLogout() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  localStorage.removeItem('hands_admin_id');
+  localStorage.removeItem('hands_admin_email');
+  location.reload();
+}
+
+function enterDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').classList.add('show');
+  document.getElementById('adminEmail').textContent = currentAdmin.email;
+  loadOverview();
+  subscribeRealtime();
+}
+
+document.querySelectorAll('.side-menu-item').forEach(item => {
+  item.addEventListener('click', () => goToPage(item.dataset.page));
+});
+
+function goToPage(page) {
+  document.querySelectorAll('.side-menu-item').forEach(i => i.classList.toggle('active', i.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'members') loadMembers();
+  if (page === 'sos') loadSOS();
+  if (page === 'board') loadPosts();
+  if (page === 'overview') loadOverview();
+}
+
+function timeAgo(d) {
+  const sec = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+  if (sec < 60) return '방금';
+  if (sec < 3600) return Math.floor(sec/60) + '분 전';
+  if (sec < 86400) return Math.floor(sec/3600) + '시간 전';
+  return Math.floor(sec/86400) + '일 전';
+}
+
+function getStatus(updated_at) {
+  if (!updated_at) return { dot: 'offline', label: '미접속' };
+  const sec = (Date.now() - new Date(updated_at).getTime()) / 1000;
+  if (sec < 300) return { dot: 'online', label: '접속중' };
+  if (sec < 3600) return { dot: 'recent', label: '최근접속' };
+  return { dot: 'offline', label: timeAgo(updated_at) };
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadOverview() {
+  const { count: totalCount } = await sb.from('members').select('*', { count: 'exact', head: true });
+  const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { count: newCount } = await sb.from('members').select('*', { count: 'exact', head: true }).gte('created_at', since24h);
+  
+  const { data: locs } = await sb.from('locations').select('member_id, updated_at');
+  let onlineCount = 0;
+  let silentCount = 0;
+  if (locs) {
+    locs.forEach(l => {
+      const sec = (Date.now() - new Date(l.updated_at).getTime()) / 1000;
+      if (sec < 300) onlineCount++;
+      if (sec > 7 * 86400) silentCount++;
+    });
+  }
+  
+  const { count: sosCount } = await sb.from('sos_alerts').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+  
+  document.getElementById('statTotal').textContent = totalCount || 0;
+  document.getElementById('statNew').textContent = `+${newCount || 0} 24시간`;
+  document.getElementById('statOnline').textContent = onlineCount;
+  document.getElementById('statSilent').textContent = silentCount;
+  document.getElementById('statSOS').textContent = sosCount || 0;
+  
+  const sosBadge = document.getElementById('sosBadge');
+  sosBadge.textContent = sosCount || 0;
+  sosBadge.classList.toggle('show', (sosCount || 0) > 0);
+  
+  const { data: recent } = await sb.from('members')
+    .select('*, locations(updated_at)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+  
+  const recentEl = document.getElementById('recentMembers');
+  if (!recent || recent.length === 0) {
+    recentEl.innerHTML = '<div class="empty-state">아직 가입자가 없습니다</div>';
+    return;
+  }
+  
+  let html = '<div class="member-row head"><div></div><div>이름</div><div>국적</div><div>전화</div><div>상태</div><div></div></div>';
+  recent.forEach(m => {
+    const status = getStatus(m.locations?.updated_at);
+    const country = ({vn:'🇻🇳',th:'🇹🇭',id:'🇮🇩',ph:'🇵🇭',np:'🇳🇵',kh:'🇰🇭',mm:'🇲🇲',lk:'🇱🇰',bd:'🇧🇩'})[m.country] || '';
+    html += `
+      <div class="member-row" onclick="showMemberDetail('${m.id}')">
+        <div style="font-size:20px">${country}</div>
+        <div><div class="member-name">${escapeHtml(m.name)}</div><div class="member-meta">${escapeHtml(m.passport_number)}</div></div>
+        <div class="member-meta">${escapeHtml(m.country)}</div>
+        <div class="member-meta">${escapeHtml(m.phone)}</div>
+        <div class="member-status"><span class="status-dot ${status.dot}"></span>${status.label}</div>
+        <div><button class="icon-btn">상세</button></div>
+      </div>
+    `;
+  });
+  recentEl.innerHTML = html;
+}
+
+async function loadMembers() {
+  const { data: members } = await sb.from('members')
+    .select('*, locations(lat, lng, updated_at)')
+    .order('created_at', { ascending: false });
+  
+  const list = document.getElementById('membersList');
+  if (!members || members.length === 0) {
+    list.innerHTML = '<div class="empty-state">등록된 회원이 없습니다</div>';
+    return;
+  }
+  
+  let html = '<div class="member-row head"><div></div><div>이름</div><div>국적</div><div>전화</div><div>상태</div><div></div></div>';
+  members.forEach(m => {
+    const status = getStatus(m.locations?.updated_at);
+    const country = ({vn:'🇻🇳',th:'🇹🇭',id:'🇮🇩',ph:'🇵🇭',np:'🇳🇵',kh:'🇰🇭',mm:'🇲🇲',lk:'🇱🇰',bd:'🇧🇩'})[m.country] || '🌍';
+    html += `
+      <div class="member-row" onclick="showMemberDetail('${m.id}')">
+        <div style="font-size:20px">${country}</div>
+        <div><div class="member-name">${escapeHtml(m.name)}</div><div class="member-meta">${escapeHtml(m.passport_number)}</div></div>
+        <div class="member-meta">${escapeHtml(m.country)}</div>
+        <div class="member-meta">${escapeHtml(m.phone)}</div>
+        <div class="member-status"><span class="status-dot ${status.dot}"></span>${status.label}</div>
+        <div><button class="icon-btn">상세</button></div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+async function showMemberDetail(memberId) {
+  const { data: m } = await sb.from('members').select('*, locations(*)').eq('id', memberId).single();
+  if (!m) return;
+  
+  let passportImg = '<div style="display:grid;place-items:center;height:100%;color:var(--ink-300);font-size:11px">사진 없음</div>';
+  let selfieImg = '<div style="display:grid;place-items:center;height:100%;color:var(--ink-300);font-size:11px">사진 없음</div>';
+  
+  if (m.passport_photo_url) {
+    const { data } = sb.storage.from('passports').getPublicUrl(m.passport_photo_url);
+    passportImg = `<img src="${data.publicUrl}" alt="여권">`;
+  }
+  if (m.selfie_photo_url) {
+    const { data } = sb.storage.from('passports').getPublicUrl(m.selfie_photo_url);
+    selfieImg = `<img src="${data.publicUrl}" alt="셀카">`;
+  }
+  
+  const loc = m.locations;
+  const locDisplay = loc 
+    ? `<div class="detail-loc">
+         <div style="font-size:11px;color:var(--ink-500)">마지막 위치</div>
+         <div class="detail-loc-coord">${loc.lat?.toFixed(5)}, ${loc.lng?.toFixed(5)}</div>
+         <div style="font-size:11px;color:var(--ink-500);margin-top:4px">${timeAgo(loc.updated_at)} · 정확도 ±${loc.accuracy}m</div>
+         <a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank" style="display:inline-block;margin-top:8px;font-size:11px;color:var(--teal-500);font-weight:700">Google Maps에서 보기 →</a>
+       </div>`
+    : '<div class="detail-loc" style="color:var(--ink-400)">위치 정보 없음</div>';
+  
+  const country = ({vn:'🇻🇳 Vietnam',th:'🇹🇭 Thailand',id:'🇮🇩 Indonesia',ph:'🇵🇭 Philippines',np:'🇳🇵 Nepal',kh:'🇰🇭 Cambodia',mm:'🇲🇲 Myanmar',lk:'🇱🇰 Sri Lanka',bd:'🇧🇩 Bangladesh'})[m.country] || m.country;
+  
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-head">
+      <div>
+        <div class="detail-name">${escapeHtml(m.name)}</div>
+        <div class="detail-meta">${country} · ${escapeHtml(m.passport_number)}</div>
+      </div>
+      <div class="detail-close" onclick="closeMemberDetail()">✕</div>
+    </div>
+    <div class="detail-photos">
+      <div class="detail-photo"><div class="detail-photo-label">여권</div>${passportImg}</div>
+      <div class="detail-photo"><div class="detail-photo-label">셀카</div>${selfieImg}</div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-item-label">전화</div><div class="detail-item-value">${escapeHtml(m.phone)}</div></div>
+      <div class="detail-item"><div class="detail-item-label">언어</div><div class="detail-item-value">${m.language?.toUpperCase() || '—'}</div></div>
+      <div class="detail-item"><div class="detail-item-label">키</div><div class="detail-item-value">${m.height_cm || '—'} cm</div></div>
+      <div class="detail-item"><div class="detail-item-label">몸무게</div><div class="detail-item-value">${m.weight_kg || '—'} kg</div></div>
+      <div class="detail-item"><div class="detail-item-label">가입일</div><div class="detail-item-value">${new Date(m.created_at).toLocaleDateString('ko')}</div></div>
+      <div class="detail-item"><div class="detail-item-label">최종 접속</div><div class="detail-item-value">${m.last_login_at ? timeAgo(m.last_login_at) : '—'}</div></div>
+    </div>
+    ${locDisplay}
+  `;
+  document.getElementById('memberDetail').classList.add('show');
+}
+
+function closeMemberDetail() {
+  document.getElementById('memberDetail').classList.remove('show');
+}
+
+document.getElementById('memberDetail').addEventListener('click', (e) => {
+  if (e.target.id === 'memberDetail') closeMemberDetail();
+});
+
+async function loadSOS() {
+  const { data: sos } = await sb.from('sos_alerts')
+    .select('*, members(name, country, phone)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  
+  const list = document.getElementById('sosList');
+  if (!sos || sos.length === 0) {
+    list.innerHTML = '<div class="empty-state">대기 중인 SOS 알림이 없습니다</div>';
+    return;
+  }
+  
+  list.innerHTML = sos.map(s => {
+    const country = ({vn:'🇻🇳',th:'🇹🇭',id:'🇮🇩',ph:'🇵🇭',np:'🇳🇵',kh:'🇰🇭',mm:'🇲🇲',lk:'🇱🇰',bd:'🇧🇩'})[s.members?.country] || '';
+    return `
+      <div class="sos-card">
+        <div>
+          <div class="sos-info-name">${country} ${escapeHtml(s.members?.name || '—')}</div>
+          <div class="sos-info-time">${timeAgo(s.created_at)} · ${escapeHtml(s.members?.phone || '')}</div>
+          <div style="font-size:11px;color:var(--ink-500);margin-top:4px"><a href="https://www.google.com/maps?q=${s.lat},${s.lng}" target="_blank" style="color:var(--rose-500);font-weight:700">📍 위치 보기 (${s.lat.toFixed(4)}, ${s.lng.toFixed(4)})</a></div>
+        </div>
+        <button class="sos-resolve" onclick="resolveSOS('${s.id}')">처리완료</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function resolveSOS(id) {
+  if (!confirm('이 SOS 알림을 처리완료로 표시할까요?')) return;
+  await sb.from('sos_alerts').update({ status: 'resolved', resolved_at: new Date().toISOString() }).eq('id', id);
+  loadSOS();
+  loadOverview();
+}
+
+async function loadPosts() {
+  const { data: posts } = await sb.from('posts')
+    .select('*, members(name, country)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  
+  const list = document.getElementById('postsList');
+  if (!posts || posts.length === 0) {
+    list.innerHTML = '<div class="empty-state">아직 게시글이 없습니다</div>';
+    return;
+  }
+  
+  const catLabels = { general:'일반', question:'질문', tip:'꿀팁', event:'행사' };
+  list.innerHTML = posts.map(p => `
+    <div class="post-row">
+      <div class="post-cat ${p.category}">${catLabels[p.category] || p.category}</div>
+      <div class="post-title">${escapeHtml(p.title)}</div>
+      <div class="post-body-text">${escapeHtml(p.body)}</div>
+      <div class="post-meta">
+        <span>${escapeHtml(p.members?.name || '—')}</span>
+        <span>·</span>
+        <span>${timeAgo(p.created_at)}</span>
+        <span class="post-delete" onclick="deletePost('${p.id}')">삭제</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function deletePost(id) {
+  if (!confirm('이 게시글을 삭제할까요?')) return;
+  await sb.from('posts').delete().eq('id', id);
+  loadPosts();
+}
+
+function subscribeRealtime() {
+  sb.channel('admin-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sos_alerts' }, () => {
+      loadOverview();
+      const activePage = document.querySelector('.page.active').id;
+      if (activePage === 'page-sos') loadSOS();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'members' }, () => {
+      loadOverview();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, () => {
+      const activePage = document.querySelector('.page.active').id;
+      if (activePage === 'page-overview' || activePage === 'page-members') {
+        loadOverview();
+      }
+    })
+    .subscribe();
+}
+
+// Auto-login
+(async () => {
+  const id = localStorage.getItem('hands_admin_id');
+  if (!id) return;
+  const { data } = await sb.from('admin_users').select('*').eq('id', id).single();
+  if (data) {
+    currentAdmin = data;
+    enterDashboard();
+  }
+})();
+</script>
+
+</body>
+</html>
