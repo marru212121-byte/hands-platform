@@ -26,8 +26,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,select,textarea{font-family:inherit;color:inherit}
 input:focus,select:focus,textarea:focus{outline:none}
 .app{position:relative;width:100%;max-width:480px;min-height:100vh;margin:0 auto;background:var(--sand-50);overflow-x:hidden}
-.screen{display:none;flex-direction:column;min-height:100vh;position:relative}
-.screen.active{display:flex}
+.screen{display:none !important;flex-direction:column;min-height:100vh;position:relative}
+.screen.active{display:flex !important}
 
 .lang-switcher{position:fixed;top:18px;right:18px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
 .lang-switcher.on-dark{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18)}
@@ -128,7 +128,7 @@ input:focus,select:focus,textarea:focus{outline:none}
 .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
 .loading-text{font-size:14px;font-weight:600}
 
-#main{background:var(--sand-50);display:flex;flex-direction:column;min-height:100vh;padding-bottom:80px}
+#main{background:var(--sand-50);flex-direction:column;min-height:100vh;padding-bottom:80px}
 .main-header{background:linear-gradient(165deg,#114841 0%,#1f7a6e 70%,#2d8d7b 100%);color:white;padding:56px 24px 80px;border-radius:0 0 32px 32px;position:relative;overflow:hidden}
 .main-header::before{content:"";position:absolute;top:-50px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(232,123,53,0.35),transparent 60%);border-radius:50%;pointer-events:none}
 .main-greet-hi{font-size:13px;opacity:0.8;font-weight:500;margin-bottom:4px;position:relative;z-index:1}
@@ -159,8 +159,8 @@ input:focus,select:focus,textarea:focus{outline:none}
 .nav-item.active{color:var(--teal-500)}
 .nav-emoji{font-size:18px}
 
-#board{background:var(--sand-50);display:none;flex-direction:column;min-height:100vh;padding:60px 0 80px}
-#board.active{display:flex}
+#board{background:var(--sand-50);flex-direction:column;min-height:100vh;padding:60px 0 80px}
+#board.active{display:flex !important}
 .board-header{padding:0 20px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
 .board-title{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-0.02em}
 .board-write-btn{background:var(--teal-500);color:white;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(31,122,110,0.3)}
@@ -176,8 +176,8 @@ input:focus,select:focus,textarea:focus{outline:none}
 .post-meta{font-size:10px;color:var(--ink-400);display:flex;gap:8px}
 .post-empty{text-align:center;padding:60px 20px;color:var(--ink-400);font-size:13px}
 
-#post-write{background:var(--sand-50);display:none;flex-direction:column;min-height:100vh;padding:60px 24px 24px}
-#post-write.active{display:flex}
+#post-write{background:var(--sand-50);flex-direction:column;min-height:100vh;padding:60px 24px 24px}
+#post-write.active{display:flex !important}
 .cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .cat-pill{padding:8px 14px;background:white;border:1px solid var(--sand-200);border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-500)}
 .cat-pill.active{background:var(--teal-500);color:white;border-color:var(--teal-500)}
@@ -372,7 +372,6 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
     <div class="main-greet-hi" data-i="greetHi">안녕하세요</div>
     <div class="main-greet-name" id="greetName">—</div>
     <div class="meta-row">
-      <span class="meta-pill"><span class="live-dot"></span><span data-i="connected">연결됨</span></span>
       <span class="meta-pill" id="metaCountry">—</span>
     </div>
   </header>
@@ -783,24 +782,55 @@ document.getElementById('btnSignup').addEventListener('click', async () => {
 });
 
 function enterMain() {
+  if (!currentMember || !currentMember.name) {
+    console.warn('currentMember 없거나 이름 없음, 로그인 화면으로');
+    return;
+  }
   document.getElementById('greetName').textContent = currentMember.name;
   const countryNames = {
     vn:'🇻🇳 Vietnam',th:'🇹🇭 Thailand',id:'🇮🇩 Indonesia',ph:'🇵🇭 Philippines',
     np:'🇳🇵 Nepal',kh:'🇰🇭 Cambodia',mm:'🇲🇲 Myanmar',lk:'🇱🇰 Sri Lanka',bd:'🇧🇩 Bangladesh',other:'—'
   };
   document.getElementById('metaCountry').textContent = countryNames[currentMember.country] || currentMember.country;
-  showScreen('main');
+  
+  // 모든 화면 비활성화 후 main만 활성화 - 이중 보장
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('main').classList.add('active');
+  window.scrollTo(0, 0);
+  const sw = document.getElementById('langSwitcher');
+  sw.classList.remove('on-dark');
+  sw.classList.add('on-light');
 }
+
+let lastSavedAt = 0;
+let lastSavedPos = null;
 
 function startLocationTracking() {
   if (!('geolocation' in navigator)) return;
   
+  // 1. 앱 켤 때 - 1회 즉시 기록 (app_open 소스)
   navigator.geolocation.getCurrentPosition(async (pos) => {
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'app_open');
   }, (err) => console.warn('위치 거부:', err));
   
+  // 2. 켜져있는 동안 watch (watch 소스)
   watchPositionId = navigator.geolocation.watchPosition(async (pos) => {
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+    const now = Date.now();
+    // 5초 미만 텀이면 스킵
+    if (now - lastSavedAt < 5000) return;
+    // 5m 미만 이동이면 history는 스킵 (현재 위치만 갱신)
+    let saveHistory = true;
+    if (lastSavedPos) {
+      const dist = haversine(lastSavedPos.lat, lastSavedPos.lng, 
+        pos.coords.latitude, pos.coords.longitude);
+      if (dist < 5) saveHistory = false;
+      // 그래도 30초 지났으면 history 강제 기록
+      if (now - lastSavedAt > 30000) saveHistory = true;
+    }
+    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 
+      saveHistory ? 'watch' : null);
+    lastSavedAt = now;
+    lastSavedPos = {lat: pos.coords.latitude, lng: pos.coords.longitude};
   }, (err) => console.warn('위치 추적 오류:', err), {
     enableHighAccuracy: true,
     maximumAge: 5000,
@@ -808,14 +838,43 @@ function startLocationTracking() {
   });
 }
 
-async function saveLocation(lat, lng, accuracy) {
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 +
+    Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function saveLocation(lat, lng, accuracy, source) {
   if (!currentMember) return;
+  const now = new Date().toISOString();
+  const acc = Math.round(accuracy || 0);
+  
+  // 현재 위치 upsert (실시간 마커용)
   await sb.from('locations').upsert({
     member_id: currentMember.id,
     lat, lng,
-    accuracy: Math.round(accuracy || 0),
-    updated_at: new Date().toISOString()
+    accuracy: acc,
+    updated_at: now
   });
+  
+  // source가 있으면 이력에도 기록
+  if (source) {
+    sb.from('location_history').insert({
+      member_id: currentMember.id,
+      lat, lng,
+      accuracy: acc,
+      source: source,
+      recorded_at: now
+    }).then(() => {}, (err) => console.warn('이력 저장 실패:', err));
+  }
+  
+  // 마지막 접속 시각 갱신
+  sb.from('members').update({last_seen_at: now}).eq('id', currentMember.id)
+    .then(() => {}, () => {});
 }
 
 async function sendSOS() {
@@ -823,11 +882,30 @@ async function sendSOS() {
   if (!confirm('관리자에게 긴급 도움을 요청합니다. 진행하시겠습니까?\nSend SOS to admin?')) return;
   
   navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    const now = new Date().toISOString();
+    
     await sb.from('sos_alerts').insert({
       member_id: currentMember.id,
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude
+      lat, lng,
+      status: 'pending'
     });
+    
+    // 이력에도 SOS 위치 기록
+    sb.from('location_history').insert({
+      member_id: currentMember.id,
+      lat, lng,
+      source: 'sos',
+      recorded_at: now
+    }).then(() => {}, () => {});
+    
+    // 현재 위치도 갱신
+    sb.from('locations').upsert({
+      member_id: currentMember.id,
+      lat, lng,
+      updated_at: now
+    }).then(() => {}, () => {});
+    
     alert('SOS 전송 완료! 관리자가 곧 연락드립니다.\nSOS sent! Admin will contact you soon.');
   }, () => alert('위치 정보 없이 SOS 전송 불가\nLocation required for SOS'));
 }
@@ -926,22 +1004,51 @@ async function tryAutoLogin() {
   const memberId = localStorage.getItem('hands_member_id');
   if (!memberId) return false;
   
-  const { data, error } = await sb.from('members').select('*').eq('id', memberId).single();
-  if (error || !data) {
-    localStorage.removeItem('hands_member_id');
+  try {
+    const { data, error } = await sb.from('members').select('*').eq('id', memberId).single();
+    if (error || !data) {
+      // DB에 없는 회원이면 로컬 정리
+      localStorage.removeItem('hands_member_id');
+      localStorage.removeItem('hands_member_name');
+      localStorage.removeItem('hands_member_country');
+      return false;
+    }
+    
+    // 데이터 무결성 체크 - 이름이나 국가가 없으면 깨진 회원
+    if (!data.name || !data.country) {
+      console.warn('가입 데이터 불완전, 다시 가입 필요');
+      localStorage.removeItem('hands_member_id');
+      localStorage.removeItem('hands_member_name');
+      localStorage.removeItem('hands_member_country');
+      return false;
+    }
+    
+    await sb.from('members').update({ 
+      last_login_at: new Date().toISOString() 
+    }).eq('id', memberId);
+    
+    currentMember = data;
+    enterMain();
+    startLocationTracking();
+    return true;
+  } catch (e) {
+    console.error('자동 로그인 오류:', e);
     return false;
   }
-  
-  await sb.from('members').update({ last_login_at: new Date().toISOString() }).eq('id', memberId);
-  
-  currentMember = data;
-  enterMain();
-  startLocationTracking();
-  return true;
 }
 
 (async () => {
   applyLang();
+  
+  // URL에 ?reset 있으면 강제 초기화 (응급용)
+  if (location.search.includes('reset')) {
+    localStorage.removeItem('hands_member_id');
+    localStorage.removeItem('hands_member_name');
+    localStorage.removeItem('hands_member_country');
+    history.replaceState(null, '', location.pathname);
+    console.log('로컬 데이터 초기화됨');
+  }
+  
   await tryAutoLogin();
 })();
 </script>
