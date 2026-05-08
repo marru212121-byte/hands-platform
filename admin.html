@@ -2,594 +2,887 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HANDS Admin · 관리자 콘솔</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>HANDS — 관리자 콘솔</title>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Kakao Map JS SDK + clusterer + services library -->
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=30cf8d591d8bd417f791b91090e8b1cd&libraries=clusterer,services"></script>
+
 <style>
-:root {
-  --teal-50:#e8f3f1;--teal-500:#1f7a6e;--teal-700:#114841;
-  --orange-500:#e87b35;
-  --rose-100:#ffe1e1;--rose-500:#d04848;
-  --green-500:#3a9b6e;
-  --sand-50:#faf6f1;--sand-200:#e8ddcd;
-  --ink-900:#0f1f1d;--ink-700:#1a3633;--ink-500:#4a6260;--ink-400:#6f8682;--ink-300:#9aaba8;--ink-200:#c4cfcd;
-  --display:'Manrope','Pretendard',system-ui,sans-serif;
-  --body:'Pretendard','Manrope',system-ui,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--body);background:#f0eee8;color:var(--ink-900);font-weight:400;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input{font-family:inherit;color:inherit}
-input:focus{outline:none}
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0f766e; --teal-d:#0d5d57; --teal-l:#14b8a6;
+    --orange:#ea580c; --orange-d:#c2410c;
+    --red:#dc2626; --red-l:#fca5a5;
+    --bg:#f8fafc; --card:#fff;
+    --line:#e2e8f0; --line-d:#cbd5e1;
+    --txt:#0f172a; --sub:#475569; --mute:#94a3b8;
+  }
+  html,body{height:100%;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro','Pretendard',sans-serif;
+    -webkit-font-smoothing:antialiased; overflow:hidden}
 
-.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(165deg,#114841 0%,#1f7a6e 60%,#2d8d7b 100%)}
-.login-box{background:white;border-radius:24px;padding:40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
-.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
-.login-logo-mark{width:40px;height:40px;background:var(--teal-500);border-radius:12px;display:grid;place-items:center;color:white;font-size:20px}
-.login-logo-name{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-0.02em}
-.login-logo-tag{font-size:10px;color:var(--ink-400);letter-spacing:0.1em;font-weight:600;margin-top:2px}
-.login-title{font-family:var(--display);font-weight:800;font-size:24px;margin-bottom:6px;letter-spacing:-0.02em}
-.login-sub{font-size:13px;color:var(--ink-500);margin-bottom:24px}
-.field-group{margin-bottom:14px}
-.field-label{display:block;font-size:11px;font-weight:700;color:var(--ink-700);margin-bottom:6px;letter-spacing:0.02em}
-.field-input{width:100%;background:#fafafa;border:1.5px solid var(--sand-200);border-radius:12px;padding:14px;font-size:14px}
-.field-input:focus{border-color:var(--teal-500);background:white}
-.cta-primary{width:100%;padding:16px;background:var(--teal-500);color:white;border-radius:12px;font-weight:800;font-size:14px;margin-top:8px;box-shadow:0 6px 18px rgba(31,122,110,0.25)}
-.cta-primary:disabled{background:var(--ink-200);box-shadow:none}
-.error-msg{font-size:12px;color:var(--rose-500);margin-top:8px;display:none}
-.error-msg.show{display:block}
+  /* ===== 로그인 ===== */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#0f766e 0%,#ea580c 100%);z-index:100}
+  .login-box{background:#fff;padding:36px 32px;border-radius:20px;width:340px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .login-box h1{font-size:24px;margin-bottom:6px;color:var(--teal)}
+  .login-box p{color:var(--sub);font-size:13px;margin-bottom:20px}
+  .login-box input{width:100%;padding:12px 14px;border:1.5px solid var(--line);
+    border-radius:10px;font-size:14px;margin-bottom:10px;outline:none}
+  .login-box input:focus{border-color:var(--teal)}
+  .login-box button{width:100%;padding:13px;background:var(--teal);color:#fff;
+    border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+  .login-box button:hover{background:var(--teal-d)}
+  .login-err{color:var(--red);font-size:12px;margin-top:6px;min-height:16px}
 
-.dashboard{display:none;min-height:100vh}
-.dashboard.show{display:flex}
-.sidebar{width:240px;background:white;padding:24px 16px;border-right:1px solid var(--sand-200);min-height:100vh;flex-shrink:0}
-.side-logo{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px}
-.side-logo-mark{width:32px;height:32px;background:var(--teal-500);border-radius:8px;display:grid;place-items:center;color:white;font-size:16px}
-.side-logo-name{font-family:var(--display);font-weight:800;font-size:14px}
-.side-menu-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600;color:var(--ink-500);cursor:pointer;margin-bottom:4px;transition:all 0.15s}
-.side-menu-item:hover{background:var(--sand-50)}
-.side-menu-item.active{background:var(--teal-500);color:white}
-.side-menu-item .badge{margin-left:auto;background:var(--rose-500);color:white;font-size:10px;padding:1px 6px;border-radius:999px;font-weight:700;display:none}
-.side-menu-item .badge.show{display:inline-block}
-.side-bottom{margin-top:auto;padding-top:24px}
-.side-user{font-size:12px;color:var(--ink-500);padding:0 14px;margin-bottom:8px}
-.side-logout{font-size:12px;color:var(--rose-500);padding:8px 14px;cursor:pointer;font-weight:600}
+  /* ===== 메인 레이아웃 ===== */
+  #app{display:none;height:100vh;flex-direction:column}
+  #app.show{display:flex}
 
-.main{flex:1;padding:24px 32px;overflow-y:auto}
-.page-title{font-family:var(--display);font-size:28px;font-weight:800;margin-bottom:6px;letter-spacing:-0.025em}
-.page-sub{font-size:13px;color:var(--ink-500);margin-bottom:24px}
-.page{display:none}
-.page.active{display:block}
+  header{background:#fff;border-bottom:1px solid var(--line);
+    padding:10px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0;height:54px}
+  header .logo{font-size:17px;font-weight:800;color:var(--teal);letter-spacing:-.3px}
+  header .badge{background:var(--orange);color:#fff;font-size:10px;padding:2px 8px;
+    border-radius:10px;font-weight:600}
+  header .stats{display:flex;gap:14px;margin-left:auto;font-size:13px;color:var(--sub)}
+  header .stats b{color:var(--txt)}
+  header .who{font-size:12px;color:var(--mute)}
+  header button.logout{background:none;border:1px solid var(--line);color:var(--sub);
+    padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px}
 
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
-.stat-card{background:white;border-radius:14px;padding:18px;border:1px solid var(--sand-200)}
-.stat-label{font-size:11px;font-weight:700;color:var(--ink-400);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px}
-.stat-value{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-0.02em}
-.stat-detail{font-size:11px;color:var(--ink-500);margin-top:4px}
-.stat-card.urgent{background:linear-gradient(135deg,#ff6b6b 0%,#d04848 100%);color:white;border:none}
-.stat-card.urgent .stat-label{color:rgba(255,255,255,0.8)}
-.stat-card.urgent .stat-detail{color:rgba(255,255,255,0.85)}
+  nav.tabs{background:#fff;border-bottom:1px solid var(--line);
+    display:flex;padding:0 14px;flex-shrink:0}
+  nav.tabs button{background:none;border:none;padding:12px 18px;font-size:13.5px;
+    color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+  nav.tabs button.on{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}
 
-.section-card{background:white;border-radius:14px;padding:0;border:1px solid var(--sand-200);overflow:hidden;margin-bottom:24px}
-.section-head{padding:18px 22px;border-bottom:1px solid var(--sand-200);display:flex;justify-content:space-between;align-items:center}
-.section-title{font-family:var(--display);font-size:16px;font-weight:800;letter-spacing:-0.02em}
-.section-action{font-size:12px;color:var(--teal-500);font-weight:700;cursor:pointer}
-.section-body{padding:0}
+  main{flex:1;overflow:hidden;position:relative}
+  .panel{display:none;height:100%}
+  .panel.on{display:flex}
 
-.member-row{display:grid;grid-template-columns:60px 1.5fr 1fr 1fr 1fr 80px;gap:16px;padding:14px 22px;align-items:center;border-bottom:1px solid var(--sand-200);font-size:13px}
-.member-row:hover{background:var(--sand-50)}
-.member-row:last-child{border-bottom:none}
-.member-row.head{background:#fafafa;font-size:11px;font-weight:700;color:var(--ink-400);letter-spacing:0.05em;text-transform:uppercase;cursor:default}
-.member-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700}
-.status-dot{width:7px;height:7px;border-radius:50%}
-.status-dot.online{background:var(--green-500);box-shadow:0 0 8px var(--green-500)}
-.status-dot.recent{background:#f5a623}
-.status-dot.offline{background:var(--ink-300)}
-.member-name{font-weight:700}
-.member-meta{font-size:11px;color:var(--ink-500)}
-.icon-btn{padding:6px 12px;background:var(--sand-50);border-radius:8px;font-size:11px;font-weight:700;color:var(--ink-700)}
+  /* ===== 지도 패널 ===== */
+  #panel-map{flex-direction:row}
+  .map-side{width:340px;background:#fff;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;flex-shrink:0}
+  .map-side-head{padding:14px 16px;border-bottom:1px solid var(--line)}
+  .map-side-head input{width:100%;padding:9px 12px;border:1.5px solid var(--line);
+    border-radius:8px;font-size:13px;outline:none}
+  .map-side-head input:focus{border-color:var(--teal)}
+  .map-filters{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .map-filters button{padding:5px 10px;background:#f1f5f9;border:1px solid var(--line);
+    border-radius:14px;font-size:11.5px;color:var(--sub);cursor:pointer;font-weight:500}
+  .map-filters button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .map-filters button.sos.on{background:var(--red);border-color:var(--red)}
 
-.sos-card{background:linear-gradient(135deg,#fff5f5 0%,#ffe1e1 100%);border-radius:14px;padding:16px 18px;margin-bottom:10px;border-left:4px solid var(--rose-500);display:flex;justify-content:space-between;align-items:center}
-.sos-info-name{font-weight:800;font-size:14px;color:var(--rose-700);margin-bottom:2px}
-.sos-info-time{font-size:11px;color:var(--ink-500)}
-.sos-resolve{padding:8px 16px;background:white;border-radius:8px;font-size:12px;font-weight:700;color:var(--rose-500)}
+  .map-list{flex:1;overflow-y:auto;padding:0}
+  .mlist-item{padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;
+    gap:10px;align-items:center;transition:background .15s}
+  .mlist-item:hover{background:#f8fafc}
+  .mlist-item.sel{background:#ecfeff;border-left:3px solid var(--teal)}
+  .mlist-item.sos{background:#fef2f2}
+  .mlist-item.sos.sel{background:#fee2e2;border-left-color:var(--red)}
+  .mlist-flag{font-size:22px;width:30px;text-align:center;flex-shrink:0}
+  .mlist-info{flex:1;min-width:0}
+  .mlist-name{font-size:13.5px;font-weight:600;color:var(--txt);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mlist-meta{font-size:11px;color:var(--mute);margin-top:2px;
+    display:flex;justify-content:space-between}
+  .mlist-meta .age{color:var(--sub)}
+  .mlist-sos{background:var(--red);color:#fff;font-size:9px;padding:2px 6px;
+    border-radius:6px;font-weight:700;letter-spacing:.5px}
 
-.empty-state{padding:60px 24px;text-align:center;color:var(--ink-400);font-size:13px}
+  .map-area{flex:1;position:relative}
+  #map{width:100%;height:100%}
 
-.detail-modal{position:fixed;inset:0;background:rgba(15,31,29,0.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
-.detail-modal.show{display:flex}
-.detail-content{background:white;border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:24px}
-.detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
-.detail-name{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px}
-.detail-meta{font-size:12px;color:var(--ink-500)}
-.detail-close{width:32px;height:32px;border-radius:50%;background:var(--sand-50);display:grid;place-items:center;font-size:14px;cursor:pointer}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.detail-item{padding:12px 14px;background:var(--sand-50);border-radius:10px}
-.detail-item-label{font-size:10px;font-weight:700;color:var(--ink-400);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px}
-.detail-item-value{font-size:13px;font-weight:700}
-.detail-photos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.detail-photo{aspect-ratio:1;background:var(--sand-50);border-radius:10px;overflow:hidden;position:relative}
-.detail-photo img{width:100%;height:100%;object-fit:cover}
-.detail-photo-label{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:700}
-.detail-loc{padding:14px;background:var(--teal-50);border-radius:10px;font-size:12px}
-.detail-loc-coord{font-family:'Manrope',monospace;font-size:14px;font-weight:700;color:var(--teal-700);margin-top:4px}
+  .map-legend{position:absolute;bottom:14px;left:14px;background:#fff;
+    padding:10px 14px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.12);
+    font-size:11.5px;display:flex;gap:14px;align-items:center}
+  .map-legend .lg{display:flex;align-items:center;gap:5px;color:var(--sub)}
+  .map-legend .dot{width:12px;height:12px;border-radius:50%}
 
-.post-row{padding:16px 22px;border-bottom:1px solid var(--sand-200)}
-.post-row:hover{background:var(--sand-50)}
-.post-row:last-child{border-bottom:none}
-.post-cat{display:inline-block;background:var(--teal-50);color:var(--teal-700);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-bottom:6px}
-.post-cat.question{background:#fff2e6;color:var(--orange-500)}
-.post-cat.tip{background:#e8f0ff;color:#3050a0}
-.post-cat.event{background:var(--rose-100);color:var(--rose-500)}
-.post-title{font-size:14px;font-weight:700;margin-bottom:4px}
-.post-body-text{font-size:12px;color:var(--ink-500);line-height:1.5;margin-bottom:6px}
-.post-meta{font-size:11px;color:var(--ink-400);display:flex;gap:8px;align-items:center}
-.post-delete{margin-left:auto;color:var(--rose-500);font-size:11px;font-weight:700;cursor:pointer}
+  .map-controls{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:6px}
+  .map-controls button{background:#fff;border:1px solid var(--line);width:38px;height:38px;
+    border-radius:10px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08);
+    font-size:16px;display:flex;align-items:center;justify-content:center}
+  .map-controls button:hover{background:#f8fafc}
+  .map-controls button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
 
-@media (max-width: 768px) {
-  .sidebar{width:100%;min-height:auto;padding:16px}
-  .dashboard.show{flex-direction:column}
-  .main{padding:20px}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .member-row{grid-template-columns:1fr;gap:6px;padding:14px}
-  .member-row.head{display:none}
-}
+  /* 인포 패널 (선택된 회원 상세 + 이동이력) */
+  .detail-panel{position:absolute;top:14px;left:14px;width:300px;background:#fff;
+    border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden;display:none;z-index:5}
+  .detail-panel.show{display:block}
+  .dp-head{padding:14px 16px;background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;
+    display:flex;align-items:center;gap:10px}
+  .dp-head.sos{background:linear-gradient(135deg,var(--red),#991b1b)}
+  .dp-flag{font-size:28px}
+  .dp-name{font-size:15px;font-weight:700;line-height:1.2}
+  .dp-sub{font-size:11px;opacity:.85;margin-top:2px}
+  .dp-close{margin-left:auto;background:rgba(255,255,255,.2);border:none;color:#fff;
+    width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:13px}
+  .dp-photos{display:flex;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
+  .dp-photo{width:48px;height:48px;border-radius:8px;object-fit:cover;
+    background:#f1f5f9;border:1px solid var(--line);cursor:pointer}
+  .dp-photo:hover{transform:scale(1.05);transition:transform .15s}
+  .dp-info{padding:12px 16px;font-size:12px}
+  .dp-info-row{display:flex;justify-content:space-between;padding:5px 0}
+  .dp-info-row span:first-child{color:var(--mute)}
+  .dp-info-row span:last-child{color:var(--txt);font-weight:500}
+  .dp-history{border-top:1px solid var(--line);max-height:240px;overflow-y:auto}
+  .dp-history h4{padding:10px 16px;font-size:11px;color:var(--mute);
+    text-transform:uppercase;letter-spacing:.8px;font-weight:700;background:#f8fafc}
+  .dph-item{padding:8px 16px;font-size:11.5px;border-bottom:1px solid #f1f5f9;
+    display:flex;justify-content:space-between;cursor:pointer}
+  .dph-item:hover{background:#f8fafc}
+  .dph-item .dph-time{color:var(--sub)}
+  .dph-item .dph-src{color:var(--mute);font-size:10px}
+  .dph-item.latest{background:#ecfeff}
+  .dph-item.latest .dph-time{color:var(--teal);font-weight:700}
+
+  /* ===== 회원 목록 패널 ===== */
+  #panel-members{padding:0;overflow-y:auto;display:none;flex-direction:column}
+  #panel-members.on{display:flex}
+  .pm-toolbar{padding:14px 18px;background:#fff;border-bottom:1px solid var(--line);
+    display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:1}
+  .pm-toolbar input{flex:1;max-width:280px;padding:8px 12px;border:1.5px solid var(--line);
+    border-radius:8px;font-size:13px;outline:none}
+  .pm-table{width:100%;background:#fff;border-collapse:collapse}
+  .pm-table th{background:#f8fafc;text-align:left;padding:10px 14px;font-size:11.5px;
+    color:var(--sub);font-weight:600;border-bottom:1px solid var(--line);
+    text-transform:uppercase;letter-spacing:.5px}
+  .pm-table td{padding:11px 14px;border-bottom:1px solid #f1f5f9;font-size:13px}
+  .pm-table tr:hover{background:#f8fafc;cursor:pointer}
+  .pm-flag{font-size:18px;margin-right:6px}
+
+  /* ===== 게시판 패널 ===== */
+  #panel-board{padding:18px;overflow-y:auto;display:none;flex-direction:column;gap:12px}
+  #panel-board.on{display:flex}
+  .post-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .post-head{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-bottom:6px}
+  .post-author{color:var(--teal);font-weight:600}
+  .post-title{font-size:14px;font-weight:600;margin-bottom:4px}
+  .post-body{font-size:13px;color:var(--sub);line-height:1.5}
+
+  /* ===== SOS 패널 ===== */
+  #panel-sos{padding:18px;overflow-y:auto;display:none;flex-direction:column;gap:10px}
+  #panel-sos.on{display:flex}
+  .sos-card{background:#fff;border:2px solid var(--red);border-radius:12px;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center}
+  .sos-card.resolved{border-color:var(--line);opacity:.6}
+  .sos-info b{font-size:14px;color:var(--red);display:block}
+  .sos-info span{font-size:12px;color:var(--sub)}
+  .sos-card button{background:var(--teal);color:#fff;border:none;padding:8px 14px;
+    border-radius:8px;cursor:pointer;font-size:12px;font-weight:600}
+
+  /* 사진 모달 */
+  #photo-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;
+    align-items:center;justify-content:center;z-index:200;cursor:pointer}
+  #photo-modal.show{display:flex}
+  #photo-modal img{max-width:90vw;max-height:90vh;border-radius:8px}
+
+  /* 빈 상태 */
+  .empty{padding:30px;text-align:center;color:var(--mute);font-size:13px}
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);
+    background:#0f172a;color:#fff;padding:10px 18px;border-radius:8px;
+    font-size:13px;z-index:300;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+  .toast.show{display:block;animation:slideIn .25s}
+  @keyframes slideIn{from{transform:translate(-50%,-20px);opacity:0}
+    to{transform:translate(-50%,0);opacity:1}}
 </style>
 </head>
 <body>
 
-<div class="login-screen" id="loginScreen">
+<!-- 로그인 화면 -->
+<div id="login">
   <div class="login-box">
-    <div class="login-logo">
-      <div class="login-logo-mark">✋</div>
-      <div>
-        <div class="login-logo-name">HANDS Admin</div>
-        <div class="login-logo-tag">관리자 콘솔</div>
-      </div>
-    </div>
-    <h1 class="login-title">로그인</h1>
-    <p class="login-sub">관리자 계정으로 접속하세요</p>
-    <div class="field-group">
-      <label class="field-label">이메일</label>
-      <input type="email" class="field-input" id="loginEmail" placeholder="admin@example.com">
-    </div>
-    <div class="field-group">
-      <label class="field-label">비밀번호</label>
-      <input type="password" class="field-input" id="loginPassword">
-    </div>
-    <button class="cta-primary" id="loginBtn">로그인</button>
-    <div class="error-msg" id="loginError">이메일 또는 비밀번호가 일치하지 않습니다</div>
+    <h1>HANDS 관리자</h1>
+    <p>외국인 노동자 통합 관리 콘솔</p>
+    <input id="lg-email" type="email" placeholder="이메일" autocomplete="username">
+    <input id="lg-pw" type="password" placeholder="비밀번호" autocomplete="current-password">
+    <button onclick="doLogin()">로그인</button>
+    <div class="login-err" id="lg-err"></div>
   </div>
 </div>
 
-<div class="dashboard" id="dashboard">
-  <aside class="sidebar">
-    <div class="side-logo">
-      <div class="side-logo-mark">✋</div>
-      <div>
-        <div class="side-logo-name">HANDS</div>
-        <div class="login-logo-tag">ADMIN</div>
-      </div>
+<!-- 메인 앱 -->
+<div id="app">
+  <header>
+    <span class="logo">HANDS</span>
+    <span class="badge">ADMIN</span>
+    <div class="stats">
+      <span>전체 <b id="st-total">0</b>명</span>
+      <span>온라인 <b id="st-online" style="color:var(--teal)">0</b></span>
+      <span>SOS <b id="st-sos" style="color:var(--red)">0</b></span>
     </div>
-    <div class="side-menu-item active" data-page="overview">
-      <span>📊</span><span>대시보드</span>
-    </div>
-    <div class="side-menu-item" data-page="members">
-      <span>👥</span><span>회원 목록</span>
-    </div>
-    <div class="side-menu-item" data-page="sos">
-      <span>🆘</span><span>SOS 알림</span>
-      <span class="badge" id="sosBadge">0</span>
-    </div>
-    <div class="side-menu-item" data-page="board">
-      <span>📝</span><span>게시판</span>
-    </div>
-    <div class="side-bottom">
-      <div class="side-user" id="adminEmail">—</div>
-      <div class="side-logout" onclick="adminLogout()">로그아웃</div>
-    </div>
-  </aside>
+    <span class="who" id="who"></span>
+    <button class="logout" onclick="doLogout()">로그아웃</button>
+  </header>
 
-  <main class="main">
-    <div class="page active" id="page-overview">
-      <h1 class="page-title">대시보드</h1>
-      <p class="page-sub">전체 회원 현황과 안전 모니터링</p>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">총 회원</div>
-          <div class="stat-value" id="statTotal">—</div>
-          <div class="stat-detail" id="statNew">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">접속 중</div>
-          <div class="stat-value" id="statOnline">—</div>
-          <div class="stat-detail">최근 5분 이내</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">잠적 의심</div>
-          <div class="stat-value" id="statSilent">—</div>
-          <div class="stat-detail">7일+ 미접속</div>
-        </div>
-        <div class="stat-card urgent">
-          <div class="stat-label">SOS 대기</div>
-          <div class="stat-value" id="statSOS">—</div>
-          <div class="stat-detail">즉시 처리 필요</div>
-        </div>
-      </div>
-      <div class="section-card">
-        <div class="section-head">
-          <div class="section-title">최근 가입자</div>
-          <div class="section-action" onclick="goToPage('members')">전체보기 →</div>
-        </div>
-        <div class="section-body" id="recentMembers">
-          <div class="empty-state">로딩 중...</div>
-        </div>
-      </div>
-    </div>
+  <nav class="tabs">
+    <button class="on" data-tab="map">🗺️ 지도</button>
+    <button data-tab="members">👥 회원목록</button>
+    <button data-tab="board">📋 게시판</button>
+    <button data-tab="sos">🆘 SOS</button>
+  </nav>
 
-    <div class="page" id="page-members">
-      <h1 class="page-title">회원 목록</h1>
-      <p class="page-sub">전체 등록 회원과 위치 정보</p>
-      <div class="section-card">
-        <div class="section-body" id="membersList">
-          <div class="empty-state">로딩 중...</div>
+  <main>
+    <!-- 지도 패널 -->
+    <div class="panel on" id="panel-map">
+      <div class="map-side">
+        <div class="map-side-head">
+          <input id="ml-search" type="text" placeholder="이름·전화번호·국가 검색">
+          <div class="map-filters">
+            <button class="on" data-filter="all">전체</button>
+            <button class="sos" data-filter="sos">SOS만</button>
+            <button data-filter="online">온라인</button>
+            <button data-filter="offline">오프라인</button>
+          </div>
+        </div>
+        <div class="map-list" id="mlist"><div class="empty">로딩 중...</div></div>
+      </div>
+      <div class="map-area">
+        <div id="map"></div>
+        <div class="map-controls">
+          <button id="btn-fit" title="모두 보기">📍</button>
+          <button id="btn-cluster" class="on" title="클러스터링 ON/OFF">⊕</button>
+          <button id="btn-trail" title="이동 경로 표시">〰️</button>
+        </div>
+        <div class="map-legend">
+          <div class="lg"><div class="dot" style="background:#10b981"></div>온라인</div>
+          <div class="lg"><div class="dot" style="background:#94a3b8"></div>오프라인</div>
+          <div class="lg"><div class="dot" style="background:#dc2626"></div>SOS</div>
+        </div>
+
+        <!-- 클릭한 회원 상세 + 이동이력 패널 -->
+        <div class="detail-panel" id="dpanel">
+          <div class="dp-head" id="dp-head">
+            <div class="dp-flag" id="dp-flag">🌐</div>
+            <div>
+              <div class="dp-name" id="dp-name">—</div>
+              <div class="dp-sub" id="dp-sub">—</div>
+            </div>
+            <button class="dp-close" onclick="closeDetail()">✕</button>
+          </div>
+          <div class="dp-photos" id="dp-photos"></div>
+          <div class="dp-info" id="dp-info"></div>
+          <div class="dp-history">
+            <h4>이동 이력 (최근 20건)</h4>
+            <div id="dp-history-list"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="page" id="page-sos">
-      <h1 class="page-title">SOS 알림</h1>
-      <p class="page-sub">긴급 도움 요청 처리</p>
-      <div id="sosList">
-        <div class="empty-state">로딩 중...</div>
+    <!-- 회원목록 패널 -->
+    <div class="panel" id="panel-members">
+      <div class="pm-toolbar">
+        <input id="pm-search" type="text" placeholder="이름·전화번호 검색">
+        <span style="color:var(--mute);font-size:12px">총 <b id="pm-count">0</b>명</span>
       </div>
+      <table class="pm-table">
+        <thead><tr>
+          <th>이름</th><th>국가</th><th>나이</th><th>전화</th>
+          <th>가입일</th><th>마지막 접속</th><th>위치</th>
+        </tr></thead>
+        <tbody id="pm-tbody"></tbody>
+      </table>
     </div>
 
-    <div class="page" id="page-board">
-      <h1 class="page-title">게시판 관리</h1>
-      <p class="page-sub">회원이 작성한 게시글</p>
-      <div class="section-card">
-        <div class="section-body" id="postsList">
-          <div class="empty-state">로딩 중...</div>
-        </div>
-      </div>
-    </div>
+    <!-- 게시판 패널 -->
+    <div class="panel" id="panel-board"></div>
+
+    <!-- SOS 패널 -->
+    <div class="panel" id="panel-sos"></div>
   </main>
 </div>
 
-<div class="detail-modal" id="memberDetail">
-  <div class="detail-content" id="detailContent">
-    <!-- 동적 -->
-  </div>
+<div id="photo-modal" onclick="this.classList.remove('show')">
+  <img id="photo-modal-img" src="" alt="">
 </div>
+<div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://wcugfateeuqfcpimoogo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdWdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjM5MTAsImV4cCI6MjA5MzY5OTkxMH0.gYMs71Q0c591W5vZ049HzpKcD2ZICsCLt6-rRCsYbJc';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ====== 설정 ====== */
+const SUPA_URL = 'https://wcugfateeuqfcpimoogo.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indjd' +
+  'WdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2NjAxNzksImV4cCI6MjA2MDIzNjE3OX0' +
+  '.6QF8q7ZG8I-Lk88U3Ol7WIeDFeJg_z5lShbKXqWj9CY';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-let currentAdmin = null;
+/* 국가 코드 → 국기 + 한글명 */
+const CTY = {
+  vn:['🇻🇳','베트남'], th:['🇹🇭','태국'], np:['🇳🇵','네팔'],
+  ph:['🇵🇭','필리핀'], id:['🇮🇩','인도네시아'], kh:['🇰🇭','캄보디아'],
+  mm:['🇲🇲','미얀마'], lk:['🇱🇰','스리랑카'], bd:['🇧🇩','방글라데시'],
+  pk:['🇵🇰','파키스탄'], in:['🇮🇳','인도'], cn:['🇨🇳','중국'],
+  uz:['🇺🇿','우즈베키스탄'], mn:['🇲🇳','몽골'], kr:['🇰🇷','한국']
+};
+const flag = c => (CTY[c]||['🌐','기타'])[0];
+const cName = c => (CTY[c]||['🌐','기타'])[1];
 
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
-  errEl.classList.remove('show');
-  
-  const { data, error } = await sb.from('admin_users')
-    .select('*').eq('email', email).eq('password', password).eq('is_active', true).maybeSingle();
-  
-  if (error || !data) {
-    errEl.classList.add('show');
-    return;
-  }
-  
-  currentAdmin = data;
-  localStorage.setItem('hands_admin_id', data.id);
-  localStorage.setItem('hands_admin_email', data.email);
-  await sb.from('admin_users').update({ last_login_at: new Date().toISOString() }).eq('id', data.id);
-  enterDashboard();
-});
+/* 국가별 마커 색 */
+const CTY_COLOR = {
+  vn:'#dc2626', th:'#3b82f6', np:'#dc2626',
+  ph:'#0ea5e9', id:'#dc2626', kh:'#1d4ed8',
+  mm:'#f59e0b', lk:'#ea580c', bd:'#16a34a',
+  pk:'#16a34a', in:'#f59e0b', cn:'#dc2626',
+  uz:'#06b6d4', mn:'#3b82f6', kr:'#0f766e'
+};
 
-document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
+/* ====== 상태 ====== */
+let me = null;          // 로그인된 admin
+let members = [];        // 전체 회원 (locations 조인 포함)
+let selectedId = null;   // 클릭한 회원
+let curFilter = 'all';
+let kakaoMap = null;
+let markers = {};        // member_id -> Marker
+let clusterer = null;
+let useCluster = true;
+let trailPoly = null;    // 이동경로 폴리라인
+let realtimeSub = null;
 
-function adminLogout() {
-  if (!confirm('로그아웃 하시겠습니까?')) return;
-  localStorage.removeItem('hands_admin_id');
-  localStorage.removeItem('hands_admin_email');
-  location.reload();
+/* ====== 유틸 ====== */
+function fmtTime(ts){
+  if(!ts) return '—';
+  const d = new Date(ts), now = Date.now(), diff = (now - d.getTime())/1000;
+  if(diff < 60) return '방금 전';
+  if(diff < 3600) return Math.floor(diff/60)+'분 전';
+  if(diff < 86400) return Math.floor(diff/3600)+'시간 전';
+  if(diff < 86400*7) return Math.floor(diff/86400)+'일 전';
+  return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
+}
+function fmtFull(ts){
+  if(!ts) return '—';
+  return new Date(ts).toLocaleString('ko-KR',
+    {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function isOnline(ts){
+  if(!ts) return false;
+  return (Date.now() - new Date(ts).getTime()) < 5*60*1000; // 5분 이내
+}
+function age(birth){
+  if(!birth) return '?';
+  const y = new Date().getFullYear() - new Date(birth).getFullYear();
+  return y;
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
-function enterDashboard() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('dashboard').classList.add('show');
-  document.getElementById('adminEmail').textContent = currentAdmin.email;
-  loadOverview();
+/* ====== 로그인 ====== */
+async function doLogin(){
+  const email = document.getElementById('lg-email').value.trim();
+  const pw = document.getElementById('lg-pw').value;
+  const errEl = document.getElementById('lg-err');
+  errEl.textContent = '';
+
+  if(!email || !pw){ errEl.textContent = '이메일·비밀번호 입력'; return; }
+
+  try{
+    const {data,error} = await sb.from('admin_users')
+      .select('id,email,name,password,is_active')
+      .eq('email', email).maybeSingle();
+
+    if(error || !data){ errEl.textContent = '계정을 찾을 수 없음'; return; }
+    if(!data.is_active){ errEl.textContent = '비활성 계정'; return; }
+    if(data.password !== pw){ errEl.textContent = '비밀번호 불일치'; return; }
+
+    me = {id:data.id, email:data.email, name:data.name};
+    localStorage.setItem('hands_admin', JSON.stringify(me));
+
+    await sb.from('admin_users').update({last_login_at: new Date().toISOString()}).eq('id', me.id);
+
+    enterApp();
+  } catch(e){ errEl.textContent = '오류: '+(e.message||e); }
+}
+
+function doLogout(){
+  localStorage.removeItem('hands_admin');
+  me = null;
+  if(realtimeSub){ realtimeSub.unsubscribe(); realtimeSub = null; }
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('lg-email').value = '';
+  document.getElementById('lg-pw').value = '';
+}
+
+function enterApp(){
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('who').textContent = me.name + ' / ' + me.email;
+  initMap();
+  loadMembers();
+  loadPosts();
+  loadSOS();
   subscribeRealtime();
 }
 
-document.querySelectorAll('.side-menu-item').forEach(item => {
-  item.addEventListener('click', () => goToPage(item.dataset.page));
-});
-
-function goToPage(page) {
-  document.querySelectorAll('.side-menu-item').forEach(i => i.classList.toggle('active', i.dataset.page === page));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  if (page === 'members') loadMembers();
-  if (page === 'sos') loadSOS();
-  if (page === 'board') loadPosts();
-  if (page === 'overview') loadOverview();
-}
-
-function timeAgo(d) {
-  const sec = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-  if (sec < 60) return '방금';
-  if (sec < 3600) return Math.floor(sec/60) + '분 전';
-  if (sec < 86400) return Math.floor(sec/3600) + '시간 전';
-  return Math.floor(sec/86400) + '일 전';
-}
-
-function getStatus(updated_at) {
-  if (!updated_at) return { dot: 'offline', label: '미접속' };
-  const sec = (Date.now() - new Date(updated_at).getTime()) / 1000;
-  if (sec < 300) return { dot: 'online', label: '접속중' };
-  if (sec < 3600) return { dot: 'recent', label: '최근접속' };
-  return { dot: 'offline', label: timeAgo(updated_at) };
-}
-
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-async function loadOverview() {
-  const { count: totalCount } = await sb.from('members').select('*', { count: 'exact', head: true });
-  const since24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const { count: newCount } = await sb.from('members').select('*', { count: 'exact', head: true }).gte('created_at', since24h);
-  
-  const { data: locs } = await sb.from('locations').select('member_id, updated_at');
-  let onlineCount = 0;
-  let silentCount = 0;
-  if (locs) {
-    locs.forEach(l => {
-      const sec = (Date.now() - new Date(l.updated_at).getTime()) / 1000;
-      if (sec < 300) onlineCount++;
-      if (sec > 7 * 86400) silentCount++;
-    });
-  }
-  
-  const { count: sosCount } = await sb.from('sos_alerts').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-  
-  document.getElementById('statTotal').textContent = totalCount || 0;
-  document.getElementById('statNew').textContent = `+${newCount || 0} 24시간`;
-  document.getElementById('statOnline').textContent = onlineCount;
-  document.getElementById('statSilent').textContent = silentCount;
-  document.getElementById('statSOS').textContent = sosCount || 0;
-  
-  const sosBadge = document.getElementById('sosBadge');
-  sosBadge.textContent = sosCount || 0;
-  sosBadge.classList.toggle('show', (sosCount || 0) > 0);
-  
-  const { data: recent } = await sb.from('members')
-    .select('*, locations(updated_at)')
-    .order('created_at', { ascending: false })
-    .limit(5);
-  
-  const recentEl = document.getElementById('recentMembers');
-  if (!recent || recent.length === 0) {
-    recentEl.innerHTML = '<div class="empty-state">아직 가입자가 없습니다</div>';
-    return;
-  }
-  
-  let html = '<div class="member-row head"><div></div><div>이름</div><div>국적</div><div>전화</div><div>상태</div><div></div></div>';
-  recent.forEach(m => {
-    const status = getStatus(m.locations?.updated_at);
-    const country = ({vn:'🇻🇳',th:'🇹🇭',id:'🇮🇩',ph:'🇵🇭',np:'🇳🇵',kh:'🇰🇭',mm:'🇲🇲',lk:'🇱🇰',bd:'🇧🇩'})[m.country] || '';
-    html += `
-      <div class="member-row" onclick="showMemberDetail('${m.id}')">
-        <div style="font-size:20px">${country}</div>
-        <div><div class="member-name">${escapeHtml(m.name)}</div><div class="member-meta">${escapeHtml(m.passport_number)}</div></div>
-        <div class="member-meta">${escapeHtml(m.country)}</div>
-        <div class="member-meta">${escapeHtml(m.phone)}</div>
-        <div class="member-status"><span class="status-dot ${status.dot}"></span>${status.label}</div>
-        <div><button class="icon-btn">상세</button></div>
-      </div>
-    `;
+/* ====== 카카오맵 초기화 ====== */
+function initMap(){
+  const center = new kakao.maps.LatLng(36.5, 127.8); // 한반도 중앙
+  kakaoMap = new kakao.maps.Map(document.getElementById('map'), {
+    center: center, level: 13
   });
-  recentEl.innerHTML = html;
-}
-
-async function loadMembers() {
-  const { data: members } = await sb.from('members')
-    .select('*, locations(lat, lng, updated_at)')
-    .order('created_at', { ascending: false });
-  
-  const list = document.getElementById('membersList');
-  if (!members || members.length === 0) {
-    list.innerHTML = '<div class="empty-state">등록된 회원이 없습니다</div>';
-    return;
-  }
-  
-  let html = '<div class="member-row head"><div></div><div>이름</div><div>국적</div><div>전화</div><div>상태</div><div></div></div>';
-  members.forEach(m => {
-    const status = getStatus(m.locations?.updated_at);
-    const country = ({vn:'🇻🇳',th:'🇹🇭',id:'🇮🇩',ph:'🇵🇭',np:'🇳🇵',kh:'🇰🇭',mm:'🇲🇲',lk:'🇱🇰',bd:'🇧🇩'})[m.country] || '🌍';
-    html += `
-      <div class="member-row" onclick="showMemberDetail('${m.id}')">
-        <div style="font-size:20px">${country}</div>
-        <div><div class="member-name">${escapeHtml(m.name)}</div><div class="member-meta">${escapeHtml(m.passport_number)}</div></div>
-        <div class="member-meta">${escapeHtml(m.country)}</div>
-        <div class="member-meta">${escapeHtml(m.phone)}</div>
-        <div class="member-status"><span class="status-dot ${status.dot}"></span>${status.label}</div>
-        <div><button class="icon-btn">상세</button></div>
-      </div>
-    `;
+  clusterer = new kakao.maps.MarkerClusterer({
+    map: kakaoMap, averageCenter: true, minLevel: 6,
+    styles: [{
+      width:'40px', height:'40px', background:'rgba(15,118,110,.9)',
+      borderRadius:'20px', color:'#fff', textAlign:'center',
+      fontWeight:'700', fontSize:'13px', lineHeight:'40px'
+    }]
   });
-  list.innerHTML = html;
+
+  // 컨트롤
+  document.getElementById('btn-fit').onclick = fitAll;
+  document.getElementById('btn-cluster').onclick = toggleCluster;
+  document.getElementById('btn-trail').onclick = toggleTrail;
 }
 
-async function showMemberDetail(memberId) {
-  const { data: m } = await sb.from('members').select('*, locations(*)').eq('id', memberId).single();
-  if (!m) return;
-  
-  let passportImg = '<div style="display:grid;place-items:center;height:100%;color:var(--ink-300);font-size:11px">사진 없음</div>';
-  let selfieImg = '<div style="display:grid;place-items:center;height:100%;color:var(--ink-300);font-size:11px">사진 없음</div>';
-  
-  if (m.passport_photo_url) {
-    const { data } = sb.storage.from('passports').getPublicUrl(m.passport_photo_url);
-    passportImg = `<img src="${data.publicUrl}" alt="여권">`;
-  }
-  if (m.selfie_photo_url) {
-    const { data } = sb.storage.from('passports').getPublicUrl(m.selfie_photo_url);
-    selfieImg = `<img src="${data.publicUrl}" alt="셀카">`;
-  }
-  
-  const loc = m.locations;
-  const locDisplay = loc 
-    ? `<div class="detail-loc">
-         <div style="font-size:11px;color:var(--ink-500)">마지막 위치</div>
-         <div class="detail-loc-coord">${loc.lat?.toFixed(5)}, ${loc.lng?.toFixed(5)}</div>
-         <div style="font-size:11px;color:var(--ink-500);margin-top:4px">${timeAgo(loc.updated_at)} · 정확도 ±${loc.accuracy}m</div>
-         <a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank" style="display:inline-block;margin-top:8px;font-size:11px;color:var(--teal-500);font-weight:700">Google Maps에서 보기 →</a>
-       </div>`
-    : '<div class="detail-loc" style="color:var(--ink-400)">위치 정보 없음</div>';
-  
-  const country = ({vn:'🇻🇳 Vietnam',th:'🇹🇭 Thailand',id:'🇮🇩 Indonesia',ph:'🇵🇭 Philippines',np:'🇳🇵 Nepal',kh:'🇰🇭 Cambodia',mm:'🇲🇲 Myanmar',lk:'🇱🇰 Sri Lanka',bd:'🇧🇩 Bangladesh'})[m.country] || m.country;
-  
-  document.getElementById('detailContent').innerHTML = `
-    <div class="detail-head">
-      <div>
-        <div class="detail-name">${escapeHtml(m.name)}</div>
-        <div class="detail-meta">${country} · ${escapeHtml(m.passport_number)}</div>
-      </div>
-      <div class="detail-close" onclick="closeMemberDetail()">✕</div>
-    </div>
-    <div class="detail-photos">
-      <div class="detail-photo"><div class="detail-photo-label">여권</div>${passportImg}</div>
-      <div class="detail-photo"><div class="detail-photo-label">셀카</div>${selfieImg}</div>
-    </div>
-    <div class="detail-grid">
-      <div class="detail-item"><div class="detail-item-label">전화</div><div class="detail-item-value">${escapeHtml(m.phone)}</div></div>
-      <div class="detail-item"><div class="detail-item-label">언어</div><div class="detail-item-value">${m.language?.toUpperCase() || '—'}</div></div>
-      <div class="detail-item"><div class="detail-item-label">키</div><div class="detail-item-value">${m.height_cm || '—'} cm</div></div>
-      <div class="detail-item"><div class="detail-item-label">몸무게</div><div class="detail-item-value">${m.weight_kg || '—'} kg</div></div>
-      <div class="detail-item"><div class="detail-item-label">가입일</div><div class="detail-item-value">${new Date(m.created_at).toLocaleDateString('ko')}</div></div>
-      <div class="detail-item"><div class="detail-item-label">최종 접속</div><div class="detail-item-value">${m.last_login_at ? timeAgo(m.last_login_at) : '—'}</div></div>
-    </div>
-    ${locDisplay}
-  `;
-  document.getElementById('memberDetail').classList.add('show');
+function fitAll(){
+  const bounds = new kakao.maps.LatLngBounds();
+  let cnt = 0;
+  Object.values(markers).forEach(m=>{
+    bounds.extend(m.getPosition()); cnt++;
+  });
+  if(cnt>0) kakaoMap.setBounds(bounds);
+  else toast('표시할 위치 없음');
 }
 
-function closeMemberDetail() {
-  document.getElementById('memberDetail').classList.remove('show');
+function toggleCluster(){
+  useCluster = !useCluster;
+  document.getElementById('btn-cluster').classList.toggle('on', useCluster);
+  rebuildMarkers();
 }
 
-document.getElementById('memberDetail').addEventListener('click', (e) => {
-  if (e.target.id === 'memberDetail') closeMemberDetail();
-});
+let trailOn = false;
+function toggleTrail(){
+  trailOn = !trailOn;
+  document.getElementById('btn-trail').classList.toggle('on', trailOn);
+  if(!trailOn && trailPoly){ trailPoly.setMap(null); trailPoly = null; }
+  if(trailOn && selectedId) drawTrail(selectedId);
+}
 
-async function loadSOS() {
-  const { data: sos } = await sb.from('sos_alerts')
-    .select('*, members(name, country, phone)')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false });
-  
-  const list = document.getElementById('sosList');
-  if (!sos || sos.length === 0) {
-    list.innerHTML = '<div class="empty-state">대기 중인 SOS 알림이 없습니다</div>';
+/* ====== 마커 SVG (국가색 + SOS 빨간 깜빡임) ====== */
+function makeMarkerImage(country, sos, online){
+  const c = sos ? '#dc2626' : (CTY_COLOR[country] || '#64748b');
+  const opacity = online ? 1 : 0.5;
+  const stroke = sos ? '#fff' : 'rgba(255,255,255,0.9)';
+  const sosRing = sos ? `<circle cx="14" cy="14" r="13" fill="none" stroke="#dc2626" stroke-width="2" opacity="0.4"><animate attributeName="r" from="9" to="14" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.7" to="0" dur="1s" repeatCount="indefinite"/></circle>` : '';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    ${sosRing}
+    <circle cx="14" cy="14" r="9" fill="${c}" stroke="${stroke}" stroke-width="2.5" opacity="${opacity}"/>
+    ${sos ? '<text x="14" y="18" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">!</text>' : ''}
+  </svg>`;
+  return new kakao.maps.MarkerImage(
+    'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),
+    new kakao.maps.Size(28,28),
+    {offset: new kakao.maps.Point(14,14)}
+  );
+}
+
+/* ====== 회원 + 위치 데이터 로드 ====== */
+async function loadMembers(){
+  // 멤버 + 위치 조인 (수동)
+  const [mRes, lRes] = await Promise.all([
+    sb.from('members').select('*').order('created_at',{ascending:false}),
+    sb.from('locations').select('*')
+  ]);
+  if(mRes.error){ console.error(mRes.error); toast('회원 로드 실패'); return; }
+
+  const locMap = {};
+  (lRes.data||[]).forEach(l => locMap[l.member_id] = l);
+
+  members = (mRes.data||[]).map(m => ({
+    ...m,
+    loc: locMap[m.id] || null
+  }));
+
+  // 활성 SOS 조인
+  const {data: sosData} = await sb.from('sos_alerts')
+    .select('member_id').eq('status','pending');
+  const sosSet = new Set((sosData||[]).map(s=>s.member_id));
+  members.forEach(m => m.sos_active = sosSet.has(m.id));
+
+  updateStats();
+  renderList();
+  rebuildMarkers();
+  renderMembersTable();
+}
+
+function updateStats(){
+  document.getElementById('st-total').textContent = members.length;
+  document.getElementById('st-online').textContent = members.filter(m=>isOnline(m.loc?.updated_at)).length;
+  document.getElementById('st-sos').textContent = members.filter(m=>m.sos_active).length;
+}
+
+/* ====== 좌측 회원 리스트 ====== */
+function renderList(){
+  const search = document.getElementById('ml-search').value.toLowerCase().trim();
+  const list = document.getElementById('mlist');
+
+  let filtered = members.filter(m=>{
+    if(curFilter === 'sos' && !m.sos_active) return false;
+    if(curFilter === 'online' && !isOnline(m.loc?.updated_at)) return false;
+    if(curFilter === 'offline' && isOnline(m.loc?.updated_at)) return false;
+    if(search){
+      const blob = (m.name||'')+(m.phone||'')+cName(m.country)+(m.country||'');
+      if(!blob.toLowerCase().includes(search)) return false;
+    }
+    return true;
+  });
+
+  if(filtered.length === 0){
+    list.innerHTML = '<div class="empty">조건에 맞는 회원이 없습니다</div>';
     return;
   }
-  
-  list.innerHTML = sos.map(s => {
-    const country = ({vn:'🇻🇳',th:'🇹🇭',id:'🇮🇩',ph:'🇵🇭',np:'🇳🇵',kh:'🇰🇭',mm:'🇲🇲',lk:'🇱🇰',bd:'🇧🇩'})[s.members?.country] || '';
-    return `
-      <div class="sos-card">
-        <div>
-          <div class="sos-info-name">${country} ${escapeHtml(s.members?.name || '—')}</div>
-          <div class="sos-info-time">${timeAgo(s.created_at)} · ${escapeHtml(s.members?.phone || '')}</div>
-          <div style="font-size:11px;color:var(--ink-500);margin-top:4px"><a href="https://www.google.com/maps?q=${s.lat},${s.lng}" target="_blank" style="color:var(--rose-500);font-weight:700">📍 위치 보기 (${s.lat.toFixed(4)}, ${s.lng.toFixed(4)})</a></div>
+
+  // SOS 우선, 그다음 최근 접속순
+  filtered.sort((a,b)=>{
+    if(a.sos_active !== b.sos_active) return a.sos_active ? -1 : 1;
+    const ta = a.loc?.updated_at ? new Date(a.loc.updated_at).getTime() : 0;
+    const tb = b.loc?.updated_at ? new Date(b.loc.updated_at).getTime() : 0;
+    return tb - ta;
+  });
+
+  list.innerHTML = filtered.map(m=>`
+    <div class="mlist-item ${m.sos_active?'sos':''} ${m.id===selectedId?'sel':''}"
+         onclick="selectMember('${m.id}')">
+      <div class="mlist-flag">${flag(m.country)}</div>
+      <div class="mlist-info">
+        <div class="mlist-name">${escapeHtml(m.name||'(이름없음)')}</div>
+        <div class="mlist-meta">
+          <span>${cName(m.country)} · ${age(m.birth_date)}세</span>
+          <span class="age">${fmtTime(m.loc?.updated_at)}</span>
         </div>
-        <button class="sos-resolve" onclick="resolveSOS('${s.id}')">처리완료</button>
       </div>
-    `;
-  }).join('');
-}
-
-async function resolveSOS(id) {
-  if (!confirm('이 SOS 알림을 처리완료로 표시할까요?')) return;
-  await sb.from('sos_alerts').update({ status: 'resolved', resolved_at: new Date().toISOString() }).eq('id', id);
-  loadSOS();
-  loadOverview();
-}
-
-async function loadPosts() {
-  const { data: posts } = await sb.from('posts')
-    .select('*, members(name, country)')
-    .order('created_at', { ascending: false })
-    .limit(50);
-  
-  const list = document.getElementById('postsList');
-  if (!posts || posts.length === 0) {
-    list.innerHTML = '<div class="empty-state">아직 게시글이 없습니다</div>';
-    return;
-  }
-  
-  const catLabels = { general:'일반', question:'질문', tip:'꿀팁', event:'행사' };
-  list.innerHTML = posts.map(p => `
-    <div class="post-row">
-      <div class="post-cat ${p.category}">${catLabels[p.category] || p.category}</div>
-      <div class="post-title">${escapeHtml(p.title)}</div>
-      <div class="post-body-text">${escapeHtml(p.body)}</div>
-      <div class="post-meta">
-        <span>${escapeHtml(p.members?.name || '—')}</span>
-        <span>·</span>
-        <span>${timeAgo(p.created_at)}</span>
-        <span class="post-delete" onclick="deletePost('${p.id}')">삭제</span>
-      </div>
+      ${m.sos_active ? '<div class="mlist-sos">SOS</div>' : ''}
     </div>
   `).join('');
 }
 
-async function deletePost(id) {
-  if (!confirm('이 게시글을 삭제할까요?')) return;
-  await sb.from('posts').delete().eq('id', id);
-  loadPosts();
+/* ====== 마커 다시 그리기 ====== */
+function rebuildMarkers(){
+  // 기존 제거
+  if(clusterer){ clusterer.clear(); }
+  Object.values(markers).forEach(m=>m.setMap(null));
+  markers = {};
+
+  const fresh = [];
+  members.forEach(m=>{
+    if(!m.loc) return;
+    const filterPass =
+      curFilter === 'all' ||
+      (curFilter === 'sos' && m.sos_active) ||
+      (curFilter === 'online' && isOnline(m.loc.updated_at)) ||
+      (curFilter === 'offline' && !isOnline(m.loc.updated_at));
+    if(!filterPass) return;
+
+    const pos = new kakao.maps.LatLng(m.loc.lat, m.loc.lng);
+    const marker = new kakao.maps.Marker({
+      position: pos,
+      image: makeMarkerImage(m.country, m.sos_active, isOnline(m.loc.updated_at)),
+      title: m.name || ''
+    });
+    kakao.maps.event.addListener(marker, 'click', ()=> selectMember(m.id));
+    markers[m.id] = marker;
+    fresh.push(marker);
+  });
+
+  if(useCluster){
+    clusterer.addMarkers(fresh);
+  } else {
+    fresh.forEach(m => m.setMap(kakaoMap));
+  }
 }
 
-function subscribeRealtime() {
-  sb.channel('admin-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'sos_alerts' }, () => {
-      loadOverview();
-      const activePage = document.querySelector('.page.active').id;
-      if (activePage === 'page-sos') loadSOS();
-    })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'members' }, () => {
-      loadOverview();
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, () => {
-      const activePage = document.querySelector('.page.active').id;
-      if (activePage === 'page-overview' || activePage === 'page-members') {
-        loadOverview();
-      }
-    })
+/* ====== 회원 클릭 → 상세 + 이동이력 ====== */
+async function selectMember(id){
+  selectedId = id;
+  const m = members.find(x=>x.id===id);
+  if(!m){ return; }
+
+  renderList(); // 좌측 리스트 하이라이트
+
+  // 지도 이동
+  if(m.loc){
+    const pos = new kakao.maps.LatLng(m.loc.lat, m.loc.lng);
+    kakaoMap.setLevel(4);
+    kakaoMap.panTo(pos);
+  }
+
+  // 상세 패널 열기
+  const dp = document.getElementById('dpanel');
+  const dpHead = document.getElementById('dp-head');
+  dp.classList.add('show');
+  dpHead.classList.toggle('sos', !!m.sos_active);
+
+  document.getElementById('dp-flag').textContent = flag(m.country);
+  document.getElementById('dp-name').textContent = m.name || '(이름없음)';
+  document.getElementById('dp-sub').textContent =
+    `${cName(m.country)} · ${age(m.birth_date)}세 · ${m.gender||'?'}`;
+
+  // 사진
+  const pp = document.getElementById('dp-photos');
+  pp.innerHTML = '';
+  if(m.passport_photo_url) pp.innerHTML +=
+    `<img class="dp-photo" src="${m.passport_photo_url}" onclick="showPhoto('${m.passport_photo_url}')" alt="여권">`;
+  if(m.selfie_photo_url) pp.innerHTML +=
+    `<img class="dp-photo" src="${m.selfie_photo_url}" onclick="showPhoto('${m.selfie_photo_url}')" alt="셀카">`;
+  if(!pp.innerHTML) pp.innerHTML = '<div style="color:var(--mute);font-size:11px;padding:8px">사진 없음</div>';
+
+  // 정보
+  const info = document.getElementById('dp-info');
+  info.innerHTML = `
+    <div class="dp-info-row"><span>📞 전화</span><span>${m.phone||'—'}</span></div>
+    <div class="dp-info-row"><span>📅 가입일</span><span>${fmtFull(m.created_at)}</span></div>
+    <div class="dp-info-row"><span>📍 현재 좌표</span><span>${m.loc ? m.loc.lat.toFixed(4)+', '+m.loc.lng.toFixed(4) : '—'}</span></div>
+    <div class="dp-info-row"><span>🕐 최근 접속</span><span style="color:${isOnline(m.loc?.updated_at)?'var(--teal)':'var(--mute)'}">${fmtTime(m.loc?.updated_at)}</span></div>
+    <div class="dp-info-row"><span>📏 신체</span><span>${m.height_cm||'?'}cm / ${m.weight_kg||'?'}kg</span></div>
+  `;
+
+  // 이동 이력
+  await loadHistory(id);
+
+  // trail 켜져있으면 그리기
+  if(trailOn) drawTrail(id);
+}
+
+async function loadHistory(memberId){
+  const list = document.getElementById('dp-history-list');
+  list.innerHTML = '<div class="empty" style="padding:14px">로딩...</div>';
+
+  const {data, error} = await sb.from('location_history')
+    .select('*').eq('member_id', memberId)
+    .order('recorded_at',{ascending:false}).limit(20);
+
+  if(error || !data || data.length === 0){
+    list.innerHTML = '<div class="empty" style="padding:14px">이력 없음</div>';
+    return;
+  }
+
+  list.innerHTML = data.map((h,i)=>`
+    <div class="dph-item ${i===0?'latest':''}" onclick="jumpTo(${h.lat},${h.lng})">
+      <div>
+        <div class="dph-time">${fmtFull(h.recorded_at)}</div>
+        <div class="dph-src">${h.source||'app'} · ${h.lat.toFixed(4)},${h.lng.toFixed(4)}</div>
+      </div>
+      ${i===0?'<span style="color:var(--teal);font-size:10px;font-weight:700">최신</span>':''}
+    </div>
+  `).join('');
+}
+
+function jumpTo(lat,lng){
+  kakaoMap.setLevel(3);
+  kakaoMap.panTo(new kakao.maps.LatLng(lat,lng));
+}
+
+async function drawTrail(memberId){
+  if(trailPoly){ trailPoly.setMap(null); trailPoly = null; }
+
+  const {data} = await sb.from('location_history')
+    .select('lat,lng,recorded_at').eq('member_id', memberId)
+    .order('recorded_at',{ascending:true}).limit(50);
+
+  if(!data || data.length < 2) return;
+
+  const path = data.map(d => new kakao.maps.LatLng(d.lat, d.lng));
+  trailPoly = new kakao.maps.Polyline({
+    path: path, strokeWeight: 3, strokeColor: '#0f766e',
+    strokeOpacity: 0.7, strokeStyle: 'solid'
+  });
+  trailPoly.setMap(kakaoMap);
+}
+
+function closeDetail(){
+  document.getElementById('dpanel').classList.remove('show');
+  selectedId = null;
+  if(trailPoly){ trailPoly.setMap(null); trailPoly = null; }
+  renderList();
+}
+
+function showPhoto(url){
+  document.getElementById('photo-modal-img').src = url;
+  document.getElementById('photo-modal').classList.add('show');
+}
+
+/* ====== 회원목록 테이블 ====== */
+function renderMembersTable(){
+  const search = document.getElementById('pm-search').value.toLowerCase().trim();
+  const tbody = document.getElementById('pm-tbody');
+
+  let filtered = members;
+  if(search){
+    filtered = members.filter(m=>{
+      const blob = (m.name||'')+(m.phone||'')+cName(m.country);
+      return blob.toLowerCase().includes(search);
+    });
+  }
+
+  document.getElementById('pm-count').textContent = filtered.length;
+  if(filtered.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">회원 없음</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(m=>`
+    <tr onclick="goToMap('${m.id}')">
+      <td><span class="pm-flag">${flag(m.country)}</span>${escapeHtml(m.name||'(없음)')}</td>
+      <td>${cName(m.country)}</td>
+      <td>${age(m.birth_date)}</td>
+      <td>${m.phone||'—'}</td>
+      <td>${fmtFull(m.created_at)}</td>
+      <td style="color:${isOnline(m.loc?.updated_at)?'var(--teal)':'var(--mute)'}">${fmtTime(m.loc?.updated_at)}</td>
+      <td>${m.loc ? m.loc.lat.toFixed(3)+','+m.loc.lng.toFixed(3) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function goToMap(id){
+  switchTab('map');
+  setTimeout(()=>selectMember(id), 100);
+}
+
+/* ====== 게시판 ====== */
+async function loadPosts(){
+  const {data,error} = await sb.from('posts')
+    .select('*, members(name,country)')
+    .order('created_at',{ascending:false}).limit(30);
+
+  const cont = document.getElementById('panel-board');
+  if(error || !data || data.length === 0){
+    cont.innerHTML = '<div class="empty">게시글 없음</div>';
+    return;
+  }
+  cont.innerHTML = data.map(p=>`
+    <div class="post-card">
+      <div class="post-head">
+        <span class="post-author">${flag(p.members?.country)} ${escapeHtml(p.members?.name||'익명')}</span>
+        <span>${fmtFull(p.created_at)}</span>
+      </div>
+      <div class="post-title">${escapeHtml(p.title||'(제목없음)')}</div>
+      <div class="post-body">${escapeHtml(p.body||'')}</div>
+    </div>
+  `).join('');
+}
+
+/* ====== SOS ====== */
+async function loadSOS(){
+  const {data} = await sb.from('sos_alerts')
+    .select('*, members(name,country,phone)')
+    .order('created_at',{ascending:false}).limit(50);
+
+  const cont = document.getElementById('panel-sos');
+  if(!data || data.length === 0){
+    cont.innerHTML = '<div class="empty">SOS 알림 없음 ✅</div>';
+    return;
+  }
+  cont.innerHTML = data.map(s=>`
+    <div class="sos-card ${s.status==='resolved'?'resolved':''}">
+      <div class="sos-info">
+        <b>${flag(s.members?.country)} ${escapeHtml(s.members?.name||'?')} ${s.members?.phone||''}</b>
+        <span>${fmtFull(s.created_at)} · 좌표: ${s.lat?.toFixed(4)||'?'},${s.lng?.toFixed(4)||'?'}</span>
+        ${s.message ? `<span style="display:block;margin-top:4px">"${escapeHtml(s.message)}"</span>` : ''}
+      </div>
+      ${s.status==='pending' ? `
+        <button onclick="resolveSOS('${s.id}','${s.member_id}')">해결됨</button>
+      ` : '<span style="color:var(--mute);font-size:12px">처리 완료</span>'}
+    </div>
+  `).join('');
+}
+
+async function resolveSOS(id, memberId){
+  await sb.from('sos_alerts').update({
+    status:'resolved', resolved_at: new Date().toISOString(), resolved_by: me.id
+  }).eq('id', id);
+  toast('SOS 처리 완료');
+  loadSOS();
+  loadMembers();
+}
+
+/* ====== Realtime 구독 ====== */
+function subscribeRealtime(){
+  realtimeSub = sb.channel('admin-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'locations'},
+      (payload)=>{
+        const row = payload.new || payload.old;
+        if(!row) return;
+        const m = members.find(x=>x.id===row.member_id);
+        if(m){
+          m.loc = payload.new || null;
+          updateStats(); renderList(); rebuildMarkers();
+        } else {
+          loadMembers(); // 새 회원이면 전체 다시
+        }
+      })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'sos_alerts'},
+      (payload)=>{
+        toast(`🆘 새 SOS 발생: ${payload.new.member_id?.slice(0,8)}`);
+        loadMembers(); loadSOS();
+        // 사운드 알림
+        try{
+          const a = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==');
+          a.play().catch(()=>{});
+        } catch(e){}
+      })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},
+      ()=> loadPosts())
     .subscribe();
 }
 
-// Auto-login
-(async () => {
-  const id = localStorage.getItem('hands_admin_id');
-  if (!id) return;
-  const { data } = await sb.from('admin_users').select('*').eq('id', id).single();
-  if (data) {
-    currentAdmin = data;
-    enterDashboard();
-  }
-})();
-</script>
+/* ====== 탭 ====== */
+function switchTab(name){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.classList.toggle('on', b.dataset.tab === name);
+  });
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.toggle('on', p.id === 'panel-'+name);
+  });
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.onclick = ()=> switchTab(b.dataset.tab);
+});
 
+/* ====== 검색 / 필터 ====== */
+document.getElementById('ml-search').addEventListener('input', renderList);
+document.getElementById('pm-search').addEventListener('input', renderMembersTable);
+document.querySelectorAll('.map-filters button').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('.map-filters button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    curFilter = b.dataset.filter;
+    renderList();
+    rebuildMarkers();
+  };
+});
+
+/* ====== 유틸 ====== */
+function escapeHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g, c=>(
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
+/* ====== 자동 로그인 (저장된 세션) ====== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const saved = localStorage.getItem('hands_admin');
+  if(saved){
+    try{
+      me = JSON.parse(saved);
+      enterApp();
+    } catch(e){}
+  }
+});
+
+/* Enter로 로그인 */
+document.getElementById('lg-pw').addEventListener('keydown', e=>{
+  if(e.key==='Enter') doLogin();
+});
+</script>
 </body>
 </html>
