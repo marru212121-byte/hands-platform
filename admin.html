@@ -191,6 +191,96 @@
   .toast.show{display:block;animation:slideIn .25s}
   @keyframes slideIn{from{transform:translate(-50%,-20px);opacity:0}
     to{transform:translate(-50%,0);opacity:1}}
+
+  /* ============================================ */
+  /* ===== 모바일 반응형 (768px 이하) ===== */
+  /* ============================================ */
+  @media (max-width: 768px) {
+    /* 헤더 - 한 줄에 다 압축 */
+    header{padding:8px 10px;height:auto;min-height:46px;gap:6px;flex-wrap:nowrap}
+    header .logo{font-size:14px;flex-shrink:0}
+    header .badge{font-size:8px;padding:2px 5px;flex-shrink:0}
+    header .stats{font-size:10.5px;gap:8px;margin-left:auto;flex-shrink:0}
+    header .stats span{white-space:nowrap}
+    header .stats span b{margin:0 1px}
+    header .who{display:none !important} /* 모바일에선 이메일 숨김 */
+    header button.logout{padding:5px 8px;font-size:10.5px;flex-shrink:0}
+
+    /* 탭 */
+    nav.tabs{padding:0 6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    nav.tabs button{padding:10px 12px;font-size:12.5px;white-space:nowrap;flex-shrink:0}
+
+    /* 지도 패널: 좌우 분할 유지하되 사이드바 접고/펼치기 */
+    #panel-map{flex-direction:row;position:relative}
+    .map-side{
+      width:0;background:#fff;flex-shrink:0;overflow:hidden;
+      transition:width .25s ease;border-right:1px solid var(--line)
+    }
+    .map-side.open{width:46%;max-width:280px}
+    .map-area{flex:1;height:100%;position:relative;min-width:0}
+
+    /* 햄버거 토글 (펼쳐있을 땐 ✕로 변환) */
+    .map-mobile-toggle{
+      display:flex !important;position:absolute;top:14px;left:14px;z-index:10;
+      width:42px;height:42px;background:#fff;border:1px solid var(--line);
+      border-radius:10px;align-items:center;justify-content:center;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:20px;cursor:pointer;
+      transition:left .25s ease
+    }
+    .map-side.open ~ .map-area .map-mobile-toggle,
+    #panel-map.side-open .map-mobile-toggle{
+      /* 사이드바 펼쳤을 때 토글 위치 (안 가리게) */
+    }
+
+    /* 사이드바 안의 콘텐츠 압축 */
+    .map-side.open .map-side-head{padding:10px 12px}
+    .map-side.open .map-side-head input{font-size:12px;padding:7px 10px}
+    .map-side.open .map-filters{gap:4px;margin-top:8px}
+    .map-side.open .map-filters button{font-size:10.5px;padding:4px 8px}
+    .map-side.open .mlist-item{padding:9px 11px;gap:8px}
+    .map-side.open .mlist-flag{font-size:18px;width:24px}
+    .map-side.open .mlist-name{font-size:12.5px}
+    .map-side.open .mlist-meta{font-size:10px}
+    .map-side.open .mlist-sos{font-size:8px;padding:1px 4px}
+
+    .map-controls{top:14px;right:14px}
+    .map-controls button{width:42px;height:42px;font-size:18px}
+    .map-legend{
+      bottom:8px;left:8px;right:8px;padding:6px 10px;
+      font-size:10.5px;gap:10px;justify-content:center
+    }
+
+    /* 상세 패널 - 지도 영역 안 하단에 슬라이드 업 (사이드바와 안 겹침) */
+    .detail-panel{
+      top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:55vh;
+      border-radius:14px;box-shadow:0 -8px 24px rgba(0,0,0,.2)
+    }
+    .dp-history{max-height:30vh}
+
+    /* 회원 목록 - 테이블 숨기고 카드만 */
+    .pm-toolbar{padding:10px 12px;flex-wrap:wrap;gap:8px}
+    .pm-toolbar input{font-size:13px;max-width:none;flex:1}
+    .pm-table{display:none !important}
+    .pm-cards{display:flex !important;flex-direction:column;gap:8px;padding:10px}
+    .pm-card{background:#fff;border:1px solid var(--line);border-radius:12px;
+      padding:12px 14px;cursor:pointer;display:flex;gap:11px;align-items:center}
+    .pm-card.sos{background:#fef2f2;border-color:#fecaca}
+    .pm-card-flag{font-size:28px;flex-shrink:0}
+    .pm-card-info{flex:1;min-width:0}
+    .pm-card-name{font-size:14.5px;font-weight:700;color:var(--txt);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pm-card-meta{font-size:11.5px;color:var(--sub);margin-top:3px;
+      display:flex;gap:8px;flex-wrap:wrap}
+    .pm-card-time{font-size:11px;color:var(--mute);text-align:right;flex-shrink:0}
+    .pm-card-time.online{color:var(--teal);font-weight:600}
+
+    /* 게시판/SOS 패딩 */
+    #panel-board,#panel-sos{padding:12px}
+  }
+
+  /* PC에서는 햄버거/카드 숨김, 테이블만 */
+  .map-mobile-toggle{display:none}
+  .pm-cards{display:none}
 </style>
 </head>
 <body>
@@ -213,9 +303,9 @@
     <span class="logo">HANDS</span>
     <span class="badge">ADMIN</span>
     <div class="stats">
-      <span>전체 <b id="st-total">0</b>명</span>
-      <span>온라인 <b id="st-online" style="color:var(--teal)">0</b></span>
-      <span>SOS <b id="st-sos" style="color:var(--red)">0</b></span>
+      <span>👥 <b id="st-total">0</b></span>
+      <span>🟢 <b id="st-online" style="color:var(--teal)">0</b></span>
+      <span>🆘 <b id="st-sos" style="color:var(--red)">0</b></span>
     </div>
     <span class="who" id="who"></span>
     <button class="logout" onclick="doLogout()">로그아웃</button>
@@ -245,6 +335,7 @@
       </div>
       <div class="map-area">
         <div id="map"></div>
+        <button class="map-mobile-toggle" onclick="toggleSide()">☰</button>
         <div class="map-controls">
           <button id="btn-fit" title="모두 보기">📍</button>
           <button id="btn-cluster" class="on" title="클러스터링 ON/OFF">⊕</button>
@@ -289,6 +380,7 @@
         </tr></thead>
         <tbody id="pm-tbody"></tbody>
       </table>
+      <div class="pm-cards" id="pm-cards"></div>
     </div>
 
     <!-- 게시판 패널 -->
@@ -605,6 +697,7 @@ async function selectMember(id){
   if(!m){ return; }
 
   renderList(); // 좌측 리스트 하이라이트
+  // 모바일에서도 사이드바 그대로 유지 (비교하면서 보기)
 
   // 지도 이동
   if(m.loc){
@@ -708,10 +801,11 @@ function showPhoto(url){
   document.getElementById('photo-modal').classList.add('show');
 }
 
-/* ====== 회원목록 테이블 ====== */
+/* ====== 회원목록 테이블 + 모바일 카드 ====== */
 function renderMembersTable(){
   const search = document.getElementById('pm-search').value.toLowerCase().trim();
   const tbody = document.getElementById('pm-tbody');
+  const cards = document.getElementById('pm-cards');
 
   let filtered = members;
   if(search){
@@ -721,12 +815,22 @@ function renderMembersTable(){
     });
   }
 
+  // SOS 우선 → 최근 접속순
+  filtered.sort((a,b)=>{
+    if(a.sos_active !== b.sos_active) return a.sos_active ? -1 : 1;
+    const ta = a.loc?.updated_at ? new Date(a.loc.updated_at).getTime() : 0;
+    const tb = b.loc?.updated_at ? new Date(b.loc.updated_at).getTime() : 0;
+    return tb - ta;
+  });
+
   document.getElementById('pm-count').textContent = filtered.length;
   if(filtered.length === 0){
     tbody.innerHTML = '<tr><td colspan="7" class="empty">회원 없음</td></tr>';
+    if(cards) cards.innerHTML = '<div class="empty">회원 없음</div>';
     return;
   }
 
+  // PC - 테이블
   tbody.innerHTML = filtered.map(m=>`
     <tr onclick="goToMap('${m.id}')">
       <td><span class="pm-flag">${flag(m.country)}</span>${escapeHtml(m.name||'(없음)')}</td>
@@ -738,6 +842,49 @@ function renderMembersTable(){
       <td>${m.loc ? m.loc.lat.toFixed(3)+','+m.loc.lng.toFixed(3) : '—'}</td>
     </tr>
   `).join('');
+
+  // 모바일 - 카드
+  if(cards){
+    cards.innerHTML = filtered.map(m=>{
+      const online = isOnline(m.loc?.updated_at);
+      return `
+        <div class="pm-card ${m.sos_active?'sos':''}" onclick="goToMap('${m.id}')">
+          <div class="pm-card-flag">${flag(m.country)}</div>
+          <div class="pm-card-info">
+            <div class="pm-card-name">${escapeHtml(m.name||'(이름없음)')} ${m.sos_active?'<span style="color:var(--red);font-weight:800">🆘</span>':''}</div>
+            <div class="pm-card-meta">
+              <span>${cName(m.country)}</span>
+              <span>·</span>
+              <span>${age(m.birth_date)}세</span>
+              ${m.phone ? `<span>·</span><span>${m.phone}</span>` : ''}
+            </div>
+          </div>
+          <div class="pm-card-time ${online?'online':''}">${fmtTime(m.loc?.updated_at)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+/* ====== 모바일 사이드바 토글 ====== */
+function toggleSide(){
+  const side = document.querySelector('.map-side');
+  const btn = document.querySelector('.map-mobile-toggle');
+  if(!side) return;
+  const isOpen = side.classList.contains('open');
+  side.classList.toggle('open', !isOpen);
+  if(btn) btn.textContent = isOpen ? '☰' : '✕';
+  // 지도 크기 변동 후 카카오맵 재계산
+  setTimeout(()=>{
+    if(kakaoMap) kakaoMap.relayout();
+  }, 280);
+}
+function closeSide(){
+  const side = document.querySelector('.map-side');
+  const btn = document.querySelector('.map-mobile-toggle');
+  if(side) side.classList.remove('open');
+  if(btn) btn.textContent = '☰';
+  setTimeout(()=>{ if(kakaoMap) kakaoMap.relayout(); }, 280);
 }
 
 function goToMap(id){
