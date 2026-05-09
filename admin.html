@@ -402,6 +402,24 @@ const SUPA_URL = 'https://wcugfateeuqfcpimoogo.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdWdmYXRlZXVxZmNwaW1vb2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjM5MTAsImV4cCI6MjA5MzY5OTkxMH0.gYMs71Q0c591W5vZ049HzpKcD2ZICsCLt6-rRCsYbJc';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
+/* ====== 사진 URL 자동 변환 ====== */
+function photoUrl(value, type){
+  if(!value) return null;
+  // 이미 전체 URL이면 그대로
+  if(value.startsWith('http://') || value.startsWith('https://')) return value;
+  // UUID만 저장된 경우 (예: "3470da20-38c6-49e8-bf41-870160fb987b")
+  // → "3470da20-..._passport.jpg" 또는 "..._selfie.jpg" 형태로 변환
+  const isUuid = /^[a-f0-9-]{36}$/i.test(value);
+  const path = isUuid ? `${value}_${type}.jpg` : value;
+  try {
+    const { data } = sb.storage.from('passports').getPublicUrl(path);
+    return data?.publicUrl || null;
+  } catch(e) {
+    console.warn('photoUrl 변환 실패:', value, type);
+    return null;
+  }
+}
+
 /* 국가 코드 → 국기 + 한글명 */
 const CTY = {
   vn:['🇻🇳','베트남'], th:['🇹🇭','태국'], np:['🇳🇵','네팔'],
@@ -717,13 +735,15 @@ async function selectMember(id){
   document.getElementById('dp-sub').textContent =
     `${cName(m.country)} · ${age(m.birth_date)}세 · ${m.gender||'?'}`;
 
-  // 사진
+  // 사진 (UUID만 저장돼있어도 자동으로 _passport.jpg / _selfie.jpg 붙여서 URL 생성)
   const pp = document.getElementById('dp-photos');
   pp.innerHTML = '';
-  if(m.passport_photo_url) pp.innerHTML +=
-    `<img class="dp-photo" src="${m.passport_photo_url}" onclick="showPhoto('${m.passport_photo_url}')" alt="여권">`;
-  if(m.selfie_photo_url) pp.innerHTML +=
-    `<img class="dp-photo" src="${m.selfie_photo_url}" onclick="showPhoto('${m.selfie_photo_url}')" alt="셀카">`;
+  const passUrl = photoUrl(m.passport_photo_url, 'passport');
+  const selfUrl = photoUrl(m.selfie_photo_url, 'selfie');
+  if(passUrl) pp.innerHTML +=
+    `<img class="dp-photo" src="${passUrl}" onclick="showPhoto('${passUrl}')" alt="여권" onerror="this.style.opacity=0.3">`;
+  if(selfUrl) pp.innerHTML +=
+    `<img class="dp-photo" src="${selfUrl}" onclick="showPhoto('${selfUrl}')" alt="셀카" onerror="this.style.opacity=0.3">`;
   if(!pp.innerHTML) pp.innerHTML = '<div style="color:var(--mute);font-size:11px;padding:8px">사진 없음</div>';
 
   // 정보
