@@ -725,7 +725,9 @@ async function uploadPhoto(blob, memberId, type) {
     upsert: true
   });
   if (error) throw error;
-  return path;
+  // 공개 URL 받아서 반환
+  const { data: urlData } = sb.storage.from('passports').getPublicUrl(path);
+  return urlData.publicUrl;
 }
 
 document.getElementById('btnSignup').addEventListener('click', async () => {
@@ -748,6 +750,18 @@ document.getElementById('btnSignup').addEventListener('click', async () => {
     
     if (memberErr) {
       if (memberErr.code === '23505') {
+        // 이미 등록된 전화번호 → 기존 회원으로 자동 로그인
+        const { data: existing } = await sb.from('members')
+          .select('*').eq('phone', phone).maybeSingle();
+        if (existing) {
+          currentMember = existing;
+          saveSession(existing);
+          hideLoading();
+          alert('이미 가입된 전화번호입니다. 기존 계정으로 로그인합니다.\nAlready registered. Logging in.');
+          enterMain();
+          startLocationTracking();
+          return;
+        }
         alert('이미 등록된 전화번호입니다.\nPhone already registered.');
       } else {
         throw memberErr;
@@ -768,6 +782,7 @@ document.getElementById('btnSignup').addEventListener('click', async () => {
     localStorage.setItem('hands_member_id', member.id);
     localStorage.setItem('hands_member_name', member.name);
     localStorage.setItem('hands_member_country', member.country);
+    saveSession(member); // 추가 백업 저장
     
     currentMember = member;
     hideLoading();
@@ -780,6 +795,38 @@ document.getElementById('btnSignup').addEventListener('click', async () => {
     hideLoading();
   }
 });
+
+/* ====== 세션 3중 저장 (localStorage + sessionStorage + Cookie) ====== */
+function saveSession(member) {
+  try { localStorage.setItem('hands_member_id', member.id); } catch(e){}
+  try { sessionStorage.setItem('hands_member_id', member.id); } catch(e){}
+  try {
+    const exp = new Date(); exp.setFullYear(exp.getFullYear() + 1);
+    document.cookie = `hands_member_id=${member.id};expires=${exp.toUTCString()};path=/;samesite=lax`;
+  } catch(e){}
+}
+function readSession() {
+  try {
+    const ls = localStorage.getItem('hands_member_id'); if(ls) return ls;
+  } catch(e){}
+  try {
+    const ss = sessionStorage.getItem('hands_member_id'); if(ss) return ss;
+  } catch(e){}
+  try {
+    const m = document.cookie.match(/hands_member_id=([^;]+)/);
+    if(m) return m[1];
+  } catch(e){}
+  return null;
+}
+function clearSession() {
+  try {
+    localStorage.removeItem('hands_member_id');
+    localStorage.removeItem('hands_member_name');
+    localStorage.removeItem('hands_member_country');
+  } catch(e){}
+  try { sessionStorage.removeItem('hands_member_id'); } catch(e){}
+  try { document.cookie = 'hands_member_id=;max-age=0;path=/'; } catch(e){}
+}
 
 function enterMain() {
   if (!currentMember || !currentMember.name) {
@@ -913,9 +960,7 @@ async function sendSOS() {
 async function logout() {
   if (!confirm('로그아웃 하시겠습니까?\nLog out?')) return;
   if (watchPositionId) navigator.geolocation.clearWatch(watchPositionId);
-  localStorage.removeItem('hands_member_id');
-  localStorage.removeItem('hands_member_name');
-  localStorage.removeItem('hands_member_country');
+  clearSession();
   currentMember = null;
   location.reload();
 }
@@ -1001,25 +1046,19 @@ document.getElementById('btnPost').addEventListener('click', async () => {
 });
 
 async function tryAutoLogin() {
-  const memberId = localStorage.getItem('hands_member_id');
+  const memberId = readSession(); // localStorage + sessionStorage + Cookie 다 시도
   if (!memberId) return false;
   
   try {
     const { data, error } = await sb.from('members').select('*').eq('id', memberId).single();
     if (error || !data) {
-      // DB에 없는 회원이면 로컬 정리
-      localStorage.removeItem('hands_member_id');
-      localStorage.removeItem('hands_member_name');
-      localStorage.removeItem('hands_member_country');
+      clearSession();
       return false;
     }
     
-    // 데이터 무결성 체크 - 이름이나 국가가 없으면 깨진 회원
     if (!data.name || !data.country) {
       console.warn('가입 데이터 불완전, 다시 가입 필요');
-      localStorage.removeItem('hands_member_id');
-      localStorage.removeItem('hands_member_name');
-      localStorage.removeItem('hands_member_country');
+      clearSession();
       return false;
     }
     
@@ -1027,6 +1066,7 @@ async function tryAutoLogin() {
       last_login_at: new Date().toISOString() 
     }).eq('id', memberId);
     
+    saveSession(data); // 새로고침 (만료 연장)
     currentMember = data;
     enterMain();
     startLocationTracking();
@@ -1042,9 +1082,7 @@ async function tryAutoLogin() {
   
   // URL에 ?reset 있으면 강제 초기화 (응급용)
   if (location.search.includes('reset')) {
-    localStorage.removeItem('hands_member_id');
-    localStorage.removeItem('hands_member_name');
-    localStorage.removeItem('hands_member_country');
+    clearSession();
     history.replaceState(null, '', location.pathname);
     console.log('로컬 데이터 초기화됨');
   }
