@@ -32,10 +32,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,select,textarea{font-family:inherit;color:inherit}
 input:focus,select:focus,textarea:focus{outline:none}
 .app{position:relative;width:100%;max-width:480px;min-height:100vh;margin:0 auto;background:var(--sand-50);overflow-x:hidden}
-.screen{display:none !important;flex-direction:column;min-height:100vh;position:relative}
+.screen{display:none !important;flex-direction:column;min-height:100vh;position:relative;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 .screen.active{display:flex !important}
 
-.lang-switcher{position:fixed;top:18px;right:18px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
+.lang-switcher{position:fixed;top:calc(18px + env(safe-area-inset-top));right:18px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
 .lang-switcher.on-dark{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18)}
 .lang-switcher.on-light{background:white;box-shadow:0 2px 8px rgba(15,31,29,0.06)}
 .lang-btn{padding:5px 11px;font-size:11px;font-weight:700;letter-spacing:0.02em;border-radius:999px;transition:all 0.15s;background:transparent;border:none;cursor:pointer}
@@ -134,7 +134,7 @@ input:focus,select:focus,textarea:focus{outline:none}
 .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
 .loading-text{font-size:14px;font-weight:600}
 
-#main{background:var(--sand-50);flex-direction:column;min-height:100vh;padding-bottom:80px}
+#main{background:var(--sand-50);flex-direction:column;min-height:100vh;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
 .main-header{background:linear-gradient(165deg,#114841 0%,#1f7a6e 70%,#2d8d7b 100%);color:white;padding:56px 24px 80px;border-radius:0 0 32px 32px;position:relative;overflow:hidden}
 .main-header::before{content:"";position:absolute;top:-50px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(232,123,53,0.35),transparent 60%);border-radius:50%;pointer-events:none}
 .main-greet-hi{font-size:13px;opacity:0.8;font-weight:500;margin-bottom:4px;position:relative;z-index:1}
@@ -160,7 +160,7 @@ input:focus,select:focus,textarea:focus{outline:none}
 .action-emoji{font-size:20px}
 .action-label{font-size:11.5px;font-weight:700}
 
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--sand-200);padding:10px 0 22px;display:flex;justify-content:space-around;z-index:100}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--sand-200);padding:10px 0 calc(22px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;z-index:100}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;color:var(--ink-300);font-size:10px;font-weight:700}
 .nav-item.active{color:var(--teal-500)}
 .nav-emoji{font-size:18px}
