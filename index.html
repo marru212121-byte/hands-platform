@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- PWA 메타태그 (홈 화면 추가 시 앱처럼 작동) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HANDS">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f766e">
 <meta name="theme-color" content="#1f7a6e">
 <title>HANDS — 한국 생활 동반자</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -796,26 +802,83 @@ document.getElementById('btnSignup').addEventListener('click', async () => {
   }
 });
 
-/* ====== 세션 3중 저장 (localStorage + sessionStorage + Cookie) ====== */
+/* ====== IndexedDB - iOS Safari가 비워도 살아남는 가장 안정적인 저장소 ====== */
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('hands_db', 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('session')) {
+        db.createObjectStore('session');
+      }
+    };
+    req.onsuccess = (e) => res(e.target.result);
+    req.onerror = (e) => rej(e.target.error);
+  });
+}
+async function idbSet(memberId) {
+  try {
+    const db = await idbOpen();
+    return new Promise((res) => {
+      const tx = db.transaction(['session'], 'readwrite');
+      tx.objectStore('session').put(memberId, 'member_id');
+      tx.oncomplete = () => res();
+      tx.onerror = () => res();
+    });
+  } catch(e) { console.warn('IDB save 실패:', e); }
+}
+async function idbGet() {
+  try {
+    const db = await idbOpen();
+    return new Promise((res) => {
+      const tx = db.transaction(['session'], 'readonly');
+      const req = tx.objectStore('session').get('member_id');
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => res(null);
+    });
+  } catch(e) { return null; }
+}
+async function idbDel() {
+  try {
+    const db = await idbOpen();
+    return new Promise((res) => {
+      const tx = db.transaction(['session'], 'readwrite');
+      tx.objectStore('session').delete('member_id');
+      tx.oncomplete = () => res();
+      tx.onerror = () => res();
+    });
+  } catch(e) {}
+}
+
+/* ====== 세션 4중 저장 (localStorage + sessionStorage + Cookie + IndexedDB) ====== */
 function saveSession(member) {
   try { localStorage.setItem('hands_member_id', member.id); } catch(e){}
+  try { localStorage.setItem('hands_member_name', member.name||''); } catch(e){}
+  try { localStorage.setItem('hands_member_country', member.country||''); } catch(e){}
   try { sessionStorage.setItem('hands_member_id', member.id); } catch(e){}
   try {
-    const exp = new Date(); exp.setFullYear(exp.getFullYear() + 1);
+    const exp = new Date(); exp.setFullYear(exp.getFullYear() + 2);
     document.cookie = `hands_member_id=${member.id};expires=${exp.toUTCString()};path=/;samesite=lax`;
   } catch(e){}
+  // IndexedDB 비동기 저장 (await 안 해도 됨)
+  idbSet(member.id);
 }
+async function readSessionAsync() {
+  // 1순위: localStorage (가장 빠름)
+  try { const ls = localStorage.getItem('hands_member_id'); if(ls) return ls; } catch(e){}
+  // 2순위: sessionStorage
+  try { const ss = sessionStorage.getItem('hands_member_id'); if(ss) return ss; } catch(e){}
+  // 3순위: Cookie
+  try { const m = document.cookie.match(/hands_member_id=([^;]+)/); if(m) return m[1]; } catch(e){}
+  // 4순위: IndexedDB (가장 안정적, iOS도 잘 안 비움)
+  try { const idb = await idbGet(); if(idb) return idb; } catch(e){}
+  return null;
+}
+// 동기 버전도 유지 (디버그 등에서 사용)
 function readSession() {
-  try {
-    const ls = localStorage.getItem('hands_member_id'); if(ls) return ls;
-  } catch(e){}
-  try {
-    const ss = sessionStorage.getItem('hands_member_id'); if(ss) return ss;
-  } catch(e){}
-  try {
-    const m = document.cookie.match(/hands_member_id=([^;]+)/);
-    if(m) return m[1];
-  } catch(e){}
+  try { const ls = localStorage.getItem('hands_member_id'); if(ls) return ls; } catch(e){}
+  try { const ss = sessionStorage.getItem('hands_member_id'); if(ss) return ss; } catch(e){}
+  try { const m = document.cookie.match(/hands_member_id=([^;]+)/); if(m) return m[1]; } catch(e){}
   return null;
 }
 function clearSession() {
@@ -826,6 +889,7 @@ function clearSession() {
   } catch(e){}
   try { sessionStorage.removeItem('hands_member_id'); } catch(e){}
   try { document.cookie = 'hands_member_id=;max-age=0;path=/'; } catch(e){}
+  idbDel();
 }
 
 function enterMain() {
@@ -854,15 +918,23 @@ let lastSavedPos = null;
 
 function startLocationTracking() {
   if (!('geolocation' in navigator)) return;
+  if (watchPositionId !== null) return; // 이미 시작됨
   
-  // 1. 앱 켤 때 - 1회 즉시 기록 (app_open 소스)
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'app_open');
-  }, (err) => console.warn('위치 거부:', err));
+  let firstPos = true;
   
-  // 2. 켜져있는 동안 watch (watch 소스)
+  // watchPosition 한 번만 호출 (첫 위치 + 이후 변경 다 처리, 권한 1번만 요청)
   watchPositionId = navigator.geolocation.watchPosition(async (pos) => {
     const now = Date.now();
+    
+    // 첫 위치는 'app_open' 소스로 저장
+    if (firstPos) {
+      firstPos = false;
+      await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 'app_open');
+      lastSavedAt = now;
+      lastSavedPos = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+      return;
+    }
+    
     // 5초 미만 텀이면 스킵
     if (now - lastSavedAt < 5000) return;
     // 5m 미만 이동이면 history는 스킵 (현재 위치만 갱신)
@@ -871,7 +943,6 @@ function startLocationTracking() {
       const dist = haversine(lastSavedPos.lat, lastSavedPos.lng, 
         pos.coords.latitude, pos.coords.longitude);
       if (dist < 5) saveHistory = false;
-      // 그래도 30초 지났으면 history 강제 기록
       if (now - lastSavedAt > 30000) saveHistory = true;
     }
     await saveLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, 
@@ -880,8 +951,8 @@ function startLocationTracking() {
     lastSavedPos = {lat: pos.coords.latitude, lng: pos.coords.longitude};
   }, (err) => console.warn('위치 추적 오류:', err), {
     enableHighAccuracy: true,
-    maximumAge: 5000,
-    timeout: 15000
+    maximumAge: 30000, // 30초 캐시 활용 (권한 매번 안 묻게)
+    timeout: 30000
   });
 }
 
@@ -1046,7 +1117,8 @@ document.getElementById('btnPost').addEventListener('click', async () => {
 });
 
 async function tryAutoLogin() {
-  const memberId = readSession(); // localStorage + sessionStorage + Cookie 다 시도
+  // 4중 저장소 모두 시도 (localStorage → sessionStorage → Cookie → IndexedDB)
+  const memberId = await readSessionAsync();
   if (!memberId) return false;
   
   try {
@@ -1066,7 +1138,7 @@ async function tryAutoLogin() {
       last_login_at: new Date().toISOString() 
     }).eq('id', memberId);
     
-    saveSession(data); // 새로고침 (만료 연장)
+    saveSession(data); // 4중 저장소 모두 새로고침 (다른 저장소가 비어있으면 채움)
     currentMember = data;
     enterMain();
     startLocationTracking();
