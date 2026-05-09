@@ -1087,7 +1087,68 @@ async function tryAutoLogin() {
     console.log('로컬 데이터 초기화됨');
   }
   
-  await tryAutoLogin();
+  // ?debug 붙이면 진단 정보 화면에 표시
+  const debugMode = location.search.includes('debug');
+  let debugLog = (msg) => console.log(msg);
+  
+  if (debugMode) {
+    const dbg = document.createElement('div');
+    dbg.id = 'debug-info';
+    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;padding:8px 10px;font:11px monospace;z-index:99999;line-height:1.5;max-height:60vh;overflow:auto;border-bottom:2px solid #0f0';
+    document.body.appendChild(dbg);
+    
+    debugLog = (msg) => {
+      dbg.innerHTML += msg + '<br>';
+      console.log(msg);
+    };
+    
+    debugLog('━━━ HANDS 진단 모드 ━━━');
+    debugLog('UA: ' + navigator.userAgent.slice(0, 70));
+    
+    // PWA 모드 체크
+    const isStandalone = window.navigator.standalone || 
+                         window.matchMedia('(display-mode:standalone)').matches;
+    debugLog('홈화면 PWA 모드: ' + (isStandalone ? '✅ YES' : '❌ NO (브라우저)'));
+    
+    // 카카오톡 인앱 체크
+    const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
+    if (isKakao) debugLog('⚠️ 카카오톡 인앱 - localStorage 매번 사라짐!');
+    
+    // Safari 인앱 체크 (Instagram 등)
+    const isInApp = /FBAN|FBAV|Instagram|Line|Twitter/i.test(navigator.userAgent);
+    if (isInApp) debugLog('⚠️ SNS 인앱 브라우저 - 권장 안 함');
+    
+    debugLog('Cookies enabled: ' + navigator.cookieEnabled);
+    
+    // 각 저장소 체크
+    try {
+      const ls = localStorage.getItem('hands_member_id');
+      debugLog('localStorage: ' + (ls ? ls.slice(0,8)+'...' : '(비어있음)'));
+    } catch(e) { debugLog('localStorage 막힘: ' + e.message); }
+    
+    try {
+      const ss = sessionStorage.getItem('hands_member_id');
+      debugLog('sessionStorage: ' + (ss ? ss.slice(0,8)+'...' : '(비어있음)'));
+    } catch(e) { debugLog('sessionStorage 막힘: ' + e.message); }
+    
+    try {
+      const m = document.cookie.match(/hands_member_id=([^;]+)/);
+      debugLog('Cookie: ' + (m ? m[1].slice(0,8)+'...' : '(비어있음)'));
+    } catch(e) { debugLog('Cookie 오류'); }
+    
+    const final = readSession();
+    debugLog('readSession 최종: ' + (final ? final.slice(0,8)+'...' : '(null)'));
+    debugLog('━━━━━━━━━━━━━━━━━━━━━');
+  }
+  
+  const result = await tryAutoLogin();
+  
+  if (debugMode) {
+    debugLog('tryAutoLogin: ' + (result ? '✅ 성공 → 메인' : '❌ 실패 → welcome'));
+    if (currentMember) {
+      debugLog('현재 회원: ' + currentMember.name + ' / ' + currentMember.country);
+    }
+  }
 })();
 </script>
 
