@@ -63,8 +63,30 @@ input:focus,select:focus,textarea:focus{outline:none}
 .lang-card-en{font-size:10px;opacity:0.6;font-weight:600;letter-spacing:0.06em}
 .welcome-cta{margin-top:18px;width:100%;background:white;color:var(--teal-700);padding:17px;border-radius:14px;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 8px 24px rgba(0,0,0,0.15);opacity:0;animation:fadeUp 0.7s ease-out 0.7s forwards}
 .welcome-cta:active{transform:scale(0.98)}
+.welcome-login{margin-top:10px;width:100%;background:transparent;color:white;padding:13px;border:1.5px solid rgba(255,255,255,0.4);border-radius:14px;font-weight:600;font-size:13px;cursor:pointer;opacity:0;animation:fadeUp 0.7s ease-out 0.85s forwards}
+.welcome-login:active{background:rgba(255,255,255,0.1)}
 
-#consent,#signup{background:var(--sand-50);padding:60px 24px 24px;min-height:100vh}
+#consent,#signup,#login,#login-confirm{background:var(--sand-50);padding:60px 24px 24px;min-height:100vh}
+#settings{background:var(--sand-50);padding:60px 20px calc(40px + env(safe-area-inset-bottom));min-height:100vh}
+.settings-row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;color:var(--ink-700)}
+.settings-row span:first-child{color:var(--ink-400)}
+.settings-row span:last-child{font-weight:600;color:var(--ink-900);max-width:60%;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings-menu{display:flex;align-items:center;width:100%;background:white;border:none;padding:14px 18px;border-radius:14px;margin-bottom:8px;font-size:14px;color:var(--ink-700);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.settings-menu:active{background:var(--sand-100)}
+.settings-logout{display:block;width:100%;background:#fee2e2;color:#dc2626;border:none;padding:14px;border-radius:14px;margin-top:24px;font-size:14px;font-weight:700;cursor:pointer}
+.settings-logout:active{background:#fecaca}
+
+/* 모달 (사전 안내, 가이드) */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,31,29,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:1500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex;animation:fadeIn 0.2s ease-out}
+.modal-card{background:white;border-radius:22px;padding:28px 22px 22px;width:100%;max-width:340px;text-align:center;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:800;color:var(--ink-900);line-height:1.3}
+.modal-desc{font-size:13px;color:var(--ink-500);margin-top:8px;line-height:1.5}
+.guide-step{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--sand-200)}
+.guide-step:last-child{border-bottom:none}
+.guide-step-num{background:var(--teal-500);color:white;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;flex-shrink:0}
+.guide-step-text{flex:1;font-size:12.5px;color:var(--ink-700)}
+.guide-section-title{font-size:14px;font-weight:800;color:var(--teal-700);margin:14px 0 6px;display:flex;align-items:center;gap:6px}
 .back-btn{width:40px;height:40px;border-radius:50%;background:white;box-shadow:0 2px 8px rgba(15,31,29,0.06);display:grid;place-items:center;margin-bottom:18px;font-size:18px;color:var(--ink-700);font-weight:600}
 .consent-eyebrow{display:inline-block;background:var(--teal-50);color:var(--teal-700);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.08em;margin-bottom:12px}
 .section-title{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.15;letter-spacing:-0.025em;color:var(--ink-900);margin-bottom:8px}
@@ -250,7 +272,52 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
       <span data-i="welcomeCta">시작하기</span>
       <span style="font-size:18px">→</span>
     </button>
+    <button class="welcome-login" id="goLogin">
+      <span data-i="alreadyMember">이미 가입했어요 · 로그인</span>
+    </button>
   </div>
+</section>
+
+<!-- 로그인 화면 (전화번호만) -->
+<section class="screen" id="login">
+  <button class="back-btn" data-back="welcome">←</button>
+  <h2 class="section-title" data-i="loginTitle">로그인</h2>
+  <p class="section-sub" data-i="loginSub">가입하신 전화번호를 입력해주세요</p>
+  
+  <div class="field-group">
+    <label class="field-label" data-i="fPhone">전화번호</label>
+    <input type="tel" class="field-input" id="lgPhone" placeholder="010-1234-5678" autocomplete="tel" inputmode="tel">
+  </div>
+  
+  <div id="lgErr" style="color:#dc2626;font-size:13px;margin:8px 0;min-height:18px"></div>
+  
+  <button class="cta-primary" id="doLoginBtn" style="width:100%;margin-top:8px" data-i="loginBtn">다음 →</button>
+  
+  <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--ink-500)">
+    <span data-i="newUser">처음이신가요?</span>
+    <a href="#" id="goSignupFromLogin" style="color:var(--teal-600);margin-left:4px;font-weight:700;text-decoration:underline" data-i="signupHere">회원가입</a>
+  </div>
+</section>
+
+<!-- 로그인 확인 화면 (이름 확인 후 로그인) -->
+<section class="screen" id="login-confirm">
+  <button class="back-btn" data-back="login">←</button>
+  <h2 class="section-title" data-i="confirmTitle">맞으신가요?</h2>
+  <p class="section-sub" data-i="confirmSub">아래 정보가 본인이 맞는지 확인해주세요</p>
+  
+  <div style="background:white;border-radius:18px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin:20px 0">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div id="lcFlag" style="font-size:38px">🌐</div>
+      <div>
+        <div id="lcName" style="font-size:20px;font-weight:800;color:var(--ink-900)">—</div>
+        <div id="lcCountry" style="font-size:13px;color:var(--ink-500);margin-top:2px">—</div>
+      </div>
+    </div>
+    <div id="lcInfo" style="font-size:12px;color:var(--ink-400);border-top:1px solid var(--sand-200);padding-top:12px;line-height:1.7"></div>
+  </div>
+  
+  <button class="cta-primary" id="doConfirmLoginBtn" style="width:100%" data-i="loginYes">네, 로그인하기</button>
+  <button class="cta-secondary" id="doRejectLoginBtn" style="width:100%;margin-top:10px" data-i="loginNo">아니요, 다시 입력</button>
 </section>
 
 <section class="screen" id="consent">
@@ -413,7 +480,7 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
         <div class="action-emoji">🆘</div>
         <div class="action-label" data-i="actSOS">긴급 도움</div>
       </button>
-      <button class="action-btn" onclick="logout()">
+      <button class="action-btn" onclick="showSettings()">
         <div class="action-emoji">⚙️</div>
         <div class="action-label" data-i="actSettings">설정</div>
       </button>
@@ -496,6 +563,68 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <button class="cta-primary" id="btnPost" style="width:100%" data-i="postSubmit">게시하기</button>
 </section>
 
+<!-- 설정 / 내정보 화면 -->
+<section class="screen" id="settings">
+  <button class="back-btn" data-back="main">←</button>
+  <h2 class="section-title" data-i="settingsTitle">내 정보</h2>
+  
+  <!-- 본인 정보 카드 -->
+  <div style="background:white;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin:14px 0">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+      <div id="stFlag" style="font-size:42px">🌐</div>
+      <div style="flex:1;min-width:0">
+        <div id="stName" style="font-size:21px;font-weight:800;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+        <div id="stCountry" style="font-size:13px;color:var(--ink-500);margin-top:2px">—</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--sand-200);padding-top:12px">
+      <div class="settings-row"><span data-i="settingsPhone">전화번호</span><span id="stPhone">—</span></div>
+      <div class="settings-row"><span data-i="settingsPassport">여권번호</span><span id="stPassport">—</span></div>
+      <div class="settings-row"><span data-i="settingsBody">신체</span><span id="stBody">—</span></div>
+      <div class="settings-row"><span data-i="settingsJoined">가입일</span><span id="stJoined">—</span></div>
+    </div>
+  </div>
+  
+  <!-- 메뉴 -->
+  <button class="settings-menu" onclick="showLocGuide()">
+    <span style="font-size:18px">📍</span>
+    <span style="flex:1;text-align:left;margin-left:10px" data-i="settingsLocGuide">위치 권한 영구 허용 가이드</span>
+    <span style="color:var(--ink-300)">→</span>
+  </button>
+  <button class="settings-menu" onclick="showLangPicker()">
+    <span style="font-size:18px">🌐</span>
+    <span style="flex:1;text-align:left;margin-left:10px" data-i="settingsLang">언어 변경</span>
+    <span style="color:var(--ink-300)">→</span>
+  </button>
+  
+  <!-- 로그아웃 -->
+  <button class="settings-logout" onclick="logout()" data-i="settingsLogout">로그아웃</button>
+</section>
+
+<!-- 위치 권한 사전 안내 모달 -->
+<div id="locPreModal" class="modal-overlay">
+  <div class="modal-card">
+    <div style="font-size:42px;margin-bottom:14px">📍</div>
+    <h3 class="modal-title" data-i="locPreTitle">가까운 근무처 변경으로 도와드려요</h3>
+    <p class="modal-desc" data-i="locPreDesc">위치 정보를 사용하면 더 정확한 안내가 가능합니다</p>
+    <button class="cta-primary" onclick="confirmLocPre()" data-i="locPreOk" style="width:100%;margin-top:16px">확인</button>
+  </div>
+</div>
+
+<!-- 위치 권한 가이드 모달 -->
+<div id="locGuideModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:380px">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3 class="modal-title" data-i="locGuideTitle">위치 권한, 한 번만 설정하면 끝!</h3>
+    
+    <div id="locGuideContent" style="text-align:left;margin-top:16px;font-size:13px;line-height:1.7;color:var(--ink-700)">
+      <!-- iOS or Android 자동 판단해서 채움 -->
+    </div>
+    
+    <button class="cta-primary" onclick="closeLocGuide()" data-i="locGuideClose" style="width:100%;margin-top:18px">닫기</button>
+  </div>
+</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -526,7 +655,21 @@ const I18N = {
     writeTitle:"글쓰기",writeSub:"동향 동료들과 정보를 나눠보세요",
     postCat:"카테고리",postTitle:"제목",postBody:"내용",postSubmit:"게시하기",
     catGeneral:"일반",catQuestion:"질문",catTip:"꿀팁",catEvent:"행사",
-    loadingSignup:"가입 처리 중...",loadingPhoto:"사진 업로드 중...",loadingPost:"게시 중..."
+    loadingSignup:"가입 처리 중...",loadingPhoto:"사진 업로드 중...",loadingPost:"게시 중...",
+    alreadyMember:"이미 가입했어요 · 로그인",
+    loginTitle:"로그인",loginSub:"가입하신 전화번호를 입력해주세요",
+    loginBtn:"다음 →",newUser:"처음이신가요?",signupHere:"회원가입",
+    confirmTitle:"맞으신가요?",confirmSub:"아래 정보가 본인이 맞는지 확인해주세요",
+    loginYes:"네, 로그인하기",loginNo:"아니요, 다시 입력",
+    loginNotFound:"가입된 전화번호가 아닙니다. 회원가입해주세요.",
+    locPreTitle:"가까운 근무처 변경으로 도와드려요",locPreDesc:"위치 정보를 사용하면 더 정확한 안내가 가능합니다",locPreOk:"확인",
+    settingsTitle:"내 정보",settingsName:"이름",settingsCountry:"국적",settingsPhone:"전화번호",
+    settingsPassport:"여권번호",settingsBody:"신체",settingsJoined:"가입일",
+    settingsLocGuide:"위치 권한 영구 허용 가이드",settingsLang:"언어 변경",settingsLogout:"로그아웃",
+    locGuideTitle:"위치 권한, 한 번만 설정하면 끝!",locGuideIos:"iPhone 사용자",locGuideAndroid:"Android 사용자",
+    locGuideStep1:"설정 앱 열기",locGuideStep2:"Safari 메뉴 찾기",locGuideStep3:"'위치' 메뉴",
+    locGuideStep4:"'hands-platform.vercel.app' 선택",locGuideStep5:"'허용' 또는 '항상' 체크",
+    locGuideClose:"닫기"
   },
   en: {
     logoTag:"Your Korea Companion",welcomeT1:"Welcome",welcomeT2:"to Korea",
@@ -549,7 +692,21 @@ const I18N = {
     writeTitle:"New post",writeSub:"Share with fellow workers",
     postCat:"Category",postTitle:"Title",postBody:"Body",postSubmit:"Post",
     catGeneral:"General",catQuestion:"Question",catTip:"Tip",catEvent:"Event",
-    loadingSignup:"Signing up...",loadingPhoto:"Uploading...",loadingPost:"Posting..."
+    loadingSignup:"Signing up...",loadingPhoto:"Uploading...",loadingPost:"Posting...",
+    alreadyMember:"Already a member · Login",
+    loginTitle:"Login",loginSub:"Enter your registered phone number",
+    loginBtn:"Next →",newUser:"New here?",signupHere:"Sign up",
+    confirmTitle:"Is this you?",confirmSub:"Please confirm your information",
+    loginYes:"Yes, log me in",loginNo:"No, re-enter",
+    loginNotFound:"Phone number not registered. Please sign up.",
+    locPreTitle:"We help you with nearby workplace changes",locPreDesc:"Using location enables more accurate guidance",locPreOk:"OK",
+    settingsTitle:"My Profile",settingsName:"Name",settingsCountry:"Country",settingsPhone:"Phone",
+    settingsPassport:"Passport",settingsBody:"Body",settingsJoined:"Joined",
+    settingsLocGuide:"Location permission guide",settingsLang:"Change language",settingsLogout:"Log out",
+    locGuideTitle:"Set location once, never again!",locGuideIos:"iPhone users",locGuideAndroid:"Android users",
+    locGuideStep1:"Open Settings app",locGuideStep2:"Find Safari menu",locGuideStep3:"'Location' menu",
+    locGuideStep4:"Select 'hands-platform.vercel.app'",locGuideStep5:"Check 'Allow' or 'Always'",
+    locGuideClose:"Close"
   },
   vi: {
     logoTag:"Đồng hành Hàn Quốc",welcomeT1:"Chào mừng",welcomeT2:"đến Hàn Quốc",
@@ -572,7 +729,21 @@ const I18N = {
     writeTitle:"Bài mới",writeSub:"Chia sẻ với đồng hương",
     postCat:"Danh mục",postTitle:"Tiêu đề",postBody:"Nội dung",postSubmit:"Đăng",
     catGeneral:"Chung",catQuestion:"Hỏi",catTip:"Mẹo",catEvent:"Sự kiện",
-    loadingSignup:"Đang đăng ký...",loadingPhoto:"Đang tải...",loadingPost:"Đang đăng..."
+    loadingSignup:"Đang đăng ký...",loadingPhoto:"Đang tải...",loadingPost:"Đang đăng...",
+    alreadyMember:"Đã có tài khoản · Đăng nhập",
+    loginTitle:"Đăng nhập",loginSub:"Nhập số điện thoại đã đăng ký",
+    loginBtn:"Tiếp →",newUser:"Người dùng mới?",signupHere:"Đăng ký",
+    confirmTitle:"Đúng là bạn?",confirmSub:"Vui lòng xác nhận thông tin",
+    loginYes:"Vâng, đăng nhập",loginNo:"Không, nhập lại",
+    loginNotFound:"Số điện thoại chưa đăng ký. Vui lòng đăng ký.",
+    locPreTitle:"Chúng tôi giúp bạn thay đổi nơi làm việc gần",locPreDesc:"Cho phép vị trí để hướng dẫn chính xác hơn",locPreOk:"OK",
+    settingsTitle:"Hồ sơ của tôi",settingsName:"Tên",settingsCountry:"Quốc tịch",settingsPhone:"Điện thoại",
+    settingsPassport:"Hộ chiếu",settingsBody:"Cơ thể",settingsJoined:"Đăng ký",
+    settingsLocGuide:"Hướng dẫn quyền vị trí",settingsLang:"Đổi ngôn ngữ",settingsLogout:"Đăng xuất",
+    locGuideTitle:"Đặt vị trí một lần là xong!",locGuideIos:"Người dùng iPhone",locGuideAndroid:"Người dùng Android",
+    locGuideStep1:"Mở Cài đặt",locGuideStep2:"Tìm Safari",locGuideStep3:"Menu 'Vị trí'",
+    locGuideStep4:"Chọn 'hands-platform.vercel.app'",locGuideStep5:"Chọn 'Cho phép'",
+    locGuideClose:"Đóng"
   },
   id: {
     logoTag:"Pendamping Korea",welcomeT1:"Selamat datang",welcomeT2:"ke Korea",
@@ -595,7 +766,21 @@ const I18N = {
     writeTitle:"Tulis baru",writeSub:"Berbagi dengan teman",
     postCat:"Kategori",postTitle:"Judul",postBody:"Isi",postSubmit:"Kirim",
     catGeneral:"Umum",catQuestion:"Tanya",catTip:"Tips",catEvent:"Acara",
-    loadingSignup:"Mendaftar...",loadingPhoto:"Upload...",loadingPost:"Mengirim..."
+    loadingSignup:"Mendaftar...",loadingPhoto:"Upload...",loadingPost:"Mengirim...",
+    alreadyMember:"Sudah jadi anggota · Login",
+    loginTitle:"Login",loginSub:"Masukkan nomor telepon terdaftar",
+    loginBtn:"Lanjut →",newUser:"Pengguna baru?",signupHere:"Daftar",
+    confirmTitle:"Apakah ini Anda?",confirmSub:"Konfirmasi informasi Anda",
+    loginYes:"Ya, login",loginNo:"Tidak, ulang",
+    loginNotFound:"Nomor belum terdaftar. Silakan daftar.",
+    locPreTitle:"Kami bantu Anda dengan perubahan tempat kerja terdekat",locPreDesc:"Izin lokasi untuk panduan akurat",locPreOk:"OK",
+    settingsTitle:"Profil Saya",settingsName:"Nama",settingsCountry:"Negara",settingsPhone:"Telepon",
+    settingsPassport:"Paspor",settingsBody:"Tubuh",settingsJoined:"Bergabung",
+    settingsLocGuide:"Panduan izin lokasi",settingsLang:"Ubah bahasa",settingsLogout:"Keluar",
+    locGuideTitle:"Atur lokasi sekali, selesai!",locGuideIos:"Pengguna iPhone",locGuideAndroid:"Pengguna Android",
+    locGuideStep1:"Buka Setting",locGuideStep2:"Cari Safari",locGuideStep3:"Menu 'Lokasi'",
+    locGuideStep4:"Pilih 'hands-platform.vercel.app'",locGuideStep5:"Pilih 'Izinkan'",
+    locGuideClose:"Tutup"
   }
 };
 
@@ -637,6 +822,24 @@ function showScreen(id) {
 
 document.getElementById('goConsent').addEventListener('click', () => showScreen('consent'));
 document.getElementById('goSignup').addEventListener('click', () => showScreen('signup'));
+document.getElementById('goLogin').addEventListener('click', showLogin);
+document.getElementById('goSignupFromLogin').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen('consent');
+});
+document.getElementById('doLoginBtn').addEventListener('click', tryLoginByPhone);
+document.getElementById('doConfirmLoginBtn').addEventListener('click', confirmLoginYes);
+document.getElementById('doRejectLoginBtn').addEventListener('click', confirmLoginNo);
+document.getElementById('lgPhone').addEventListener('input', (e) => {
+  let v = e.target.value.replace(/\D/g, '');
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length > 7) v = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7);
+  else if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3);
+  e.target.value = v;
+});
+document.getElementById('lgPhone').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') tryLoginByPhone();
+});
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => showScreen(b.dataset.back)));
 
 document.getElementById('fPhone').addEventListener('input', (e) => {
@@ -1030,10 +1233,16 @@ async function sendSOS() {
 
 async function logout() {
   if (!confirm('로그아웃 하시겠습니까?\nLog out?')) return;
-  if (watchPositionId) navigator.geolocation.clearWatch(watchPositionId);
+  if (watchPositionId) {
+    try { navigator.geolocation.clearWatch(watchPositionId); } catch(e){}
+    watchPositionId = null;
+  }
   clearSession();
   currentMember = null;
-  location.reload();
+  // welcome이 아닌 login 화면으로 (다시 로그인 가능하게)
+  showScreen('login');
+  document.getElementById('lgPhone').value = '';
+  document.getElementById('lgErr').textContent = '';
 }
 
 function showMain() { showScreen('main'); }
@@ -1042,6 +1251,169 @@ function showBoard() {
   loadPosts();
 }
 function showWrite() { showScreen('post-write'); }
+
+/* ====== 설정 화면 ====== */
+function showSettings() {
+  if (!currentMember) return;
+  const m = currentMember;
+  
+  // 국가 표시
+  const countryNames = {
+    vn:['🇻🇳','Vietnam'],th:['🇹🇭','Thailand'],id:['🇮🇩','Indonesia'],ph:['🇵🇭','Philippines'],
+    np:['🇳🇵','Nepal'],kh:['🇰🇭','Cambodia'],mm:['🇲🇲','Myanmar'],lk:['🇱🇰','Sri Lanka'],
+    bd:['🇧🇩','Bangladesh'],other:['🌐','—']
+  };
+  const c = countryNames[m.country] || ['🌐','—'];
+  
+  document.getElementById('stFlag').textContent = c[0];
+  document.getElementById('stName').textContent = m.name || '—';
+  document.getElementById('stCountry').textContent = c[1];
+  document.getElementById('stPhone').textContent = m.phone || '—';
+  document.getElementById('stPassport').textContent = m.passport_number || '—';
+  document.getElementById('stBody').textContent = 
+    (m.height_cm ? m.height_cm+'cm' : '—') + ' / ' + (m.weight_kg ? m.weight_kg+'kg' : '—');
+  document.getElementById('stJoined').textContent = m.created_at 
+    ? new Date(m.created_at).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}) 
+    : '—';
+  
+  showScreen('settings');
+}
+
+function showLangPicker() {
+  // 언어 변경: 기존 lang switcher가 우측 상단에 있으니 그거 활용
+  alert(I18N[currentLang].settingsLang + ' →\n우측 상단 언어 버튼을 사용해주세요');
+}
+
+/* ====== 위치 권한 가이드 모달 ====== */
+function showLocGuide() {
+  const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const t = I18N[currentLang];
+  const content = document.getElementById('locGuideContent');
+  
+  if (isIos) {
+    content.innerHTML = `
+      <div class="guide-section-title">📱 ${t.locGuideIos}</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">${t.locGuideStep1}</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">${t.locGuideStep2}</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">'개인정보 보호 및 보안' → ${t.locGuideStep3}</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text">${t.locGuideStep4}</div></div>
+      <div class="guide-step"><div class="guide-step-num">5</div><div class="guide-step-text">${t.locGuideStep5}</div></div>
+    `;
+  } else {
+    content.innerHTML = `
+      <div class="guide-section-title">📱 ${t.locGuideAndroid}</div>
+      <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Chrome → 우측 상단 ⋮</div></div>
+      <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">설정 → 사이트 설정 → ${t.locGuideStep3}</div></div>
+      <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">${t.locGuideStep4}</div></div>
+      <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text">${t.locGuideStep5}</div></div>
+    `;
+  }
+  document.getElementById('locGuideModal').classList.add('show');
+}
+function closeLocGuide() {
+  document.getElementById('locGuideModal').classList.remove('show');
+}
+
+/* ====== 위치 권한 사전 안내 모달 ====== */
+let locPreCallback = null;
+function askLocationWithPre(callback) {
+  // 이미 권한 허용된 상태면 바로 진행
+  if (navigator.permissions) {
+    navigator.permissions.query({name:'geolocation'}).then(status => {
+      if (status.state === 'granted') {
+        callback();
+        return;
+      }
+      // 거부된 적 없거나 prompt 상태면 사전 안내
+      locPreCallback = callback;
+      document.getElementById('locPreModal').classList.add('show');
+    }).catch(() => {
+      // Permissions API 없으면 그냥 사전 안내
+      locPreCallback = callback;
+      document.getElementById('locPreModal').classList.add('show');
+    });
+  } else {
+    locPreCallback = callback;
+    document.getElementById('locPreModal').classList.add('show');
+  }
+}
+function confirmLocPre() {
+  document.getElementById('locPreModal').classList.remove('show');
+  if (locPreCallback) {
+    locPreCallback();
+    locPreCallback = null;
+  }
+}
+
+/* ====== 로그인 화면 (전화번호 → 이름 확인 → 로그인) ====== */
+let pendingLoginMember = null;
+
+function showLogin() {
+  document.getElementById('lgPhone').value = '';
+  document.getElementById('lgErr').textContent = '';
+  showScreen('login');
+}
+
+async function tryLoginByPhone() {
+  const phoneRaw = document.getElementById('lgPhone').value.trim();
+  if (!phoneRaw) return;
+  
+  // 정규화 (010-1234-5678 또는 01012345678)
+  const phone = phoneRaw;
+  const errEl = document.getElementById('lgErr');
+  errEl.textContent = '';
+  
+  try {
+    const { data, error } = await sb.from('members')
+      .select('*').eq('phone', phone).maybeSingle();
+    
+    if (error || !data) {
+      errEl.textContent = I18N[currentLang].loginNotFound;
+      return;
+    }
+    
+    // 확인 화면에 정보 표시
+    const countryNames = {
+      vn:['🇻🇳','Vietnam'],th:['🇹🇭','Thailand'],id:['🇮🇩','Indonesia'],ph:['🇵🇭','Philippines'],
+      np:['🇳🇵','Nepal'],kh:['🇰🇭','Cambodia'],mm:['🇲🇲','Myanmar'],lk:['🇱🇰','Sri Lanka'],
+      bd:['🇧🇩','Bangladesh'],other:['🌐','—']
+    };
+    const c = countryNames[data.country] || ['🌐','—'];
+    
+    document.getElementById('lcFlag').textContent = c[0];
+    document.getElementById('lcName').textContent = data.name || '—';
+    document.getElementById('lcCountry').textContent = c[1];
+    document.getElementById('lcInfo').innerHTML = 
+      `📞 ${data.phone || '—'}<br>` +
+      `📅 ${data.created_at ? new Date(data.created_at).toLocaleDateString('ko-KR') : '—'}`;
+    
+    pendingLoginMember = data;
+    showScreen('login-confirm');
+  } catch(e) {
+    errEl.textContent = '오류: ' + (e.message || '알 수 없음');
+  }
+}
+
+async function confirmLoginYes() {
+  if (!pendingLoginMember) return;
+  
+  // 로그인 처리
+  await sb.from('members').update({
+    last_login_at: new Date().toISOString()
+  }).eq('id', pendingLoginMember.id);
+  
+  saveSession(pendingLoginMember);
+  currentMember = pendingLoginMember;
+  pendingLoginMember = null;
+  
+  enterMain();
+  startLocationTracking();
+}
+
+function confirmLoginNo() {
+  pendingLoginMember = null;
+  showScreen('login');
+}
 
 async function loadPosts() {
   const { data: posts, error } = await sb.from('posts')
