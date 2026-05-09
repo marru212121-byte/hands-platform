@@ -36,6 +36,34 @@ input:focus,select:focus,textarea:focus{outline:none}
 .screen.active{display:flex !important}
 
 .lang-switcher{position:fixed;top:calc(18px + env(safe-area-inset-top));right:18px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
+
+/* LIC 회사 로고 - 언어 스위처 바로 아래 */
+.company-logo-wrap{
+  position:fixed;
+  top:calc(64px + env(safe-area-inset-top));
+  right:18px;
+  z-index:99;
+  width:56px;
+  height:56px;
+  background:white;
+  border-radius:14px;
+  box-shadow:0 3px 12px rgba(0,0,0,0.12);
+  border:1px solid rgba(0,0,0,0.04);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:7px;
+}
+.company-logo{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  /* 회색 배경을 살짝 밝게 + 대비 보강 - 누끼 따진 것처럼 보이게 */
+  filter:contrast(1.15) brightness(1.08) saturate(1.1);
+  /* multiply 합성: 흰 배경에 자연스럽게 녹아들기 */
+  mix-blend-mode:multiply;
+}
 .lang-switcher.on-dark{background:rgba(255,255,255,0.15);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.18)}
 .lang-switcher.on-light{background:white;box-shadow:0 2px 8px rgba(15,31,29,0.06)}
 .lang-btn{padding:5px 11px;font-size:11px;font-weight:700;letter-spacing:0.02em;border-radius:999px;transition:all 0.15s;background:transparent;border:none;cursor:pointer}
@@ -241,6 +269,11 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
   <button class="lang-btn" data-lang="en">EN</button>
   <button class="lang-btn" data-lang="vi">VI</button>
   <button class="lang-btn" data-lang="id">ID</button>
+</div>
+
+<!-- LIC 회사 로고 (언어 스위처 아래) -->
+<div class="company-logo-wrap" id="companyLogoWrap">
+  <img src="lic-logo.jpeg" alt="LIC" class="company-logo" onerror="document.getElementById('companyLogoWrap').style.display='none'">
 </div>
 
 <div class="loading-overlay" id="loading">
@@ -900,7 +933,7 @@ document.getElementById('viewTermsLink').addEventListener('click', (e) => {
   alert('약관 전문은 추후 추가 예정입니다.\nTerms will be added later.');
 });
 
-function compressImage(file, maxWidth = 1280, quality = 0.8) {
+function compressImage(file, maxWidth = 1024, quality = 0.7) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
