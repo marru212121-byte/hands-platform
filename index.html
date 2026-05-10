@@ -35,7 +35,7 @@ input:focus,select:focus,textarea:focus{outline:none}
 .screen{display:none !important;flex-direction:column;min-height:100vh;position:relative;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 .screen.active{display:flex !important}
 
-.lang-switcher{position:fixed;top:calc(18px + env(safe-area-inset-top));right:18px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
+.lang-switcher{position:fixed;top:calc(18px + env(safe-area-inset-top));right:12px;z-index:100;border-radius:999px;padding:4px;display:flex;gap:2px;transition:all 0.2s}
 
 /* LIC 회사 로고 - 언어 스위처 바로 아래 */
 .company-logo-wrap{
@@ -79,8 +79,9 @@ input:focus,select:focus,textarea:focus{outline:none}
 .logo-row{display:flex;align-items:center;gap:14px;margin-bottom:auto;opacity:0;animation:fadeUp 0.7s ease-out 0.1s forwards}
 .logo-mark{width:60px;height:60px;background:white;border-radius:16px;display:grid;place-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);overflow:hidden;padding:6px;font-size:30px}
 .logo-mark-img{width:100%;height:100%;object-fit:contain;filter:contrast(1.05) saturate(1.1)}
+.logo-row{display:flex;align-items:center;gap:14px;margin-bottom:auto;opacity:0;animation:fadeUp 0.7s ease-out 0.1s forwards;padding-right:90px}
 .logo-text{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-0.03em;line-height:1;color:#fde9c8}
-.logo-tag{font-size:17px;font-weight:600;letter-spacing:-0.01em;opacity:1;color:rgba(255,255,255,0.92);margin-top:6px}
+.logo-tag{font-size:17px;font-weight:600;letter-spacing:-0.01em;opacity:1;color:rgba(255,255,255,0.92);margin-top:6px;white-space:nowrap}
 .logo-tag{font-size:10px;font-weight:600;letter-spacing:0.12em;opacity:0.7;margin-top:3px}
 .welcome-headline{margin-top:56px;opacity:0;animation:fadeUp 0.7s ease-out 0.3s forwards}
 .welcome-title{font-family:var(--display);font-weight:800;font-size:40px;line-height:1.05;letter-spacing:-0.035em;margin-bottom:14px}
@@ -205,6 +206,12 @@ input:focus,select:focus,textarea:focus{outline:none}
 #main{background:var(--sand-50);flex-direction:column;min-height:100vh;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
 .main-header{background:linear-gradient(165deg,#114841 0%,#1f7a6e 70%,#2d8d7b 100%);color:white;padding:56px 24px 80px;border-radius:0 0 32px 32px;position:relative;overflow:hidden}
 .main-header::before{content:"";position:absolute;top:-50px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(232,123,53,0.35),transparent 60%);border-radius:50%;pointer-events:none}
+.main-logo-row{display:flex;align-items:center;gap:11px;margin-bottom:18px;position:relative;z-index:1}
+.main-logo-mark{width:42px;height:42px;background:white;border-radius:11px;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.12);overflow:hidden;padding:4px;flex-shrink:0}
+.main-logo-img{width:100%;height:100%;object-fit:contain;filter:contrast(1.05) saturate(1.1)}
+.main-logo-text{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-0.02em;line-height:1;color:#fde9c8}
+.main-logo-tag{font-size:11px;font-weight:600;letter-spacing:-0.01em;color:rgba(255,255,255,0.85);margin-top:3px}
+
 .main-greet-hi{font-size:13px;opacity:0.8;font-weight:500;margin-bottom:4px;position:relative;z-index:1}
 .main-greet-name{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-0.025em;margin-bottom:14px;position:relative;z-index:1}
 .meta-row{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
@@ -382,10 +389,10 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
       </div>
     </div>
     <div class="benefit">
-      <div class="benefit-icon orange">🍱</div>
+      <div class="benefit-icon orange">📅</div>
       <div class="benefit-text">
-        <div class="benefit-title" data-i="b2t">주변 맛집·편의시설</div>
-        <div class="benefit-desc" data-i="b2d">병원·약국·식당·은행을 모국어로 추천</div>
+        <div class="benefit-title" data-i="b2t">기간 연장</div>
+        <div class="benefit-desc" data-i="b2d">비자·체류 기간 연장 안내</div>
       </div>
     </div>
     <div class="benefit">
@@ -491,6 +498,15 @@ textarea.field-input{resize:vertical;min-height:200px;line-height:1.5}
 
 <section class="screen" id="main">
   <header class="main-header">
+    <div class="main-logo-row">
+      <div class="main-logo-mark">
+        <img src="lic-logo.jpeg" alt="LIC" class="main-logo-img" onerror="this.style.display='none'">
+      </div>
+      <div>
+        <div class="main-logo-text">위해</div>
+        <div class="main-logo-tag">외국인선원관리업체</div>
+      </div>
+    </div>
     <div class="main-greet-hi" data-i="greetHi">안녕하세요</div>
     <div class="main-greet-name" id="greetName">—</div>
     <div class="meta-row">
@@ -707,7 +723,7 @@ const I18N = {
     logoTag:"외국인선원관리업체",welcomeT1:"환영합니다",welcomeT2:"한국에 오신 걸",
     welcomeSub:"당신의 언어를 선택하세요. 한국 생활을 함께 도와드립니다.",welcomeCta:"시작하기",
     consentEyebrow:"서비스 이용",consentTitle:"한국에서<br>안전하게 지내요",consentSub:"HANDS가 어떻게 도움드리는지 알려드립니다",
-    b1t:"근무처 변경",b1d:"선박 근무 지역 변경",b2t:"주변 맛집·편의시설",b2d:"병원·약국·식당·은행을 모국어로 추천",
+    b1t:"근무처 변경",b1d:"선박 근무 지역 변경",b2t:"기간 연장",b2d:"비자·체류 기간 연장 안내",
     b3t:"관리자와 상시 연결",b3d:"임금·비자·숙소 문의를 1:1 비공개로",b4t:"긴급 상황 즉시 도움",b4d:"SOS 한 번으로 관리자에게 안전 알림",
     laterBtn:"나중에",agreeBtn:"동의하고 시작 →",
     signupTitle:"회원가입",signupSub:"한국 생활을 시작합니다",
@@ -744,7 +760,7 @@ const I18N = {
     logoTag:"Foreign Seafarer Management",welcomeT1:"Welcome",welcomeT2:"to Korea",
     welcomeSub:"Choose your language. We'll help you settle in Korea.",welcomeCta:"Get started",
     consentEyebrow:"Using HANDS",consentTitle:"Stay safe<br>in Korea",consentSub:"Here's how HANDS helps you",
-    b1t:"Workplace transfer",b1d:"Ship work location changes",b2t:"Food & places nearby",b2d:"Hospitals, pharmacies, restaurants nearby",
+    b1t:"Workplace transfer",b1d:"Ship work location changes",b2t:"Visa extension",b2d:"Visa & stay extension guidance",
     b3t:"Connect with admin",b3d:"Wages, visa, housing — private 1-on-1",b4t:"Emergency support",b4d:"One-tap SOS alerts the admin instantly",
     laterBtn:"Later",agreeBtn:"Agree and continue →",
     signupTitle:"Sign up",signupSub:"Start your life in Korea",
@@ -781,7 +797,7 @@ const I18N = {
     logoTag:"Quản lý Thuyền viên Nước ngoài",welcomeT1:"Chào mừng",welcomeT2:"đến Hàn Quốc",
     welcomeSub:"Chọn ngôn ngữ của bạn.",welcomeCta:"Bắt đầu",
     consentEyebrow:"Sử dụng HANDS",consentTitle:"An toàn<br>tại Hàn Quốc",consentSub:"HANDS giúp bạn như thế nào",
-    b1t:"Đổi nơi làm việc",b1d:"Thay đổi khu vực làm tàu",b2t:"Quán ăn & tiện ích",b2d:"Bệnh viện, hiệu thuốc gần",
+    b1t:"Đổi nơi làm việc",b1d:"Thay đổi khu vực làm tàu",b2t:"Gia hạn thời gian",b2d:"Hướng dẫn gia hạn visa",
     b3t:"Kết nối quản trị",b3d:"Lương, visa, nhà ở 1:1",b4t:"Hỗ trợ khẩn cấp",b4d:"SOS một chạm",
     laterBtn:"Để sau",agreeBtn:"Đồng ý và tiếp tục →",
     signupTitle:"Đăng ký",signupSub:"Bắt đầu cuộc sống tại Hàn",
@@ -818,7 +834,7 @@ const I18N = {
     logoTag:"Manajemen Pelaut Asing",welcomeT1:"Selamat datang",welcomeT2:"ke Korea",
     welcomeSub:"Pilih bahasa Anda.",welcomeCta:"Mulai",
     consentEyebrow:"Pakai HANDS",consentTitle:"Aman<br>di Korea",consentSub:"Bagaimana HANDS membantu",
-    b1t:"Pindah tempat kerja",b1d:"Ganti area kerja kapal",b2t:"Makanan & tempat",b2d:"RS, apotek, restoran",
+    b1t:"Pindah tempat kerja",b1d:"Ganti area kerja kapal",b2t:"Perpanjangan visa",b2d:"Panduan perpanjangan visa",
     b3t:"Hubungi admin",b3d:"Gaji, visa, tempat 1:1",b4t:"Dukungan darurat",b4d:"SOS satu sentuh",
     laterBtn:"Nanti",agreeBtn:"Setuju dan lanjut →",
     signupTitle:"Daftar",signupSub:"Mulai di Korea",
