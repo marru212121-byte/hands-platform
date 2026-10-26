@@ -90,6 +90,7 @@ body.tall .hero h1{font-size:30px}
 .wordmark{font-size:15px;font-weight:800;letter-spacing:.16em;color:var(--navy);margin-top:28px}
 
 /* language list */
+.langrow .flag{width:28px;height:20px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(20,40,75,.12);flex:none;margin-right:12px}
 .langlist{display:flex;flex-direction:column;gap:8px;margin-top:20px}
 .langrow{display:flex;align-items:center;gap:14px;min-height:64px;padding:10px 18px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left;width:100%}
 .langrow .n{font-size:19px;font-weight:650;flex:1}
@@ -292,6 +293,7 @@ const LANGS = [
   ['my','မြန်မာ','Myanmar'],['si','සිංහල','Sinhala'],['bn','বাংলা','Bengali']];
 const LANG_NAME = Object.fromEntries(LANGS.map(l => [l[0], l[1]]));
 const LOCALE = { ko:'ko-KR', en:'en-US', vi:'vi-VN', id:'id-ID', th:'th-TH', tl:'fil-PH', ne:'ne-NP', km:'km-KH', my:'my-MM', si:'si-LK', bn:'bn-BD' };
+const FLAG = { ko:'kr', en:'us', vi:'vn', id:'id', th:'th', tl:'ph', ne:'np', km:'kh', my:'mm', si:'lk', bn:'bd' };
 const TALL = ['my','km','si','ne','bn','th'];
 
 const STR = {
@@ -638,6 +640,7 @@ function langBtn() {
 function langList(onPick) {
   return h('div', { class: 'langlist', role: 'list' }, LANGS.map(([c, n, e]) =>
     h('button', { class: 'langrow' + (c === S.lang ? ' on' : ''), lang: c === 'tl' ? 'fil' : c, onclick: () => onPick(c) },
+      h('img', { class: 'flag', src: '/flags/' + FLAG[c] + '.png', alt: '', width: '28', height: '20', loading: 'lazy' }),
       h('span', { class: 'n', text: n }), c !== 'en' ? h('span', { class: 'e', text: e }) : null, c === S.lang ? icon('check') : null)));
 }
 function openLangSheet() {
