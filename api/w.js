@@ -143,6 +143,25 @@ module.exports = L.handler({
     return { ok: true, id: rows[0].id, notified };
   },
 
+  // 일자리 찾기 · 선박 문의 → 관리자 문의함
+  async inquiry(req, b) {
+    const m = await L.workerFromReq(req);
+    const category = ['job', 'ship', 'other'].includes(b.category) ? b.category : 'other';
+    const body = clean(b.body, 2000);
+    if (!body) throw new HttpError(400, 'missing_fields');
+    const title = clean(b.title, 120) || (category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의');
+    await db('inquiries', { method: 'POST', body: { member_id: m.id, category, title, body, body_lang: m.language, status: 'open' } });
+    const label = category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의';
+    await L.telegram([`[HANDS ${label}]`, `${m.name} (${COUNTRY_KO[m.country] || m.country || '-'}) ${m.phone || ''}`, body.slice(0, 300)].join('\n')).catch(() => {});
+    return { ok: true };
+  },
+
+  async inquiries(req) {
+    const m = await L.workerFromReq(req);
+    const rows = await db(`inquiries?select=id,category,title,body,reply,status,created_at,replied_at&member_id=eq.${m.id}&order=created_at.desc&limit=30`);
+    return { ok: true, inquiries: rows };
+  },
+
   async posts(req) {
     await L.workerFromReq(req);
     const rows = await db('posts?select=id,category,title,body,created_at,author:members(name,country)&order=created_at.desc&limit=50');

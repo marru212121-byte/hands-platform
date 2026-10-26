@@ -42,10 +42,11 @@ module.exports = L.handler({
 
   async dashboard(req) {
     await L.adminFromReq(req);
-    const [members, sos, locs] = await Promise.all([
+    const [members, sos, locs, inq] = await Promise.all([
       db(`members?select=id,last_seen_at,last_checkin_at,is_active,created_at`),
       db(`sos_alerts?select=id,status&status=eq.pending`),
       db(`locations?select=member_id,updated_at`),
+      db(`inquiries?select=id&status=eq.open`),
     ]);
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const active = members.filter(m => m.is_active !== false);
@@ -58,6 +59,7 @@ module.exports = L.handler({
       silent_3d: silent3,
       new_7d: active.filter(m => m.created_at >= daysAgo(7)).length,
       located: locs.length,
+      inquiries_open: inq.length,
     } };
   },
 
@@ -143,6 +145,23 @@ module.exports = L.handler({
     await L.adminFromReq(req);
     const rows = await db(`access_logs?select=id,admin_email,action,created_at,member:members(name)&action=neq.login_fail&order=created_at.desc&limit=200`);
     return { ok: true, logs: rows };
+  },
+
+  async inquiries(req) {
+    await L.adminFromReq(req);
+    const st = ['open', 'answered'].includes(req.query.status) ? `&status=eq.${req.query.status}` : '';
+    const rows = await db(`inquiries?select=id,category,title,body,reply,status,created_at,replied_at,member:members(id,name,phone,country,company)&order=created_at.desc&limit=200${st}`);
+    return { ok: true, inquiries: rows };
+  },
+
+  async inquiry_reply(req, b) {
+    const a = await L.adminFromReq(req);
+    if (!/^[0-9a-f-]{36}$/i.test(String(b.id || ''))) throw new HttpError(400, 'bad_id');
+    const reply = clean(b.reply, 2000);
+    if (!reply) throw new HttpError(400, 'missing_fields');
+    const rows = await db(`inquiries?id=eq.${b.id}`, { method: 'PATCH', prefer: 'return=representation', body: { reply, status: 'answered', replied_at: nowIso() } });
+    if (rows[0]) await L.logAccess(a, rows[0].member_id, 'inquiry_reply');
+    return { ok: true };
   },
 
   async posts(req) {

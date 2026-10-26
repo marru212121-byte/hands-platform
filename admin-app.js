@@ -50,6 +50,8 @@ const ICONS = {
   image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
   bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
   lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
   qr: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4h-4"/>',
   printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
   copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
@@ -65,7 +67,6 @@ const COUNTRY = { vn: '베트남', th: '태국', id: '인도네시아', ph: '필
 const LANG = { ko: '한국어', en: '영어', vi: '베트남어', th: '태국어', id: '인도네시아어', tl: '필리핀어', fil: '필리핀어', ne: '네팔어', km: '캄보디아어', my: '미얀마어', si: '싱할라어', ta: '타밀어', bn: '벵골어', uz: '우즈베크어', zh: '중국어' };
 const GENDER = { M: '남성', F: '여성', m: '남성', f: '여성', male: '남성', female: '여성' };
 const SOURCE = { app_open: '앱 실행', watch: '위치 추적', checkin: '안부 확인', sos: 'SOS' };
-const CATEGORY = { general: '일반', question: '질문', tip: '생활 정보', event: '행사·소식', notice: '공지' };
 const ACTION = {
   view_member: ['근로자 정보 열람', 'navy'], update_member: ['근로자 정보 수정', 'warn'],
   relink_code: ['재연결 번호 발급', 'navy'], sos_resolve: ['SOS 처리', 'ok'], post_delete: ['게시글 삭제', 'danger'],
@@ -253,6 +254,7 @@ async function pollSos() {
     if (!S.firstPoll && n > S.sosPending) toast(`새 SOS 요청이 ${n - S.sosPending}건 들어왔습니다.`, 'err');
     S.firstPoll = false;
     S.sosPending = n;
+    setInqCount(j.stats && j.stats.inquiries_open);
     updateSosBadge();
     if (S.view === 'sos') renderSos(true);
     if (S.view === 'dashboard') renderDashboard(true, j);
@@ -265,6 +267,11 @@ function updateSosBadge() {
   const tb = $('#tabSosBadge'); tb.hidden = n <= 0; tb.textContent = n > 99 ? '99+' : String(n);
   document.title = (n > 0 ? `(SOS ${n}) ` : '') + 'HANDS 관리자' + (S.view ? ' · ' + VIEWS[S.view].title : '');
 }
+function setInqCount(v) {
+  const n = Number(v) || 0; S.inqOpen = n;
+  const t = n > 99 ? '99+' : String(n);
+  ['#inqBadge', '#tabMoreBadge', '#moreInqBadge'].forEach((sel) => { const b = $(sel); if (b) { b.hidden = n <= 0; b.textContent = t; } });
+}
 const stamp = () => { $('#updatedAt').textContent = `${fmtTime(new Date())} 기준`; };
 
 /* ───────── 라우팅 ───────── */
@@ -275,7 +282,7 @@ const VIEWS = {
   map: { title: '지도', sub: '근로자가 마지막으로 공유한 위치입니다.', render: () => renderMap() },
   sos: { title: 'SOS', sub: '긴급 도움 요청을 확인하고 처리합니다. 30초마다 자동으로 갱신됩니다.', render: () => renderSos() },
   silent: { title: '미접속', sub: '일정 기간 앱을 열지 않은 근로자입니다. 직접 연락해 안부를 확인하세요.', render: () => renderSilent() },
-  posts: { title: '게시판', sub: '근로자 커뮤니티 게시글을 관리합니다.', render: () => renderPosts() },
+  inquiries: { title: '문의', sub: '근로자가 앱에서 보낸 문의입니다. 답변은 근로자 앱에 표시됩니다.', render: () => renderInquiries() },
   logs: { title: '열람 기록', sub: '관리자의 개인정보 열람·수정 내역입니다. 기록은 수정하거나 삭제할 수 없습니다.', render: () => renderLogs() },
 };
 function route() {
@@ -329,19 +336,19 @@ async function renderDashboard(silent, preStats) {
   const kp = $('#kpis');
   if (st.status === 'fulfilled') {
     const s = st.value.stats || {};
-    S.sosPending = Number(s.sos_pending) || 0; updateSosBadge();
+    S.sosPending = Number(s.sos_pending) || 0; setInqCount(s.inquiries_open); updateSosBadge();
     const pct = (a) => s.total ? `전체의 ${Math.round((a / s.total) * 100)}%` : '-';
     const cards = [
       { k: 'total', label: '전체 근로자', icon: 'users', foot: `위치 공유 ${fmtNum(s.located)}명`, to: '#/members', cls: 'teal' },
       { k: 'seen_today', label: '오늘 접속', icon: 'activity', foot: pct(s.seen_today), to: '#/members' },
-      { k: 'checkin_today', label: '오늘 안부 확인', icon: 'checkCircle', foot: pct(s.checkin_today), to: '#/members' },
       { k: 'sos_pending', label: 'SOS 미처리', icon: 'alert', foot: s.sos_pending > 0 ? '즉시 확인이 필요합니다' : '미처리 요청 없음', to: '#/sos', cls: s.sos_pending > 0 ? 'danger' : '' },
+      { k: 'inquiries_open', label: '미답변 문의', icon: 'inbox', foot: s.inquiries_open > 0 ? '답변을 기다리고 있습니다' : '모두 답변 완료', to: '#/inquiries', cls: s.inquiries_open > 0 ? 'teal-on' : '' },
       { k: 'silent_3d', label: '3일 이상 미접속', icon: 'clock', foot: '연락 확인 필요', to: '#/silent', cls: s.silent_3d > 0 ? 'warn' : '' },
       { k: 'new_7d', label: '최근 7일 가입', icon: 'userPlus', foot: '신규 등록', to: '#/members' },
     ];
     setHTML(kp, html`${cards.map((c) => html`<a class="kpi ${c.cls || ''}" href="${c.to}">
       <div class="kpi-top"><span>${c.label}</span><span class="kpi-icon">${ico(c.icon, 'sm')}</span></div>
-      <div class="kpi-value num">${fmtNum(s[c.k])}<small>${c.k === 'sos_pending' ? '건' : '명'}</small></div>
+      <div class="kpi-value num">${fmtNum(s[c.k])}<small>${['sos_pending', 'inquiries_open'].includes(c.k) ? '건' : '명'}</small></div>
       <div class="kpi-foot">${c.foot}</div></a>`)}`);
   } else if (!silent) setHTML(kp, html`<div class="card" style="grid-column:1/-1">${errorBox(st.reason)}</div>`);
 
@@ -461,8 +468,8 @@ function renderMembers() {
       <div class="right"><button class="btn btn-ghost btn-sm" id="mreload">${ico('refresh', 'sm')}새로고침</button></div>
     </div>
     <div class="table-wrap"><table class="data">
-      <thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>전화</th><th>가입일</th><th>마지막 접속</th><th>안부 확인</th><th>상태</th></tr></thead>
-      <tbody id="mbody">${loadingRows(8)}</tbody>
+      <thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>전화</th><th>가입일</th><th>마지막 접속</th><th>상태</th></tr></thead>
+      <tbody id="mbody">${loadingRows(7)}</tbody>
     </table><div id="mempty"></div></div>
     <div class="card-foot muted" id="mfoot">불러오는 중</div>
   </section>`);
@@ -504,7 +511,6 @@ function drawMembers() {
       <td class="nowrap num" data-label="전화">${m.phone || html`<span class="muted">-</span>`}</td>
       <td class="nowrap num" data-label="가입일">${fmtDate(m.created_at)}</td>
       <td class="nowrap" data-label="마지막 접속">${rel(m.last_seen_at)}</td>
-      <td class="nowrap" data-label="안부 확인">${isToday(m.last_checkin_at) ? html`<span class="badge ok">${ico('check', 'xs')}오늘 확인</span>` : rel(m.last_checkin_at, '없음')}</td>
       <td class="nowrap" data-label="상태">${sos ? html`<span class="badge danger"><span class="d"></span>SOS</span> ` : ''}${m.is_active === false ? html`<span class="badge off">비활성</span>` : html`<span class="badge ok"><span class="d"></span>활성</span>`}</td>
     </tr>`;
   })}`);
@@ -648,7 +654,6 @@ function drawDetail() {
           <dt>가입일</dt><dd class="num">${fmtDT(m.created_at)}</dd>
           <dt>마지막 로그인</dt><dd class="num">${fmtDT(m.last_login_at)}</dd>
           <dt>마지막 접속</dt><dd class="num">${fmtDT(m.last_seen_at)} ${m.last_seen_at ? html`<span class="muted">(${relText(m.last_seen_at)})</span>` : ''}</dd>
-          <dt>마지막 안부 확인</dt><dd class="num">${fmtDT(m.last_checkin_at)}</dd>
           <dt>앱 언어</dt><dd>${LANG[m.language] || m.language || '-'}</dd>
         </dl></div>
       </section>
@@ -1025,8 +1030,8 @@ async function renderSilent() {
       <div class="seg" id="dsel">${[1, 3, 7].map((d) => html`<button data-d="${d}" class="${S.silentDays === d ? 'on' : ''}">${d}일 이상</button>`)}</div>
       <div class="right"><span class="muted" id="silentN" style="font-size:13px"></span></div>
     </div>
-    <div class="table-wrap"><table class="data"><thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>마지막 접속</th><th>경과</th><th>마지막 안부 확인</th><th class="right">연락</th></tr></thead>
-      <tbody id="lbody">${loadingRows(7)}</tbody></table><div id="lempty"></div></div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>마지막 접속</th><th>경과</th><th class="right">연락</th></tr></thead>
+      <tbody id="lbody">${loadingRows(6)}</tbody></table><div id="lempty"></div></div>
   </section>`);
   $$('#dsel button').forEach((b) => b.addEventListener('click', () => { S.silentDays = +b.dataset.d; renderSilent(); }));
   try {
@@ -1043,7 +1048,6 @@ async function renderSilent() {
         <td data-label="근무처"><div class="cell-clip">${m.company || html`<span class="muted">미등록</span>`}</div></td>
         <td class="nowrap num" data-label="마지막 접속">${m.last_seen_at ? fmtDT(m.last_seen_at) : html`<span class="muted">접속 기록 없음</span>`}</td>
         <td class="nowrap" data-label="경과">${ds == null ? html`<span class="badge warn">기록 없음</span>` : html`<span class="badge ${ds >= 7 ? 'danger' : 'warn'} num">${ds}일째</span>`}</td>
-        <td class="nowrap" data-label="마지막 안부 확인">${rel(m.last_checkin_at, '없음')}</td>
         <td class="card-actions right" data-label="연락">${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm" href="${telHref(m.phone)}" data-stop>${ico('phone', 'sm')}전화 걸기</a>` : html`<span class="muted">전화 미등록</span>`}</td>
       </tr>`;
     })}`);
@@ -1055,45 +1059,81 @@ async function renderSilent() {
   }
 }
 
-/* ───────── 6. 게시판 ───────── */
-async function renderPosts() {
+/* ───────── 문의 ───────── */
+const INQ_CAT = { job: '일자리 찾기', ship: '선박 문의', other: '기타' };
+const inqOpen = (q) => q.status !== 'answered';
+let inqCache = null;
+async function renderInquiries() {
+  S.inqFilter = S.inqFilter || 'open'; S.inqCat = S.inqCat || 'all';
   const v = $('#view');
-  setHTML(v, html`<section class="card">
-    <div class="card-head"><h2>게시글</h2><span class="count" id="pcount"></span><div class="right"><span class="muted" style="font-size:12px">제목을 누르면 본문 전체가 펼쳐집니다</span></div></div>
-    <div class="table-wrap"><table class="data"><thead><tr><th>분류</th><th>제목·내용</th><th>작성자</th><th>작성일</th><th class="right">관리</th></tr></thead>
-      <tbody id="pbody">${loadingRows(5)}</tbody></table><div id="pempty"></div></div>
+  setHTML(v, html`<section class="card inq-wrap">
+    <div class="toolbar">
+      <div class="seg" id="ifilter"><button data-f="open">미답변 <span class="c" data-c="open"></span></button><button data-f="answered">답변 완료 <span class="c" data-c="answered"></span></button><button data-f="all">전체 <span class="c" data-c="all"></span></button></div>
+      <div class="chips" id="icat">${[['all', '전체'], ['job', '일자리'], ['ship', '선박'], ['other', '기타']].map(([k, l]) => html`<button class="chip" data-k="${k}">${l}</button>`)}</div>
+      <div class="right"><button class="btn btn-ghost btn-sm" id="ireload">${ico('refresh', 'sm')}새로고침</button></div>
+    </div>
+    <div id="ilist" class="inq-list">${Array.from({ length: 3 }, () => html`<div class="inq"><span class="skel" style="width:40%"></span><span class="skel" style="width:80%;margin-top:12px"></span><span class="skel" style="width:60%;margin-top:12px"></span></div>`)}</div>
   </section>`);
+  $$('#ifilter button').forEach((b) => b.addEventListener('click', () => { S.inqFilter = b.dataset.f; drawInquiries(); }));
+  $$('#icat .chip').forEach((b) => b.addEventListener('click', () => { S.inqCat = b.dataset.k; drawInquiries(); }));
+  $('#ireload').addEventListener('click', loadInquiries);
+  loadInquiries();
+}
+async function loadInquiries() {
   try {
-    const j = await api('posts');
-    if (S.view !== 'posts') return;
-    stamp();
-    const list = j.posts || [];
-    $('#pcount').textContent = `${fmtNum(list.length)}건`;
-    setHTML($('#pbody'), html`${list.map((p) => {
-      const a = p.author || {};
-      return html`<tr data-id="${p.id}">
-        <td class="nowrap" data-label="분류"><span class="badge navy">${CATEGORY[p.category] || p.category || '기타'}</span></td>
-        <td class="card-block" data-label="제목·내용" style="cursor:pointer" data-toggle><div class="cell-main">${p.title || '(제목 없음)'}</div><div class="post-body">${p.body || ''}</div></td>
-        <td class="nowrap" data-label="작성자"><span>${a.id ? html`<a href="#/members/${encodeURIComponent(a.id)}">${a.name || '-'}</a>` : (a.name || html`<span class="muted">탈퇴 회원</span>`)}${a.country ? html` <span class="muted">· ${countryName(a.country)}</span>` : ''}</span></td>
-        <td class="nowrap" data-label="작성일"><span class="num">${fmtDT(p.created_at)}</span></td>
-        <td class="card-actions right" data-label="관리"><button class="btn btn-danger-outline btn-sm" data-del="${p.id}">${ico('trash', 'sm')}삭제</button></td>
-      </tr>`;
-    })}`);
-    setHTML($('#pempty'), list.length ? '' : emptyBox('게시글이 없습니다', '', 'message'));
-    $$('[data-toggle]').forEach((td) => td.addEventListener('click', () => td.closest('tr').classList.toggle('expanded')));
-    $$('[data-del]').forEach((b) => b.addEventListener('click', () => {
-      const p = list.find((x) => x.id === b.dataset.del); if (!p) return;
-      confirmDialog({
-        title: '게시글을 삭제할까요?', danger: true, okLabel: '삭제',
-        details: html`<dl class="kv"><dt>제목</dt><dd>${p.title || '(제목 없음)'}</dd><dt>작성자</dt><dd>${(p.author && p.author.name) || '-'}</dd><dt>작성일</dt><dd class="num">${fmtDT(p.created_at)}</dd></dl>`,
-        message: '삭제한 게시글은 되돌릴 수 없으며, 삭제 기록이 열람 기록에 남습니다.',
-        run: async () => { await api('post_delete', { body: { id: p.id } }); toast('게시글을 삭제했습니다.'); renderPosts(); },
-      });
-    }));
+    const j = await api('inquiries');
+    if (S.view !== 'inquiries') return;
+    inqCache = j.inquiries || []; stamp();
+    setInqCount(inqCache.filter(inqOpen).length);
+    drawInquiries();
   } catch (e) {
-    if (S.view !== 'posts') return;
-    setHTML($('#pbody'), ''); setHTML($('#pempty'), errorBox(e)); bindRetry($('#pempty'), renderPosts);
+    if (S.view !== 'inquiries') return;
+    setHTML($('#ilist'), errorBox(e)); bindRetry($('#ilist'), loadInquiries);
   }
+}
+function drawInquiries() {
+  if (!inqCache) return;
+  const byCat = inqCache.filter((q) => S.inqCat === 'all' || (S.inqCat === 'other' ? !['job', 'ship'].includes(q.category) : q.category === S.inqCat));
+  const counts = { all: byCat.length, open: byCat.filter(inqOpen).length }; counts.answered = counts.all - counts.open;
+  $$('#ifilter button').forEach((b) => b.classList.toggle('on', b.dataset.f === S.inqFilter));
+  $$('#ifilter [data-c]').forEach((c) => { c.textContent = fmtNum(counts[c.dataset.c]); });
+  $$('#icat .chip').forEach((b) => b.classList.toggle('on', b.dataset.k === S.inqCat));
+  const list = byCat.filter((q) => S.inqFilter === 'all' || (S.inqFilter === 'open' ? inqOpen(q) : !inqOpen(q)))
+    .sort((a, b) => (inqOpen(a) ? 0 : 1) - (inqOpen(b) ? 0 : 1) || String(b.created_at).localeCompare(String(a.created_at)));
+  setHTML($('#ilist'), list.length ? html`${list.map((q) => {
+    const m = q.member || {}; const t = telHref(m.phone); const open = inqOpen(q);
+    return html`<article class="inq ${open ? 'is-open' : ''}" data-id="${q.id}">
+      <div class="inq-head">
+        <span class="badge ${q.category === 'job' ? 'navy' : q.category === 'ship' ? 'ok' : ''}">${INQ_CAT[q.category] || INQ_CAT.other}</span>
+        ${open ? html`<span class="badge warn"><span class="d"></span>미답변</span>` : html`<span class="badge off">${ico('check', 'xs')}답변 완료</span>`}
+        <span class="inq-time"><span class="num">${fmtDT(q.created_at)}</span> · ${relText(q.created_at) || ''}</span>
+      </div>
+      <div class="inq-who">${m.id ? html`<a class="cell-main" href="#/members/${encodeURIComponent(m.id)}">${m.name || '-'}</a>` : html`<span class="cell-main">${m.name || '탈퇴 회원'}</span>`}
+        <span class="muted">${countryName(m.country)}${m.company ? ` · ${m.company}` : ''}</span>
+        ${t ? html`<a class="tel" href="${t}">${ico('phone', 'xs')}${m.phone}</a>` : ''}</div>
+      ${q.title ? html`<div class="inq-title">${q.title}</div>` : ''}
+      <div class="inq-body">${q.body || ''}</div>
+      ${open ? html`<form class="inq-reply" data-reply="${q.id}" novalidate>
+          <textarea maxlength="2000" placeholder="답변을 입력하세요. 근로자 앱에 그대로 표시됩니다." aria-label="답변"></textarea>
+          <div class="inq-reply-foot"><span class="muted">답변자: ${S.admin ? S.admin.email : ''}</span><button type="submit" class="btn btn-primary btn-sm">${ico('send', 'sm')}답변 보내기</button></div>
+        </form>`
+        : html`<div class="inq-answer"><div class="inq-answer-head">${ico('checkCircle', 'xs')}답변 <span class="num">${fmtDT(q.replied_at)}</span></div><div class="inq-answer-body">${q.reply || ''}</div></div>`}
+    </article>`;
+  })}` : emptyBox(S.inqFilter === 'open' ? '미답변 문의가 없습니다' : '문의가 없습니다', '', 'inbox'));
+  $$('#ilist [data-reply]').forEach((f) => f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ta = $('textarea', f); const reply = ta.value.trim();
+    if (!reply) { toast('답변 내용을 입력해 주세요.', 'err'); ta.focus(); return; }
+    const btn = $('button[type=submit]', f); btn.disabled = true;
+    try {
+      await api('inquiry_reply', { body: { id: f.dataset.reply, reply } });
+      const q = inqCache.find((x) => x.id === f.dataset.reply);
+      if (q) Object.assign(q, { reply, status: 'answered', replied_at: new Date().toISOString() });
+      setInqCount(inqCache.filter(inqOpen).length);
+      toast('답변을 보냈습니다.');
+      drawInquiries();
+    } catch (err) { toast(errText(err), 'err'); btn.disabled = false; }
+  }));
 }
 
 /* ───────── 7. 열람 기록 ───────── */
@@ -1138,7 +1178,7 @@ function drawLogs() {
 }
 
 /* ───────── 휴대폰 하단 탭·더보기 ───────── */
-const MORE_VIEWS = ['qr', 'silent', 'posts', 'logs'];
+const MORE_VIEWS = ['inquiries', 'qr', 'silent', 'logs'];
 function openMore() {
   $('#moreEmail').textContent = S.admin ? (S.admin.email || '') : '';
   $('#moreBack').hidden = false; $('#moreSheet').hidden = false;

@@ -151,8 +151,8 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cam video.mirror{transform:scaleX(-1)}
 .guide{position:absolute;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 200vmax rgba(0,0,0,.55);border:3px solid rgba(255,255,255,.95);pointer-events:none}
-.guide.face{top:46%;width:64%;aspect-ratio:3/4;border-radius:50%}
-.guide.pass{top:47%;width:88%;aspect-ratio:1.42;border-radius:14px}
+.guide.face{top:48%;width:78%;aspect-ratio:3/4;border-radius:50%}
+.guide.pass{top:48%;width:90%;aspect-ratio:1.42;border-radius:14px}
 .guide.pass::after{content:"";position:absolute;left:6%;top:14%;width:28%;height:62%;border:2px dashed rgba(255,255,255,.55);border-radius:6px}
 .cam-top{position:absolute;left:0;right:0;top:0;padding:calc(8px + var(--sat)) 12px 20px;background:linear-gradient(rgba(0,0,0,.72),rgba(0,0,0,0))}
 .cam-top .row{display:flex;align-items:center;justify-content:space-between}
@@ -197,19 +197,36 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .greet .nm{font-size:26px;font-weight:750;line-height:1.3;margin-top:2px}
 .greet .co{font-size:15px;color:var(--ink3);margin-top:4px}
 .tabpage{padding:12px 20px calc(110px + var(--sab))}
-.sos-card{background:#fff;border:1px solid #F3D3D3;border-radius:20px;padding:26px 18px 22px;display:flex;flex-direction:column;align-items:center}
-.sos-wrap{position:relative;width:208px;height:208px;display:grid;place-items:center}
-.sos-wrap svg.ring{position:absolute;inset:0;pointer-events:none;width:208px;height:208px;transform:rotate(-90deg)}
-.sos-btn{width:172px;height:172px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#D64545,var(--red) 62%,var(--red-dark));color:#fff;font-size:46px;font-weight:800;letter-spacing:.06em;box-shadow:0 10px 28px rgba(198,40,40,.32),inset 0 -6px 14px rgba(0,0,0,.12);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;transition:transform .15s}
-.sos-btn.holding{transform:scale(.96)}
-.sos-label{margin-top:14px;font-size:16px;font-weight:600;color:var(--ink2);text-align:center}
-.check-card{margin-top:14px;display:flex;flex-direction:column;gap:14px}
-.check-top{display:flex;gap:14px;align-items:flex-start}
-.check-top .bubble{width:48px;height:48px;border-radius:14px;background:var(--teal-bg);color:var(--teal);display:grid;place-items:center;flex:none}
-.check-top h2{font-size:19px}
-.check-top p{font-size:15px;color:var(--ink3);margin-top:2px}
-.done-pill{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border-radius:14px;background:var(--teal-bg);color:var(--teal);font-weight:700;font-size:17px;text-align:center;padding:8px 14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.mtile{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 16px;min-height:150px;background:#fff;border:1px solid var(--line);border-radius:18px;text-align:left;color:var(--ink);text-decoration:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .12s}
+.mtile:active{transform:scale(.985)}
+.mtile .mi{position:relative;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy);flex:none}
+.mtile .mi .ic{width:26px;height:26px}
+.mtile .mt{display:block;font-size:18px;font-weight:700;line-height:1.35}
+.mtile .ms{display:block;font-size:13px;font-weight:500;color:var(--ink3);margin-top:3px;line-height:1.45}
+.mtile.sos{border-color:#EFC2C2;background:#FFF6F6;touch-action:none}
+.mtile.sos .mi{background:var(--red);color:#fff;border-radius:50%}
+.mtile.sos .mt{color:var(--red-dark);font-size:24px;font-weight:800;letter-spacing:.05em}
+.mtile.sos svg.ring{position:absolute;left:-7px;top:-7px;width:66px;height:66px;transform:rotate(-90deg);pointer-events:none}
+.mtile.sos .hb{position:absolute;left:0;bottom:0;height:6px;width:0;background:var(--red)}
+.mtile.sos.holding{background:#FDEAEA}
+.mtile.strong{background:var(--navy);border-color:var(--navy);color:#fff}
+.mtile.strong .mi{background:rgba(255,255,255,.14);color:#fff}
+.mtile.strong .ms{color:rgba(255,255,255,.78)}
+.mtile.done .mi{background:var(--teal);color:#fff}
+.mtile.done .mt{color:var(--teal)}
+.mtile.ok .mi{background:var(--teal-bg);color:var(--teal)}
+.inq{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.inq + .inq{margin-top:10px}
+.inq .top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.st{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:#FEF3E2;color:#92400E}
+.st.answered{background:var(--teal-bg);color:var(--teal)}
+.inq .q{font-size:16px;color:var(--ink);margin-top:10px;white-space:pre-wrap}
+.inq .d{font-size:13px;color:var(--ink3);margin-top:6px}
+.inq .rp{margin-top:12px;background:var(--navy-bg);border-radius:12px;padding:12px 14px}
+.inq .rp b{display:block;font-size:13px;color:var(--navy);margin-bottom:4px}
+.inq .rp p{font-size:16px;white-space:pre-wrap}
 .tile{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:16px;min-height:112px;background:#fff;border:1px solid var(--line);border-radius:var(--r);text-decoration:none;color:var(--ink)}
 .tile:active{background:#F1F4F8}
 .tile .bubble{width:44px;height:44px;border-radius:12px;background:var(--navy-bg);color:var(--navy);display:grid;place-items:center}
@@ -218,7 +235,7 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .morebtn .ic{width:18px;height:18px}
 
 /* tabbar */
-.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:10;background:#FFFFFF;box-shadow:0 -4px 16px rgba(15,23,42,.04);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px calc(6px + var(--sab))}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:10;background:#FFFFFF;box-shadow:0 -4px 16px rgba(15,23,42,.04);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding:6px 4px calc(6px + var(--sab))}
 .tab{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink3);font-size:12px;font-weight:600;line-height:1.25;text-align:center;padding:2px 2px}
 .tab .ic{width:26px;height:26px}
 .tab.on{color:var(--navy)}
@@ -303,14 +320,14 @@ ios1:'Tap the Share button at the bottom of Safari.',ios2:'Scroll down and tap �
 anyway:'Continue in browser',install:'Install app',infoTitle:'Your information',req:'Required',opt:'Optional',fName:'Full name (as in passport)',fCountry:'Nationality',select:'Select',other:'Other',
 fPhone:'Korean phone number',fPhoneHint:'Enter it if you have one. Otherwise leave it empty.',fPassport:'Passport number',fBirth:'Date of birth',fCompany:'Workplace / company',fEmergency:'Emergency contact (name and phone)',
 agreeTitle:'Agreement',agreeAll:'Agree to all',cTerms:'Terms of service',cPrivacy:'Collection and use of personal information',cSensitive:'Face and passport photos (sensitive information)',cSensitiveD:'Used only by the company manager to confirm your identity.',
-cLocation:'Collection and use of location',cLocationD:'Recorded when you open the app, press “I’m OK” or press SOS. Only the company manager can see it, for your safety and work management.',cMarketing:'Notices and benefits',view:'View',next:'Continue',
+cLocation:'Collection and use of location',cLocationD:'Recorded when you open the app, send an inquiry or press SOS. Only the company manager can see it, for your safety and work management.',cMarketing:'Notices and benefits',view:'View',next:'Continue',
 selfieTitle:'Photo of your face',selfieHint:'Fit your face inside the oval. Remove hat and glasses.',passTitle:'Photo of your passport',passHint:'Fit the photo page inside the frame. Avoid glare.',retake:'Retake',usePhoto:'Use this photo',camFail:'The camera could not open.',openFile:'Use phone camera',
 sending:'Sending',doneTitle:'Registration complete',hello:'Hello',
 sosHold:'Press and hold for 2 seconds',sosSent:'Help request sent',sosNotified:'The manager has been notified.',sosRecorded:'Your request was recorded. If it is urgent, call 119.',sosFail:'Not sent. Try again.',retry:'Try again',call119:'Call 119',rescuers:'Show this to rescuers',back:'Back',
 okBtn:'I’m OK today',okDone:'Checked in today',okHint:'Tap once a day so the manager knows you are safe.',lastCheck:'Last check-in',places:'Nearby places',
 pHospital:'Hospital',pPharmacy:'Pharmacy',pMoney:'Money transfer',pHalal:'Halal food',pGrocery:'Asian grocery',pWorship:'Place of worship',pPolice:'Police',pAtm:'Bank / ATM',pStore:'Convenience store',pSupport:'Foreign worker support center',placesHint:'Opens Google Maps near you.',
 home:'Home',community:'Community',myInfo:'My info',write:'Write',postTitle:'Title',postBody:'Content',postSend:'Post',noPosts:'No posts yet.',catGeneral:'General',catQuestion:'Question',catTip:'Tip',catEvent:'Event',
-joined:'Joined',language:'Language',terms:'Terms and policies',version:'Version',collected:'What we collect: name, nationality, contact details, passport and face photos, and location when you open the app, check in or press SOS. Only the company manager can see it.',device:'This phone is registered to you.',
+joined:'Joined',language:'Language',terms:'Terms and policies',version:'Version',collected:'What we collect: name, nationality, contact details, passport and face photos, and location when you open the app, send an inquiry or press SOS. Only the company manager can see it.',device:'This phone is registered to you.',
 reconsent:'Our terms have been updated. Please review and agree.',locating:'Finding location',noLoc:'Location not available',errNet:'No connection. Check the internet and try again.',errGeneric:'Something went wrong. Please try again.',errPhone:'This phone number is already registered. Please contact your company manager.',errImage:'The photo could not be used. Please take it again.',errMissing:'Please fill in the required fields.'},
 
 ko:{chooseLang:'언어를 선택하세요',welcome:'한국에 오신 것을 환영합니다',welcomeSub:'HANDS는 한국에서 일하는 동안 안전하게 연결되도록 돕습니다.',signup:'가입하기',lostNote:'이미 가입했다면 회사 관리자에게 문의하세요.',
@@ -319,14 +336,14 @@ ios1:'Safari 아래쪽의 공유 버튼을 누르세요.',ios2:'아래로 내려
 anyway:'브라우저에서 계속하기',install:'앱 설치',infoTitle:'내 정보 입력',req:'필수',opt:'선택',fName:'이름 (여권과 같게)',fCountry:'국적',select:'선택하세요',other:'기타',
 fPhone:'한국 전화번호',fPhoneHint:'있으면 적어 주세요. 없으면 비워 두세요.',fPassport:'여권번호',fBirth:'생년월일',fCompany:'근무처 / 회사',fEmergency:'비상 연락처 (이름, 전화)',
 agreeTitle:'약관 동의',agreeAll:'전체 동의',cTerms:'이용약관',cPrivacy:'개인정보 수집·이용',cSensitive:'얼굴·여권 사진 등 민감정보 처리',cSensitiveD:'사진은 회사 관리자가 본인 확인에만 사용합니다.',
-cLocation:'위치정보 수집·이용',cLocationD:'앱을 열 때, “괜찮아요”를 누를 때, SOS를 누를 때 위치가 기록됩니다. 회사 관리자만 볼 수 있으며 안전과 근무 관리에 사용합니다.',cMarketing:'공지·혜택 알림',view:'보기',next:'다음',
+cLocation:'위치정보 수집·이용',cLocationD:'앱을 열 때, 문의를 보낼 때, SOS를 누를 때 위치가 기록됩니다. 회사 관리자만 볼 수 있으며 안전과 근무 관리에 사용합니다.',cMarketing:'공지·혜택 알림',view:'보기',next:'다음',
 selfieTitle:'얼굴 사진',selfieHint:'타원 안에 얼굴을 맞추세요. 모자와 안경은 벗어 주세요.',passTitle:'여권 사진',passHint:'사진이 있는 면을 틀 안에 맞추세요. 빛 반사를 피하세요.',retake:'다시 찍기',usePhoto:'이 사진 사용',camFail:'카메라를 열 수 없습니다.',openFile:'휴대폰 카메라로 찍기',
 sending:'보내는 중',doneTitle:'가입 완료',hello:'안녕하세요',
 sosHold:'2초간 길게 누르세요',sosSent:'도움 요청을 보냈습니다',sosNotified:'관리자에게 알렸습니다.',sosRecorded:'요청이 기록되었습니다. 급하면 119에 전화하세요.',sosFail:'보내지 못했습니다. 다시 시도하세요.',retry:'다시 시도',call119:'119에 전화',rescuers:'구조대원에게 보여 주세요',back:'돌아가기',
 okBtn:'오늘 괜찮아요',okDone:'오늘 확인 완료',okHint:'하루 한 번 눌러 관리자에게 안전을 알려 주세요.',lastCheck:'마지막 확인',places:'주변 장소',
 pHospital:'병원',pPharmacy:'약국',pMoney:'해외 송금',pHalal:'할랄 음식',pGrocery:'아시아 식료품',pWorship:'종교 시설',pPolice:'경찰서',pAtm:'은행 / ATM',pStore:'편의점',pSupport:'외국인력지원센터',placesHint:'내 주변의 Google 지도를 엽니다.',
 home:'홈',community:'커뮤니티',myInfo:'내 정보',write:'글쓰기',postTitle:'제목',postBody:'내용',postSend:'올리기',noPosts:'아직 글이 없습니다.',catGeneral:'일반',catQuestion:'질문',catTip:'정보',catEvent:'행사',
-joined:'가입일',language:'언어',terms:'약관 및 정책',version:'버전',collected:'수집하는 정보: 이름, 국적, 연락처, 여권·얼굴 사진, 그리고 앱을 열거나 확인·SOS를 누를 때의 위치. 회사 관리자만 볼 수 있습니다.',device:'이 휴대폰은 본인 명의로 등록되어 있습니다.',
+joined:'가입일',language:'언어',terms:'약관 및 정책',version:'버전',collected:'수집하는 정보: 이름, 국적, 연락처, 여권·얼굴 사진, 그리고 앱을 열거나 문의를 보내거나 SOS를 누를 때의 위치. 회사 관리자만 볼 수 있습니다.',device:'이 휴대폰은 본인 명의로 등록되어 있습니다.',
 reconsent:'약관이 바뀌었습니다. 확인 후 다시 동의해 주세요.',locating:'위치 찾는 중',noLoc:'위치를 받지 못했습니다',errNet:'인터넷 연결을 확인하고 다시 시도하세요.',errGeneric:'문제가 생겼습니다. 다시 시도하세요.',errPhone:'이미 등록된 전화번호입니다. 회사 관리자에게 문의하세요.',errImage:'사진을 사용할 수 없습니다. 다시 찍어 주세요.',errMissing:'필수 항목을 입력해 주세요.'},
 
 vi:{chooseLang:'Chọn ngôn ngữ',welcome:'Chào mừng bạn đến Hàn Quốc',welcomeSub:'HANDS giúp bạn an toàn và luôn được kết nối khi làm việc tại Hàn Quốc.',signup:'Đăng ký',lostNote:'Nếu bạn đã đăng ký rồi, hãy liên hệ người quản lý của công ty.',
@@ -490,6 +507,21 @@ bn:{permTitle:'ক্যামেরা ও অবস্থান',permSub:'এ�
 };
 for (const l in STR2) Object.assign(STR[l], STR2[l]);
 
+/* inquiry strings (job / ship) */
+const STR3 = {
+en:{"job": "Find a job", "ship": "Vessel inquiry", "jobSub": "Tell us what work you are looking for.", "shipSub": "Ask about your vessel, contract or work on board.", "inqQ": "How can we help you?", "inqSend": "Send", "inqDone": "The manager will check and contact you.", "myInq": "My inquiries", "inqOpen": "Waiting for reply", "inqAnswered": "Answered", "reply": "Reply", "noInq": "No inquiries yet."},
+ko:{"job": "일자리 찾기", "ship": "선박 문의", "jobSub": "원하시는 일을 알려 주세요.", "shipSub": "배, 계약, 선상 근무에 대해 물어보세요.", "inqQ": "무엇을 도와드릴까요?", "inqSend": "보내기", "inqDone": "담당자가 확인 후 연락드립니다.", "myInq": "내 문의", "inqOpen": "답변 대기", "inqAnswered": "답변 완료", "reply": "답변", "noInq": "아직 문의가 없습니다."},
+vi:{"job": "Tìm việc làm", "ship": "Hỏi về tàu", "jobSub": "Hãy cho chúng tôi biết bạn muốn tìm công việc gì.", "shipSub": "Hỏi về tàu, hợp đồng hoặc công việc trên tàu.", "inqQ": "Chúng tôi có thể giúp gì cho bạn?", "inqSend": "Gửi", "inqDone": "Người phụ trách sẽ kiểm tra và liên hệ với bạn.", "myInq": "Câu hỏi của tôi", "inqOpen": "Đang chờ trả lời", "inqAnswered": "Đã trả lời", "reply": "Trả lời", "noInq": "Chưa có câu hỏi nào."},
+id:{"job": "Cari pekerjaan", "ship": "Pertanyaan kapal", "jobSub": "Beri tahu kami pekerjaan yang Anda cari.", "shipSub": "Tanyakan tentang kapal, kontrak, atau pekerjaan di kapal.", "inqQ": "Apa yang bisa kami bantu?", "inqSend": "Kirim", "inqDone": "Petugas akan memeriksa dan menghubungi Anda.", "myInq": "Pertanyaan saya", "inqOpen": "Menunggu jawaban", "inqAnswered": "Sudah dijawab", "reply": "Jawaban", "noInq": "Belum ada pertanyaan."},
+th:{"job": "หางาน", "ship": "สอบถามเรื่องเรือ", "jobSub": "บอกเราว่าคุณกำลังหางานแบบไหน", "shipSub": "สอบถามเรื่องเรือ สัญญา หรืองานบนเรือ", "inqQ": "ให้เราช่วยอะไรคุณได้บ้าง", "inqSend": "ส่ง", "inqDone": "เจ้าหน้าที่จะตรวจสอบและติดต่อกลับ", "myInq": "คำถามของฉัน", "inqOpen": "รอคำตอบ", "inqAnswered": "ตอบแล้ว", "reply": "คำตอบ", "noInq": "ยังไม่มีคำถาม"},
+tl:{"job": "Maghanap ng trabaho", "ship": "Tanong tungkol sa barko", "jobSub": "Sabihin sa amin kung anong trabaho ang hinahanap mo.", "shipSub": "Magtanong tungkol sa barko, kontrata o trabaho sa barko.", "inqQ": "Paano ka namin matutulungan?", "inqSend": "Ipadala", "inqDone": "Titingnan ito ng manager at kokontakin ka.", "myInq": "Aking mga tanong", "inqOpen": "Naghihintay ng sagot", "inqAnswered": "Nasagot na", "reply": "Sagot", "noInq": "Wala pang tanong."},
+ne:{"job": "काम खोज्नुहोस्", "ship": "जहाज सम्बन्धी सोधपुछ", "jobSub": "तपाईं कस्तो काम खोज्दै हुनुहुन्छ, भन्नुहोस्।", "shipSub": "जहाज, सम्झौता वा जहाजमा कामबारे सोध्नुहोस्।", "inqQ": "हामी तपाईंलाई कसरी मद्दत गर्न सक्छौं?", "inqSend": "पठाउनुहोस्", "inqDone": "जिम्मेवार व्यक्तिले हेरेर तपाईंलाई सम्पर्क गर्नुहुनेछ।", "myInq": "मेरा सोधपुछ", "inqOpen": "जवाफको प्रतीक्षामा", "inqAnswered": "जवाफ दिइयो", "reply": "जवाफ", "noInq": "अहिलेसम्म कुनै सोधपुछ छैन।"},
+km:{"job": "ស្វែងរកការងារ", "ship": "សាកសួរអំពីកប៉ាល់", "jobSub": "ប្រាប់យើងពីការងារដែលអ្នកកំពុងស្វែងរក។", "shipSub": "សួរអំពីកប៉ាល់ កិច្ចសន្យា ឬការងារលើកប៉ាល់។", "inqQ": "តើយើងអាចជួយអ្វីបាន?", "inqSend": "ផ្ញើ", "inqDone": "អ្នកទទួលបន្ទុកនឹងពិនិត្យ ហើយទាក់ទងអ្នកវិញ។", "myInq": "សំណួររបស់ខ្ញុំ", "inqOpen": "កំពុងរង់ចាំចម្លើយ", "inqAnswered": "បានឆ្លើយ", "reply": "ចម្លើយ", "noInq": "មិនទាន់មានសំណួរទេ។"},
+my:{"job": "အလုပ်ရှာရန်", "ship": "သင်္ဘော မေးမြန်းရန်", "jobSub": "သင်ရှာနေသော အလုပ်အကြောင်း ပြောပြပါ။", "shipSub": "သင်္ဘော၊ စာချုပ် သို့မဟုတ် သင်္ဘောပေါ်ရှိ အလုပ်အကြောင်း မေးပါ။", "inqQ": "ဘာကူညီပေးရမလဲ။", "inqSend": "ပို့ရန်", "inqDone": "တာဝန်ခံက စစ်ဆေးပြီး ပြန်ဆက်သွယ်ပါမည်။", "myInq": "ကျွန်ုပ်၏ မေးမြန်းချက်များ", "inqOpen": "အဖြေ စောင့်နေသည်", "inqAnswered": "ဖြေပြီး", "reply": "အဖြေ", "noInq": "မေးမြန်းချက် မရှိသေးပါ။"},
+si:{"job": "රැකියාවක් සොයන්න", "ship": "නැව පිළිබඳ විමසීම", "jobSub": "ඔබ සොයන රැකියාව කුමක්දැයි අපට කියන්න.", "shipSub": "නැව, ගිවිසුම හෝ නැවේ වැඩ ගැන විමසන්න.", "inqQ": "අපට ඔබට උදව් කළ හැක්කේ කෙසේද?", "inqSend": "යවන්න", "inqDone": "භාරකරු පරීක්ෂා කර ඔබව සම්බන්ධ කරගනු ඇත.", "myInq": "මගේ විමසීම්", "inqOpen": "පිළිතුර බලාපොරොත්තුවෙන්", "inqAnswered": "පිළිතුරු දී ඇත", "reply": "පිළිතුර", "noInq": "තවම විමසීම් නැත."},
+bn:{"job": "কাজ খুঁজুন", "ship": "জাহাজ সংক্রান্ত জিজ্ঞাসা", "jobSub": "আপনি কী ধরনের কাজ খুঁজছেন জানান।", "shipSub": "জাহাজ, চুক্তি বা জাহাজে কাজ নিয়ে প্রশ্ন করুন।", "inqQ": "আমরা কীভাবে সাহায্য করতে পারি?", "inqSend": "পাঠান", "inqDone": "দায়িত্বপ্রাপ্ত ব্যক্তি দেখে আপনার সাথে যোগাযোগ করবেন।", "myInq": "আমার জিজ্ঞাসা", "inqOpen": "উত্তরের অপেক্ষায়", "inqAnswered": "উত্তর দেওয়া হয়েছে", "reply": "উত্তর", "noInq": "এখনও কোনো জিজ্ঞাসা নেই।"}
+};
+for (const l in STR3) Object.assign(STR[l], STR3[l]);
 /* ---------- icons (inline SVG line icons) ---------- */
 const P = {
   globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9M12 3C9.4 5.6 8.2 8.6 8.2 12s1.2 6.4 3.8 9"/>',
@@ -522,6 +554,8 @@ const P = {
   download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
   map:'<path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
+  briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3 12.5h18"/>',
+  ship:'<path d="M3 16.5l2.2 4h13.6l2.2-4L12 13.5z"/><path d="M6 15.2V9h12v6.2M12 9V4M9.5 6h5"/>',
   menu:'<circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/>'
 };
 function svgIcon(name, sw) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' + P[name] + '</svg>'; }
@@ -593,6 +627,8 @@ const S = {
   posts: null, postsErr: null, sos: null, perm: null, signupPos: null
 };
 function t(k) { return (STR[S.lang] && STR[S.lang][k]) || STR.en[k] || k; }
+/* Korean-only text (consent block + permission screen, per owner: Korean company briefing first) */
+function tk(k) { return STR.ko[k] || STR.en[k] || k; }
 
 /* ---------- router ---------- */
 const app = document.getElementById('app');
@@ -852,13 +888,12 @@ function checkbox(checked, onchange, labelKids, extraCls) {
 }
 function consentBlock(onChange) {
   const all = CONSENT_ITEMS.every(([k]) => S.consents[k]);
-  const wrap = h('div', { class: 'consent' },
-    h('div', { class: 'crow all' }, checkbox(all, (v) => { CONSENT_ITEMS.forEach(([k]) => S.consents[k] = v); onChange(); }, t('agreeAll'))),
+  return h('div', { class: 'consent', lang: 'ko' },
+    h('div', { class: 'crow all' }, checkbox(all, (v) => { CONSENT_ITEMS.forEach(([k]) => S.consents[k] = v); onChange(); }, tk('agreeAll'))),
     CONSENT_ITEMS.map(([k, lk, dk, req]) => h('div', { class: 'crow' },
       checkbox(S.consents[k], (v) => { S.consents[k] = v; onChange(); },
-        [t(lk), h('span', { class: 'tag' + (req ? ' req' : ''), text: req ? t('req') : t('opt') }), dk ? h('span', { class: 'cdesc', style: 'display:block', text: t(dk) }) : null]),
-      h('a', { class: 'view', href: '/terms.html?lang=' + S.lang + '#' + k, target: '_blank', rel: 'noopener' }, t('view'), icon('chevRight')))));
-  return wrap;
+        [tk(lk), h('span', { class: 'tag' + (req ? ' req' : ''), text: req ? tk('req') : tk('opt') }), dk ? h('span', { class: 'cdesc', style: 'display:block', text: tk(dk) }) : null]),
+      h('a', { class: 'view', href: '/terms.html?lang=' + S.lang + '#' + k, target: '_blank', rel: 'noopener' }, tk('view'), icon('chevRight')))));
 }
 
 function screenSignup() {
@@ -899,7 +934,7 @@ function screenSignup() {
       h('div', { class: 'field' },
         h('label', { class: 'label', for: 'f_country' }, t('fCountry'), h('span', { class: 'tag req', text: t('req') })), sel),
       field('phone', 'fPhone', { type: 'tel', hint: 'fPhoneHint', attrs: { inputmode: 'tel', autocomplete: 'tel', maxlength: '30' } }),
-      h('h2', { class: 'fs-title', text: t('agreeTitle') }),
+      h('h2', { class: 'fs-title', lang: 'ko', text: tk('agreeTitle') }),
       consentHost),
     h('div', { class: 'footer' }, nextBtn));
 }
@@ -1024,7 +1059,7 @@ function screenPerm() {
   const stateRow = (label, st) => h('div', { class: 'irow' }, h('span', { class: 'k', style: 'color:var(--ink);font-weight:650', text: label }),
     h('span', { class: 'v', style: st === 'ok' ? 'color:var(--teal)' : st === 'no' ? 'color:var(--red)' : 'color:var(--ink3)' },
       st === 'wait' ? h('span', { class: 'spin', style: 'width:20px;height:20px;border-width:3px' }) : icon(st === 'ok' ? 'check' : 'alert'),
-      st === 'wait' ? '' : (st === 'ok' ? t('allowed') : t('denied'))));
+      st === 'wait' ? '' : (st === 'ok' ? tk('allowed') : tk('denied'))));
   const settled = P2.cam !== 'wait' && P2.loc !== 'wait';
   if (!P2.started) {
     P2.started = true;
@@ -1044,14 +1079,14 @@ function screenPerm() {
     })();
   }
   return h('div', { class: 'screen' }, topbar(() => { S.perm = null; go(screenSignup); }),
-    h('div', { class: 'content' },
+    h('div', { class: 'content', lang: 'ko' },
       progress(1),
-      h('h1', { text: t('permTitle') }),
-      h('p', { class: 'lead', text: t('permSub') }),
-      h('div', { class: 'rows', style: 'margin-top:22px' }, stateRow(t('camLabel'), P2.cam), stateRow(t('locLabel'), P2.loc)),
-      P2.cam === 'no' ? h('div', { class: 'note warn', style: 'margin-top:14px' }, icon('alert'), h('div', { text: t('camDenied') })) : null,
-      P2.loc === 'no' ? h('div', { class: 'note warn', style: 'margin-top:14px' }, icon('alert'), h('div', { text: t('locDenied') })) : null),
-    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', disabled: !settled, onclick: () => go(screenCamera, 'selfie') }, t('next'), icon('chevRight'))));
+      h('h1', { text: tk('permTitle') }),
+      h('p', { class: 'lead', text: tk('permSub') }),
+      h('div', { class: 'rows', style: 'margin-top:22px' }, stateRow(tk('camLabel'), P2.cam), stateRow(tk('locLabel'), P2.loc)),
+      P2.cam === 'no' ? h('div', { class: 'note warn', style: 'margin-top:14px' }, icon('alert'), h('div', { text: tk('camDenied') })) : null,
+      P2.loc === 'no' ? h('div', { class: 'note warn', style: 'margin-top:14px' }, icon('alert'), h('div', { text: tk('locDenied') })) : null),
+    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', disabled: !settled, onclick: () => go(screenCamera, 'selfie') }, tk('next'), icon('chevRight'))));
 }
 
 function screenDone() {
@@ -1060,7 +1095,7 @@ function screenDone() {
       h('div', { class: 'badge ok' }, icon('okCircle')),
       h('h1', { text: t('doneTitle') }),
       h('p', { class: 'lead', text: t('doneSub') }),
-      (S.perm && S.perm.loc === 'no') ? h('div', { class: 'note warn', style: 'margin-top:22px;text-align:left' }, icon('alert'), h('div', { text: t('locDenied') })) : null),
+      (S.perm && S.perm.loc === 'no') ? h('div', { class: 'note warn', style: 'margin-top:22px;text-align:left' }, icon('alert'), h('div', { lang: 'ko', text: tk('locDenied') })) : null),
     h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => { S.perm = null; goHome('home'); } }, t('start'), icon('chevRight'))));
 }
 
@@ -1074,8 +1109,8 @@ function screenReconsent() {
   const render = () => { host.replaceChildren(consentBlock(render)); btn.disabled = !requiredOk(); };
   render();
   return h('div', { class: 'screen' }, topbar(null),
-    h('div', { class: 'content' }, h('h1', { text: t('agreeTitle') }),
-      h('div', { class: 'note', style: 'margin:16px 0 20px' }, icon('info'), h('div', { text: t('reconsent') })), host),
+    h('div', { class: 'content', lang: 'ko' }, h('h1', { text: tk('agreeTitle') }),
+      h('div', { class: 'note', style: 'margin:16px 0 20px' }, icon('info'), h('div', { text: tk('reconsent') })), host),
     h('div', { class: 'footer' }, btn));
 }
 
@@ -1097,7 +1132,7 @@ function placeTile([k, ic, q]) {
 }
 function screenHome() {
   const p = S.profile || {};
-  const tabs = [['home', 'home', 'home'], ['places', 'map', 'places'], ['community', 'chat', 'community'], ['my', 'user', 'myInfo']];
+  const tabs = [['home', 'home', 'home'], ['places', 'map', 'places'], ['my', 'user', 'myInfo']];
   const page = h('main', { class: 'tabpage' });
   const tabbar = h('nav', { class: 'tabbar' }, tabs.map(([id, ic, lk]) =>
     h('button', { class: 'tab' + (S.tab === id ? ' on' : ''), 'aria-current': S.tab === id ? 'page' : null, onclick: () => { S.tab = id; rerender(); window.scrollTo(0, 0); } }, icon(ic), h('span', { text: t(lk) }))));
@@ -1105,33 +1140,39 @@ function screenHome() {
     h('div', { class: 'bar1' }, h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), h('b', { text: 'HANDS' })), langBtn()));
   if (S.tab === 'home') {
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
-    page.append(sosCard(), checkCard(),
-      h('div', { class: 'section-h' }, h('h2', { text: t('places') }), h('button', { class: 'morebtn', onclick: () => { S.tab = 'places'; rerender(); window.scrollTo(0, 0); }, 'aria-label': t('places') }, icon('chevRight'))),
-      h('div', { class: 'grid' }, PLACES.slice(0, 4).map(placeTile)));
+    const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
+    page.append(h('div', { class: 'mgrid' },
+        sosTile(),
+        h('button', { class: 'mtile strong', onclick: () => go(screenInquiry, 'job') }, h('span', { class: 'mi' }, icon('briefcase')), h('span', {}, h('span', { class: 'mt', text: t('job') }), h('span', { class: 'ms', text: t('jobSub') }))),
+        h('button', { class: 'mtile strong', onclick: () => go(screenInquiry, 'ship') }, h('span', { class: 'mi' }, icon('ship')), h('span', {}, h('span', { class: 'mt', text: t('ship') }), h('span', { class: 'ms', text: t('shipSub') }))),
+        h('button', { class: 'mtile', onclick: toTab('places') }, h('span', { class: 'mi' }, icon('map')), h('span', {}, h('span', { class: 'mt', text: t('places') }), h('span', { class: 'ms', text: t('placesHint') })))),
+      h('div', { class: 'rows', style: 'margin-top:14px' },
+        h('button', { class: 'irow', onclick: () => go(screenMyInquiries) }, h('span', { class: 'k', style: 'color:var(--ink);font-weight:650;display:flex;align-items:center;gap:10px;max-width:none' }, icon('doc'), t('myInq')), h('span', { class: 'v' }, icon('chevRight')))));
   } else if (S.tab === 'places') {
     page.append(h('h1', { style: 'margin-top:8px', text: t('places') }), h('p', { class: 'lead', style: 'margin-bottom:18px', text: t('placesHint') }),
       h('div', { class: 'grid' }, PLACES.map(placeTile)));
-  } else if (S.tab === 'community') {
-    page.append(communityTab());
   } else {
     page.append(myTab());
   }
   return h('div', { class: 'screen' }, head, page, tabbar);
 }
 
-function sosCard() {
-  const R = 98, C = 2 * Math.PI * R;
+function sosTile() {
+  const R = 30, C = 2 * Math.PI * R;
   const ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  ring.setAttribute('viewBox', '0 0 208 208'); ring.setAttribute('class', 'ring'); ring.setAttribute('aria-hidden', 'true');
-  ring.innerHTML = '<circle cx="104" cy="104" r="' + R + '" fill="none" stroke="#F6D5D5" stroke-width="7"/><circle class="pr" cx="104" cy="104" r="' + R + '" fill="none" stroke="#C62828" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '"/>';
+  ring.setAttribute('viewBox', '0 0 66 66'); ring.setAttribute('class', 'ring'); ring.setAttribute('aria-hidden', 'true');
+  ring.innerHTML = '<circle cx="33" cy="33" r="' + R + '" fill="none" stroke="#F3CFCF" stroke-width="4"/><circle class="pr" cx="33" cy="33" r="' + R + '" fill="none" stroke="#C62828" stroke-width="4" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '"/>';
   const pr = ring.querySelector('.pr');
-  const btn = h('button', { class: 'sos-btn', 'aria-label': 'SOS. ' + t('sosHold'), oncontextmenu: (e) => e.preventDefault() }, 'SOS');
+  const bar = h('span', { class: 'hb', 'aria-hidden': 'true' });
+  const btn = h('button', { class: 'mtile sos', 'aria-label': 'SOS. ' + t('sosHold'), oncontextmenu: (e) => e.preventDefault() },
+    h('span', { class: 'mi' }, ring, icon('alert')),
+    h('span', {}, h('span', { class: 'mt', text: 'SOS' }), h('span', { class: 'ms', text: t('sosHold') })), bar);
   let start = 0, raf = 0, holding = false;
-  const reset = () => { holding = false; cancelAnimationFrame(raf); btn.classList.remove('holding'); pr.style.strokeDashoffset = C; };
+  const reset = () => { holding = false; cancelAnimationFrame(raf); btn.classList.remove('holding'); pr.style.strokeDashoffset = C; bar.style.width = '0'; };
   const tick = () => {
     if (!holding) return;
     const k = Math.min(1, (performance.now() - start) / 2000);
-    pr.style.strokeDashoffset = C * (1 - k);
+    pr.style.strokeDashoffset = C * (1 - k); bar.style.width = (k * 100) + '%';
     if (k >= 1) { reset(); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} triggerSOS(); return; }
     raf = requestAnimationFrame(tick);
   };
@@ -1140,28 +1181,65 @@ function sosCard() {
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => btn.addEventListener(ev, () => { if (holding) reset(); }));
   btn.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); begin(); } });
   btn.addEventListener('keyup', (e) => { if (e.key === 'Enter' || e.key === ' ') reset(); });
-  return h('section', { class: 'sos-card' }, h('div', { class: 'sos-wrap' }, ring, btn), h('div', { class: 'sos-label', text: t('sosHold') }));
+  return btn;
 }
-
-function checkCard() {
-  const p = S.profile || {};
-  const done = isToday(p.last_checkin_at);
-  const card = h('section', { class: 'card check-card' },
-    h('div', { class: 'check-top' }, h('div', { class: 'bubble' }, icon('okCircle')),
-      h('div', {}, h('h2', { text: t('okBtn') }), h('p', { text: p.last_checkin_at ? t('lastCheck') + ' · ' + fmtDate(p.last_checkin_at, true) : t('okHint') }))));
-  if (done) card.append(h('div', { class: 'done-pill', role: 'status' }, icon('check'), t('okDone')));
-  else {
-    const b = h('button', { class: 'btn btn-teal', onclick: async () => {
-      b.disabled = true; b.replaceChildren(h('span', { class: 'spin', style: 'width:22px;height:22px;border-width:3px;border-color:rgba(255,255,255,.35);border-top-color:#fff' }), t('locating'));
-      const pos = await getPos(8000, true);
-      try {
-        const j = await api('checkin', { body: pos || {} });
-        S.profile.last_checkin_at = j.at; cacheProfile(); rerender();
-      } catch (e) { if (e.status !== 401) { toast(errText(e.code)); rerender(); } }
-    } }, icon('check'), t('okBtn'));
-    card.append(b);
+/* ---------- inquiries (job / ship) ---------- */
+function screenInquiry(cat) {
+  const key = 'inq_' + cat;
+  S.drafts = S.drafts || {};
+  const ta = h('textarea', { class: 'input', id: 'inq_body', maxlength: '2000', oninput: (e) => { S.drafts[key] = e.target.value; } });
+  ta.value = S.drafts[key] || '';
+  const btn = h('button', { class: 'btn btn-primary', onclick: send }, t('inqSend'), icon('chevRight'));
+  async function send() {
+    const body = (S.drafts[key] || '').trim();
+    if (!body) { toast(t('errMissing')); ta.focus(); return; }
+    btn.disabled = true;
+    try { await api('inquiry', { body: { category: cat, body } }); S.drafts[key] = ''; S.inqs = null; go(screenInquiryDone, cat); sendInquiryLocation(); }
+    catch (e) { btn.disabled = false; if (e.status !== 401) toast(errText(e.code)); }
   }
-  return card;
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')),
+    h('div', { class: 'content' },
+      h('h1', { text: t(cat) }), h('p', { class: 'lead', text: t(cat + 'Sub') }),
+      h('div', { class: 'field' }, h('label', { class: 'label', for: 'inq_body', text: t('inqQ') }), ta),
+      h('button', { class: 'btn-link', style: 'margin-top:8px', onclick: () => go(screenMyInquiries) }, t('myInq'))),
+    h('div', { class: 'footer' }, btn));
+}
+async function sendInquiryLocation() {
+  try {
+    if (!S.token || !(await locGranted())) return;
+    const pos = await getPos(6000, false);
+    if (pos && S.token) { lsSet('hands_loc_at', String(Date.now())); await api('location', { body: { ...pos, source: 'app_open' } }); }
+  } catch (e) {}
+}
+function screenInquiryDone(cat) {
+  return h('div', { class: 'screen' }, topbar(null),
+    h('div', { class: 'center' }, h('div', { class: 'badge ok' }, icon('okCircle')), h('h1', { style: 'font-size:24px', text: t('inqDone') })),
+    h('div', { class: 'footer stack' },
+      h('button', { class: 'btn btn-primary', onclick: () => go(screenMyInquiries) }, icon('doc'), t('myInq')),
+      h('button', { class: 'btn btn-secondary', onclick: () => goHome('home') }, icon('home'), t('home'))));
+}
+async function loadInquiries() {
+  S.inqsErr = null;
+  try { const j = await api('inquiries', { method: 'GET' }); S.inqs = j.inquiries || []; }
+  catch (e) { S.inqsErr = e.code; }
+  if (S.route && S.route[0] === screenMyInquiries) rerender();
+}
+function screenMyInquiries() {
+  const list = h('div', { style: 'margin-top:18px' });
+  if (S.inqs == null && !S.inqsErr) { list.append(h('div', { class: 'empty' }, h('div', { class: 'spin', style: 'margin:0 auto' }))); loadInquiries(); }
+  else if (S.inqsErr) list.append(h('div', { class: 'empty' }, h('p', { text: errText(S.inqsErr) }), h('button', { class: 'btn btn-secondary', style: 'margin-top:14px', onclick: () => { S.inqs = null; S.inqsErr = null; rerender(); } }, t('retry'))));
+  else if (!S.inqs.length) list.append(h('div', { class: 'empty', text: t('noInq') }));
+  else S.inqs.forEach(q => {
+    const answered = q.status === 'answered' || !!q.reply;
+    list.append(h('article', { class: 'inq' },
+      h('div', { class: 'top' }, h('span', { class: 'chip', text: q.category === 'job' ? t('job') : q.category === 'ship' ? t('ship') : t('myInq') }),
+        h('span', { class: 'st' + (answered ? ' answered' : ''), text: answered ? t('inqAnswered') : t('inqOpen') })),
+      h('div', { class: 'q', text: q.body || '' }),
+      h('div', { class: 'd', text: fmtDate(q.created_at, true) }),
+      q.reply ? h('div', { class: 'rp' }, h('b', { text: t('reply') + (q.replied_at ? ' · ' + fmtDate(q.replied_at, true) : '') }), h('p', { text: q.reply })) : null));
+  });
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')),
+    h('div', { class: 'content' }, h('h1', { text: t('myInq') }), list));
 }
 
 /* ---------- SOS ---------- */
@@ -1201,52 +1279,6 @@ function screenSOS() {
           pos ? h('a', { class: 'maplink', href: 'https://maps.google.com/?q=' + pos.lat + ',' + pos.lng, target: '_blank', rel: 'noopener' }, icon('map'), '지도에서 위치 보기') : null,
           h('div', { class: 'co', text: '관리 회사: ' + COMPANY_KO }))),
       h('button', { class: 'btn btn-secondary', style: 'margin-top:18px', onclick: () => goHome('home') }, t('back'))));
-}
-
-/* ---------- community ---------- */
-const CATS = ['general', 'question', 'tip', 'event'];
-const catLabel = (c) => t('cat' + (c || 'general').charAt(0).toUpperCase() + (c || 'general').slice(1));
-async function loadPosts() {
-  S.postsErr = null;
-  try { const j = await api('posts', { method: 'GET' }); S.posts = j.posts || []; }
-  catch (e) { S.postsErr = e.code; }
-  if (S.route && S.route[0] === screenHome && S.tab === 'community') rerender();
-}
-function communityTab() {
-  const wrap = h('div');
-  wrap.append(h('div', { class: 'section-h', style: 'margin-top:8px' }, h('h1', { text: t('community') }),
-    h('button', { class: 'writebtn', onclick: () => go(screenWrite) }, icon('pen'), t('write'))));
-  if (S.posts == null && !S.postsErr) { wrap.append(h('div', { class: 'empty' }, h('div', { class: 'spin', style: 'margin:0 auto' }))); loadPosts(); return wrap; }
-  if (S.postsErr) { wrap.append(h('div', { class: 'empty' }, h('p', { text: errText(S.postsErr) }), h('button', { class: 'btn btn-secondary', style: 'margin-top:14px', onclick: () => { S.posts = null; S.postsErr = null; rerender(); } }, t('retry')))); return wrap; }
-  if (!S.posts.length) { wrap.append(h('div', { class: 'empty', text: t('noPosts') })); return wrap; }
-  S.posts.forEach(po => {
-    const a = po.author || {};
-    wrap.append(h('article', { class: 'post' },
-      h('span', { class: 'chip ' + (CATS.includes(po.category) ? po.category : 'general'), text: catLabel(CATS.includes(po.category) ? po.category : 'general') }),
-      h('h3', { text: po.title || '' }), h('p', { text: po.body || '' }),
-      h('div', { class: 'meta', text: [a.name, a.country ? countryName(a.country) : null, fmtDate(po.created_at, true)].filter(Boolean).join(' · ') })));
-  });
-  return wrap;
-}
-function screenWrite() {
-  const st = S.draft || (S.draft = { category: 'general', title: '', body: '' });
-  const btn = h('button', { class: 'btn btn-primary', onclick: send }, t('postSend'));
-  async function send() {
-    if (!st.title.trim() || !st.body.trim()) { toast(t('errMissing')); return; }
-    btn.disabled = true;
-    try { await api('post', { body: { category: st.category, title: st.title.trim(), body: st.body.trim() } }); S.draft = null; S.posts = null; goHome('community'); }
-    catch (e) { btn.disabled = false; if (e.status !== 401) toast(errText(e.code)); }
-  }
-  return h('div', { class: 'screen' }, topbar(() => goHome('community')),
-    h('div', { class: 'content' },
-      h('h1', { text: t('write') }),
-      h('div', { class: 'chips', role: 'radiogroup', style: 'margin-top:18px' }, CATS.map(c =>
-        h('label', {}, h('input', { type: 'radio', name: 'cat', value: c, checked: st.category === c, onchange: () => st.category = c }), h('span', { text: catLabel(c) })))),
-      h('div', { class: 'field' }, h('label', { class: 'label', for: 'w_title', text: t('postTitle') }),
-        h('input', { class: 'input', id: 'w_title', maxlength: '120', value: st.title, oninput: (e) => st.title = e.target.value })),
-      h('div', { class: 'field' }, h('label', { class: 'label', for: 'w_body', text: t('postBody') }),
-        (() => { const ta = h('textarea', { class: 'input', id: 'w_body', maxlength: '3000', oninput: (e) => st.body = e.target.value }); ta.value = st.body; return ta; })())),
-    h('div', { class: 'footer' }, btn));
 }
 
 /* ---------- my info ---------- */
