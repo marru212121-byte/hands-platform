@@ -73,9 +73,18 @@ module.exports = L.handler({
       filter = `&or=(name.ilike.${s},phone.ilike.${s},passport_number.ilike.${s},company.ilike.${s})`;
     }
     const rows = await db(`members?select=id,name,phone,country,company,created_at,last_seen_at,last_checkin_at,is_active,watch,passport_number&order=created_at.desc&limit=500${filter}`);
-    const locs = await db(`locations?select=member_id,lat,lng,updated_at,sos_active`);
+    const [locs, all] = await Promise.all([
+      db(`locations?select=member_id,lat,lng,updated_at,sos_active`),
+      db(`members?select=id,name,birth_date,passport_number&limit=5000`),
+    ]);
     const byId = Object.fromEntries(locs.map(l => [l.member_id, l]));
+    // 중복 가입 의심: 같은 여권번호, 또는 같은 이름+생년월일 (아이폰 사파리↔홈 화면 앱 등으로 다시 가입한 경우)
+    const keyCount = {};
+    const keys = (m) => [m.passport_number && 'p:' + String(m.passport_number).toUpperCase().replace(/\s/g, ''),
+      m.name && m.birth_date && 'n:' + String(m.name).toUpperCase().replace(/\s+/g, ' ').trim() + '|' + m.birth_date].filter(Boolean);
+    all.forEach((m) => keys(m).forEach((k) => { keyCount[k] = (keyCount[k] || 0) + 1; }));
     return { ok: true, members: rows.map(m => ({ ...m,
+      dup: keys(m).some((k) => keyCount[k] > 1),
       passport_number: m.passport_number ? '•••' + String(m.passport_number).slice(-4) : null,
       location: byId[m.id] || null })) };
   },

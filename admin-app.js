@@ -533,7 +533,7 @@ function drawMembers() {
   setHTML($('#mbody'), html`${list.map((m) => {
     const sos = m.location && m.location.sos_active;
     return html`<tr class="clickable ${sos ? 'row-danger' : ''} ${S.selectedId === m.id ? 'selected' : ''}" data-id="${m.id}" tabindex="0">
-      <td class="card-title" data-label="이름"><div class="cell-main">${m.name || '-'}${m.watch === true ? html` <span class="badge watch" title="집중 관리: 앱을 열고 닫을 때 텔레그램 알림">집중</span>` : ''}</div><div class="cell-sub num">여권 ${m.passport_number || '미등록'}</div></td>
+      <td class="card-title" data-label="이름"><div class="cell-main">${m.name || '-'}${m.watch === true ? html` <span class="badge watch" title="집중 관리: 앱을 열고 닫을 때 텔레그램 알림">집중</span>` : ''}${m.dup ? html` <span class="badge warn" title="같은 여권번호 또는 같은 이름·생년월일로 가입한 근로자가 더 있습니다. 옛 계정은 관리 중지하세요.">중복 의심</span>` : ''}</div><div class="cell-sub num">여권 ${m.passport_number || '미등록'}</div></td>
       <td data-label="국적">${flag(m.country)}</td>
       <td data-label="근무처"><div class="cell-clip" title="${m.company || ''}">${m.company || html`<span class="muted">미등록</span>`}</div></td>
       <td class="nowrap num" data-label="전화">${m.phone || html`<span class="muted">-</span>`}</td>
