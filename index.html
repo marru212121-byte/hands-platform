@@ -1169,8 +1169,17 @@ function screenCamera(kind) {
   S.cleanup = () => { alive = false; if (stream) stream.getTracks().forEach(tr => tr.stop()); stream = null; };
   async function capture() {
     if (!video.videoWidth) return;
-    const url = await compress(video, video.videoWidth, video.videoHeight);
-    done(url);
+    if (selfie) { done(await compress(video, video.videoWidth, video.videoHeight)); return; }
+    // passport: keep only what is inside the on-screen frame (+ a little margin), at full camera resolution
+    const VW = video.videoWidth, VH = video.videoHeight;
+    const vr = video.getBoundingClientRect(), gr = root.querySelector('.guide').getBoundingClientRect();
+    const sc = Math.max(vr.width / VW, vr.height / VH);              // object-fit: cover
+    const ox = (vr.width - VW * sc) / 2, oy = (vr.height - VH * sc) / 2;
+    const m = 0.06 * Math.max(gr.width, gr.height);
+    let sx = (gr.left - vr.left - m - ox) / sc, sy = (gr.top - vr.top - m - oy) / sc;
+    let sw = (gr.width + 2 * m) / sc, sh = (gr.height + 2 * m) / sc;
+    sx = Math.max(0, sx); sy = Math.max(0, sy); sw = Math.min(VW - sx, sw); sh = Math.min(VH - sy, sh);
+    done(await compress(video, VW, VH, { sx, sy, sw, sh, max: 1800 }));
   }
   async function onFile(e) {
     const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -1186,13 +1195,14 @@ function screenCamera(kind) {
 }
 function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
 /* JPEG, max 1280px long side, start q=0.8, keep under ~600KB */
-async function compress(src, w, hgt) {
-  const scale = Math.min(1, 1280 / Math.max(w, hgt));
-  const cw = Math.round(w * scale), ch = Math.round(hgt * scale);
+async function compress(src, w, hgt, crop) {
+  const r = crop || { sx: 0, sy: 0, sw: w, sh: hgt, max: 1280 };
+  const scale = Math.min(1, r.max / Math.max(r.sw, r.sh));
+  const cw = Math.round(r.sw * scale), ch = Math.round(r.sh * scale);
   const c = document.createElement('canvas'); c.width = cw; c.height = ch;
-  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch); ctx.drawImage(src, 0, 0, cw, ch);
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch); ctx.drawImage(src, r.sx, r.sy, r.sw, r.sh, 0, 0, cw, ch);
   let q = 0.8, url = c.toDataURL('image/jpeg', q);
-  while (url.length * 0.75 > 600 * 1024 && q > 0.45) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
+  while (url.length * 0.75 > (r.max > 1280 ? 900 : 600) * 1024 && q > 0.45) { q -= 0.1; url = c.toDataURL('image/jpeg', q); }
   return url;
 }
 
