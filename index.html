@@ -1173,7 +1173,30 @@ function screenInfo() {
 }
 
 /* ---------- camera ---------- */
+/* passport: the phone's own camera app (full resolution, autofocus, the worker can get close) — no in-app frame */
+function screenPassShot() {
+  const file = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: async (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      let src, w, hgt;
+      if (window.createImageBitmap) { src = await createImageBitmap(f, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(f)); w = src.width; hgt = src.height; }
+      else { src = await loadImg(URL.createObjectURL(f)); w = src.naturalWidth; hgt = src.naturalHeight; }
+      S.passport = await compress(src, w, hgt, { sx: 0, sy: 0, sw: w, sh: hgt, max: 2000 });
+      go(screenInfo);  // straight on — reading starts on the info screen, no extra 'use this photo' tap
+    } catch (err) { toast(t('errImage')); }
+  } });
+  return h('div', { class: 'screen' }, topbar(() => go(screenPerm)),
+    h('div', { class: 'content' },
+      progress(2),
+      h('h1', { text: t('passTitle') }),
+      h('div', { class: 'note', role: 'note' }, icon('info'), h('div', { text: t('passSideways') })),
+      h('p', { class: 'lead', text: t('passHint2') }),
+      h('div', { class: 'pass-illus', 'aria-hidden': 'true' }, h('div', { class: 'pi-photo' }), h('div', { class: 'pi-lines' }, h('i'), h('i'), h('i')), h('div', { class: 'pi-mrz' }, h('i'), h('i')))),
+    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => file.click() }, icon('cam'), t('openFile'))),
+    file);
+}
 function screenCamera(kind) {
+  if (kind === 'passport') return screenPassShot();
   const selfie = kind === 'selfie';
   let stream = null, alive = true;
   const video = h('video', { autoplay: true, playsinline: true, muted: true, class: selfie ? 'mirror' : '' });
@@ -1184,22 +1207,22 @@ function screenCamera(kind) {
     h('button', { class: 'btn btn-secondary', style: 'max-width:320px', onclick: () => file.click() }, icon('image'), t('openFile')));
   const shutter = h('button', { class: 'shutter', 'aria-label': selfie ? t('selfieTitle') : t('passTitle'), onclick: capture });
   const root = h('div', { class: 'cam' }, video,
-    selfie ? h('div', { class: 'guide face' }) : null,
+    h('div', { class: 'guide ' + (selfie ? 'face' : 'pass') }),
     failBox,
     h('div', { class: 'cam-top' },
       h('div', { class: 'row' }, h('button', { class: 'iconbtn', 'aria-label': t('back'), onclick: () => selfie ? go(screenInfo) : go(screenPerm) }, icon('back')), langBtn()),
       h('div', { class: 'cam-prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= (selfie ? 3 : 2) ? 'on' : '' }))),
       h('div', { class: 'cam-title', text: selfie ? t('selfieTitle') : t('passTitle') }),
-      h('div', { class: 'cam-hint', text: selfie ? t('selfieHint') : t('passSideways') })),
+      h('div', { class: 'cam-hint', text: selfie ? t('selfieHint') : t('passHint') })),
     h('div', { class: 'cam-bottom' },
       h('button', { class: 'cam-side', 'aria-label': t('openFile'), title: t('openFile'), onclick: () => file.click() }, icon('image')),
       shutter, h('span')),
     file);
-  function fail() { failBox.style.display = 'flex'; shutter.style.visibility = 'hidden'; const g = root.querySelector('.guide'); if (g) g.style.display = 'none'; }
+  function fail() { failBox.style.display = 'flex'; shutter.style.visibility = 'hidden'; root.querySelector('.guide').style.display = 'none'; }
   (async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no_media');
-      const s = await navigator.mediaDevices.getUserMedia({ video: selfie ? { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1440 } } : { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 3072 } }, audio: false });
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: selfie ? 'user' : { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false });
       if (!alive) { s.getTracks().forEach(tr => tr.stop()); return; }
       stream = s; video.srcObject = s; await video.play().catch(() => {});
     } catch (e) { if (alive) fail(); }
@@ -1208,9 +1231,16 @@ function screenCamera(kind) {
   async function capture() {
     if (!video.videoWidth) return;
     if (selfie) { done(await compress(video, video.videoWidth, video.videoHeight)); return; }
-    // passport: no frame — keep the whole picture at full camera resolution; the vision model finds the page
+    // passport: keep only what is inside the on-screen frame (+ a little margin), at full camera resolution
     const VW = video.videoWidth, VH = video.videoHeight;
-    done(await compress(video, VW, VH, { sx: 0, sy: 0, sw: VW, sh: VH, max: 2000 }));
+    const vr = video.getBoundingClientRect(), gr = root.querySelector('.guide').getBoundingClientRect();
+    const sc = Math.max(vr.width / VW, vr.height / VH);              // object-fit: cover
+    const ox = (vr.width - VW * sc) / 2, oy = (vr.height - VH * sc) / 2;
+    const m = 0.06 * Math.max(gr.width, gr.height);
+    let sx = (gr.left - vr.left - m - ox) / sc, sy = (gr.top - vr.top - m - oy) / sc;
+    let sw = (gr.width + 2 * m) / sc, sh = (gr.height + 2 * m) / sc;
+    sx = Math.max(0, sx); sy = Math.max(0, sy); sw = Math.min(VW - sx, sw); sh = Math.min(VH - sy, sh);
+    done(await compress(video, VW, VH, { sx, sy, sw, sh, max: 1800 }));
   }
   async function onFile(e) {
     const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -1218,11 +1248,10 @@ function screenCamera(kind) {
       let src, w, hgt;
       if (window.createImageBitmap) { src = await createImageBitmap(f, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(f)); w = src.width; hgt = src.height; }
       else { src = await loadImg(URL.createObjectURL(f)); w = src.naturalWidth; hgt = src.naturalHeight; }
-      done(await compress(src, w, hgt, selfie ? undefined : { sx: 0, sy: 0, sw: w, sh: hgt, max: 2000 }));
+      done(await compress(src, w, hgt));
     } catch (err) { toast(t('errImage')); }
   }
-  // passport goes straight on to the info screen (reading starts there); the selfie still gets a look first
-  function done(url) { if (selfie) { S.selfie = url; go(screenPreview, kind); } else { S.passport = url; go(screenInfo); } }
+  function done(url) { if (selfie) S.selfie = url; else S.passport = url; go(screenPreview, kind); }
   return root;
 }
 function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
