@@ -808,17 +808,19 @@ function getPos(timeout, high) {
 }
 let watchId = null, lastWatchSent = 0;
 async function locGranted() {
-  try { if (navigator.permissions && navigator.permissions.query) { const r = await navigator.permissions.query({ name: 'geolocation' }); return r.state === 'granted'; } } catch (e) {}
+  try { if (navigator.permissions && navigator.permissions.query) { const r = await navigator.permissions.query({ name: 'geolocation' }); if (r.state === 'granted') return true; if (r.state === 'denied') return false; } } catch (e) {}
+  // iPhone home-screen apps often report "prompt" even after Allow → trust what we saw at signup
   return lsGet('hands_loc_ok') === '1';
 }
 async function sendAppOpenLocation() {
   if (!S.token || document.hidden) return;
-  if (!(await locGranted())) return;
   const last = Number(lsGet('hands_loc_at')) || 0;
-  if (Date.now() - last < 5 * 60 * 1000) return;
+  if (Date.now() - last < 30 * 1000) return;
   lsSet('hands_loc_at', String(Date.now())); lastLocSent = Date.now();
-  const pos = await getPos(10000, false);
-  if (pos && S.token) api('location', { body: { ...pos, source: 'app_open' } }).catch(() => {});
+  const pos = (await locGranted()) ? await getPos(10000, false) : null;
+  if (pos) S.lastPos = pos;
+  // always tell the server the app opened (집중 관리 alert), with the position when we have one
+  if (S.token) api('location', { body: { ...(pos || {}), source: 'app_open' } }).catch(() => {});
 }
 /* every main button tap (home tiles, place tiles, bottom tabs): at most once per 60 s, shared with the app-open send; never blocks */
 let lastLocSent = 0;

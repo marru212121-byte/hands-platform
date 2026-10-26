@@ -37,10 +37,10 @@ async function saveLocation(m, { lat, lng, accuracy, source }) {
   return { lat, lng, acc, t };
 }
 
-// 「집중 관리」 근로자는 앱을 열고 닫을 때 텔레그램 (같은 종류 5분 안 중복은 건너뜀)
+// 「집중 관리」 근로자는 앱을 열고 닫을 때 텔레그램 (같은 종류 1분 안 중복은 건너뜀)
 async function watchAlert(m, b, kind) {
   if (!m.watch) return;
-  const since = new Date(Date.now() - 5 * 60000).toISOString();
+  const since = new Date(Date.now() - 60000).toISOString();
   const recent = await db(`location_history?select=id&member_id=eq.${m.id}&source=eq.${kind}&recorded_at=gt.${encodeURIComponent(since)}&limit=1`).catch(() => []);
   if (recent.length) return;
   const lat = num(b.lat), lng = num(b.lng);
@@ -120,6 +120,14 @@ module.exports = L.handler({
     const m = await L.workerFromReq(req);
     const source = ['app_open', 'watch', 'tap'].includes(b.source) ? b.source : 'app_open';
     if (source === 'app_open') await watchAlert(m, b, 'app_open');
+    if (b.lat == null || b.lng == null) {
+      if (source !== 'app_open') throw new HttpError(400, 'bad_location');
+      // opened without a position (location off): keep the event, no coordinates
+      const t = nowIso();
+      await db('location_history', { method: 'POST', body: { member_id: m.id, lat: null, lng: null, source, recorded_at: t } }).catch(() => {});
+      await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { last_seen_at: t } });
+      return { ok: true };
+    }
     await saveLocation(m, { ...b, source });
     return { ok: true };
   },
