@@ -152,6 +152,10 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .cam video.mirror{transform:scaleX(-1)}
 .guide{position:absolute;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 200vmax rgba(0,0,0,.55);border:3px solid rgba(255,255,255,.95);pointer-events:none}
 .guide.face{top:48%;width:78%;aspect-ratio:3/4;border-radius:50%}
+.pass-illus{margin:26px auto 0;width:min(100%,340px);aspect-ratio:1.42;border-radius:14px;background:#F1EEE6;border:2px solid #D9D3C4;position:relative;box-shadow:0 6px 18px rgba(15,23,42,.08)}
+.pass-illus .pi-photo{position:absolute;left:6%;top:16%;width:26%;height:52%;background:#C9CED8;border-radius:4px}
+.pass-illus .pi-lines{position:absolute;left:38%;top:20%;right:8%;display:grid;gap:9px}.pass-illus .pi-lines i{display:block;height:7px;background:#C9C3B4;border-radius:4px}
+.pass-illus .pi-mrz{position:absolute;left:5%;right:5%;bottom:9%;display:grid;gap:6px}.pass-illus .pi-mrz i{display:block;height:8px;background:repeating-linear-gradient(90deg,#8A8F99 0 6px,transparent 6px 9px);border-radius:2px}
 .guide.pass{top:50%;width:min(86%,calc(66vh / 1.42));aspect-ratio:1/1.42;border-radius:14px}
 .guide.pass::after{content:"";position:absolute;left:14%;top:6%;width:62%;height:28%;border:2px dashed rgba(255,255,255,.55);border-radius:6px}
 .cam-top{position:absolute;left:0;right:0;top:0;padding:calc(8px + var(--sat)) 12px 20px;background:linear-gradient(rgba(0,0,0,.72),rgba(0,0,0,0))}
@@ -529,6 +533,19 @@ my:{mrzReading:'နိုင်ငံကူးလက်မှတ် ဖတ်န
 si:{mrzReading:'ගමන් බලපත්‍රය කියවමින්…',mrzOk:'ගමන් බලපත්‍රයෙන් පුරවා ඇත. කරුණාකර පරීක්ෂා කරන්න.',mrzFail:'ගමන් බලපත්‍රය ස්වයංක්‍රීයව කියවිය නොහැකි විය. කරුණාකර ඔබම ටයිප් කරන්න.'},
 bn:{mrzReading:'পাসপোর্ট পড়া হচ্ছে…',mrzOk:'আপনার পাসপোর্ট থেকে পূরণ করা হয়েছে। দয়া করে যাচাই করুন।',mrzFail:'পাসপোর্ট স্বয়ংক্রিয়ভাবে পড়া যায়নি। দয়া করে নিজে লিখুন।'}};
 for (const l in STR_MRZ) Object.assign(STR[l], STR_MRZ[l]);
+const STR_PASS2 = {
+en:'Take a close-up photo of the passport photo page so it fills the picture. Avoid glare.',
+ko:'여권 사진 면이 사진에 꽉 차게 가까이 찍어 주세요. 빛 반사를 피하세요.',
+vi:'Chụp gần trang có ảnh của hộ chiếu sao cho kín khung hình. Tránh bị lóa.',
+id:'Foto dari dekat halaman foto paspor hingga memenuhi gambar. Hindari pantulan cahaya.',
+th:'ถ่ายหน้าที่มีรูปของหนังสือเดินทางในระยะใกล้ให้เต็มภาพ หลีกเลี่ยงแสงสะท้อน',
+tl:'Kunan nang malapitan ang pahinang may larawan ng pasaporte para mapuno ang litrato. Iwasan ang silaw.',
+ne:'राहदानीको फोटो भएको पाना पूरै तस्बिरभरि आउने गरी नजिकबाट खिच्नुहोस्। चमक नपर्ने गरी खिच्नुहोस्।',
+km:'ថតទំព័ររូបថតលិខិតឆ្លងដែនឱ្យជិត ពេញរូបភាព។ ជៀសវាងពន្លឺចាំង។',
+my:'နိုင်ငံကူးလက်မှတ်၏ ဓာတ်ပုံပါသော စာမျက်နှာကို ပုံပြည့်အောင် နီးနီးကပ်ကပ် ရိုက်ပါ။ အလင်းပြန်ခြင်းကို ရှောင်ပါ။',
+si:'ගමන් බලපත්‍රයේ ඡායාරූපය ඇති පිටුව රූපය පිරෙන සේ ළඟින් ගන්න. දිලිසීම වළක්වන්න.',
+bn:'পাসপোর্টের ছবির পাতাটি কাছ থেকে তুলুন যাতে পুরো ছবি জুড়ে থাকে। আলোর ঝলক এড়িয়ে চলুন।'};
+for (const l in STR_PASS2) STR[l].passHint2 = STR_PASS2[l];
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -1135,7 +1152,29 @@ function screenInfo() {
 }
 
 /* ---------- camera ---------- */
+/* passport: the phone's own camera app (full resolution, autofocus, the worker can get close) — no in-app frame */
+function screenPassShot() {
+  const file = h('input', { type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none', onchange: async (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      let src, w, hgt;
+      if (window.createImageBitmap) { src = await createImageBitmap(f, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(f)); w = src.width; hgt = src.height; }
+      else { src = await loadImg(URL.createObjectURL(f)); w = src.naturalWidth; hgt = src.naturalHeight; }
+      S.passport = await compress(src, w, hgt, { sx: 0, sy: 0, sw: w, sh: hgt, max: 2000 });
+      go(screenPreview, 'passport');
+    } catch (err) { toast(t('errImage')); }
+  } });
+  return h('div', { class: 'screen' }, topbar(() => go(screenPerm)),
+    h('div', { class: 'content' },
+      progress(2),
+      h('h1', { text: t('passTitle') }),
+      h('p', { class: 'lead', text: t('passHint2') }),
+      h('div', { class: 'pass-illus', 'aria-hidden': 'true' }, h('div', { class: 'pi-photo' }), h('div', { class: 'pi-lines' }, h('i'), h('i'), h('i')), h('div', { class: 'pi-mrz' }, h('i'), h('i')))),
+    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => file.click() }, icon('cam'), t('openFile'))),
+    file);
+}
 function screenCamera(kind) {
+  if (kind === 'passport') return screenPassShot();
   const selfie = kind === 'selfie';
   let stream = null, alive = true;
   const video = h('video', { autoplay: true, playsinline: true, muted: true, class: selfie ? 'mirror' : '' });
