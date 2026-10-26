@@ -342,7 +342,7 @@ function bindRetry(root, fn) { const b = $('[data-retry]', root); if (b) b.addEv
 async function renderDashboard(silent, preStats) {
   const v = $('#view');
   if (!silent) {
-    setHTML(v, html`<section class="urgent ph-only" id="dashUrgent"></section><div class="kpis" id="kpis">${Array.from({ length: 6 }, () => html`<div class="kpi"><span class="skel" style="width:50%"></span><span class="skel" style="width:30%;height:24px"></span><span class="skel" style="width:70%"></span></div>`)}</div>
+    setHTML(v, html`<section class="urgent ph-only" id="dashUrgent"></section><div class="dash-actions"><a class="btn btn-primary" href="#/push">${ico('bell', 'sm')}근로자에게 알림 보내기</a><span class="muted">전체 · 국적별 · 한 사람에게 휴대폰 알림</span></div><div class="kpis" id="kpis">${Array.from({ length: 6 }, () => html`<div class="kpi"><span class="skel" style="width:50%"></span><span class="skel" style="width:30%;height:24px"></span><span class="skel" style="width:70%"></span></div>`)}</div>
       <div class="grid-2">
         <section class="card"><div class="card-head"><h2>최근 SOS</h2><div class="right"><a class="link" href="#/sos">전체 보기</a></div></div><div id="dashSos"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>
         <section class="card"><div class="card-head"><h2>3일 이상 미접속</h2><span class="count" id="dashSilentN"></span><div class="right"><a class="link" href="#/silent">전체 보기</a></div></div><div id="dashSilent"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>
@@ -1492,7 +1492,7 @@ function drawLogs() {
 }
 
 /* ───────── 휴대폰 하단 탭·더보기 ───────── */
-const MORE_VIEWS = ['inquiries', 'push', 'qr', 'silent', 'logs', 'telegram'];
+const MORE_VIEWS = ['inquiries', 'qr', 'silent', 'logs', 'telegram'];
 function openMore() {
   $('#moreEmail').textContent = S.admin ? (S.admin.email || '') : '';
   $('#moreBack').hidden = false; $('#moreSheet').hidden = false;
