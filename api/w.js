@@ -2,7 +2,7 @@
 const L = require('./_lib');
 const { db, HttpError, clean, num } = L;
 
-const CONSENT_VERSION = '2026-10-27';
+const CONSENT_VERSION = '2026-10-27b';
 const REQUIRED = ['terms', 'privacy', 'sensitive', 'location'];
 const COUNTRY_KO = { vn: '베트남', th: '태국', id: '인도네시아', ph: '필리핀', np: '네팔', kh: '캄보디아', mm: '미얀마', lk: '스리랑카', bd: '방글라데시', other: '기타' };
 
@@ -52,7 +52,74 @@ async function watchAlert(m, b, kind) {
     `관리자에서 보기: ${adminLink(m.id)}`].join('\n')).catch(() => {});
 }
 
+// ── 여권 읽기: 하이쿠 비전 (사장님 10-27). 가입 전이라 근로자 열쇠가 없음 → 주소·크기·횟수로 막음
+const { Anthropic } = require('@anthropic-ai/sdk');
+const readHits = new Map();
+const mrzCk = (str) => { const w = [7, 3, 1]; let t = 0; for (let i = 0; i < str.length; i++) { const c = str[i]; const v = c === '<' ? 0 : c >= '0' && c <= '9' ? c.charCodeAt(0) - 48 : c >= 'A' && c <= 'Z' ? c.charCodeAt(0) - 55 : 0; t += v * w[i % 3]; } return String(t % 10); };
+const PASS_SCHEMA = {
+  type: 'object', additionalProperties: false,
+  required: ['is_passport', 'surname', 'given_names', 'passport_number', 'nationality_code', 'birth_date', 'sex', 'mrz_line1', 'mrz_line2'],
+  properties: {
+    is_passport: { type: 'boolean' }, surname: { type: 'string' }, given_names: { type: 'string' },
+    passport_number: { type: 'string' }, nationality_code: { type: 'string' }, birth_date: { type: 'string' },
+    sex: { type: 'string' }, mrz_line1: { type: 'string' }, mrz_line2: { type: 'string' },
+  },
+};
+const PASS_PROMPT = 'This photo should show the data page of a passport. It may be rotated, tilted or partly blurry. ' +
+  'Read the two machine-readable lines (MRZ) at the bottom exactly as printed (44 characters each, use < for fillers), and the printed fields. ' +
+  'Use the MRZ check digits and the printed fields to correct reading mistakes. Names in Latin capital letters exactly as in the passport. ' +
+  'nationality_code = the 3-letter code (e.g. VNM). birth_date = YYYY-MM-DD. sex = M or F. Use an empty string for anything you cannot read with confidence. ' +
+  'If the image is not a passport data page, set is_passport to false.';
+function fixWithMrz(r) {
+  // 자동 수정: MRZ 검증 숫자가 맞으면 그 값을 정답으로 씀
+  const l2 = String(r.mrz_line2 || '').toUpperCase().replace(/[^A-Z0-9<]/g, '');
+  if (l2.length >= 28) {
+    const doc = l2.slice(0, 9);
+    if (mrzCk(doc) === l2[9]) r.passport_number = doc.replace(/</g, '');
+    const dob = l2.slice(13, 19);
+    if (/^\d{6}$/.test(dob) && mrzCk(dob) === l2[19]) {
+      const yy = +dob.slice(0, 2), now = new Date().getFullYear() % 100;
+      r.birth_date = (yy > now ? '19' : '20') + dob.slice(0, 2) + '-' + dob.slice(2, 4) + '-' + dob.slice(4, 6);
+    }
+    if (/^[A-Z]{3}$/.test(l2.slice(10, 13))) r.nationality_code = l2.slice(10, 13);
+    if (l2[20] === 'M' || l2[20] === 'F') r.sex = l2[20];
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(r.birth_date || '')) r.birth_date = '';
+  if (r.sex !== 'M' && r.sex !== 'F') r.sex = '';
+  return r;
+}
+
 module.exports = L.handler({
+  async passport_read(req, b) {
+    if (req.method !== 'POST') throw new HttpError(405, 'post_only');
+    if (!process.env.ANTHROPIC_API_KEY) throw new HttpError(503, 'vision_off');
+    const from = String(req.headers.origin || req.headers.referer || '');
+    if (!/^https:\/\/hands-platform\.vercel\.app|^http:\/\/localhost(:\d+)?/.test(from)) throw new HttpError(403, 'forbidden');
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';
+    const now = Date.now(); const hits = (readHits.get(ip) || []).filter((t) => now - t < 10 * 60000);
+    if (hits.length >= 12) throw new HttpError(429, 'too_many');
+    hits.push(now); readHits.set(ip, hits);
+    const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
+    if (!m || m[2].length > 4500000) throw new HttpError(400, 'bad_image');
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: 'claude-haiku-5-5', max_tokens: 2048,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: PASS_SCHEMA } },
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/' + m[1], data: m[2] } },
+        { type: 'text', text: PASS_PROMPT },
+      ] }],
+    });
+    if (msg.stop_reason === 'refusal') throw new HttpError(422, 'refused');
+    const txt = (msg.content.find((c) => c.type === 'text') || {}).text || '';
+    let r; try { r = JSON.parse(txt); } catch (e) { throw new HttpError(502, 'bad_reply'); }
+    if (!r.is_passport) return { ok: true, passport: false };
+    fixWithMrz(r);
+    const name = [r.surname, r.given_names].map((x) => String(x || '').replace(/</g, ' ').trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ').toUpperCase();
+    return { ok: true, passport: true, name, passport_number: String(r.passport_number || '').toUpperCase().replace(/\s/g, ''),
+      nationality: String(r.nationality_code || '').toUpperCase(), birth_date: r.birth_date, gender: r.sex };
+  },
+
   // 가입: 동의 + 정보 + 얼굴 + 여권 한 번에. 기기 열쇠를 돌려줌.
   async signup(req, b) {
     if (req.method !== 'POST') throw new HttpError(405, 'post_only');

@@ -1096,7 +1096,15 @@ function startMRZ() {
   const url = S.passport;
   if (!url || (S.mrz && S.mrz.url === url)) return;
   S.mrz = { url, state: 'reading' };
-  readMRZ(url).then((r) => {
+  // 1) 하이쿠 비전 (서버) → 2) 안 되면 폰 안 무료 판독
+  const viaVision = () => api('passport_read', { body: { image: url } }).then((j) => {
+    if (!j.passport) return null;
+    const c3 = j.nationality && (MRZ_C3[j.nationality] ? j.nationality : natCode(j.nationality));
+    const r = { name: j.name || null, passport_number: j.passport_number || null, birth_date: j.birth_date || null, gender: j.gender || null, country: c3 ? MRZ_C3[c3] : null };
+    Object.keys(r).forEach((k) => { if (!r[k]) delete r[k]; });
+    return Object.keys(r).length ? r : null;
+  });
+  viaVision().catch(() => readMRZ(url)).then((r) => {
     if (!S.mrz || S.mrz.url !== url) return;
     S.mrz.state = r ? 'ok' : 'fail';
     if (r) {
