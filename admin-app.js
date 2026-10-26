@@ -104,6 +104,7 @@ const isToday = (s) => { const d = toDate(s); if (!d) return false; const t = ne
 const flag = (c) => html`<span class="flag">${countryName(c)}</span>`;
 const fmtNum = (n) => (Number(n) || 0).toLocaleString('ko-KR');
 const coord = (lat, lng) => (lat == null || lng == null) ? null : `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+const gdir = (lat, lng) => (lat == null || lng == null) ? null : `https://www.google.com/maps/dir/?api=1&destination=${Number(lat)},${Number(lng)}`;
 const gmaps = (lat, lng) => (lat == null || lng == null) ? null : `https://maps.google.com/?q=${Number(lat)},${Number(lng)}`;
 
 /* ───────── API ───────── */
@@ -286,7 +287,8 @@ function route() {
   closeMore();
   if (view === S.view && view === 'map' && S.mapFocus) focusMapMember(S.mapFocus);
   if (view !== S.view) {
-    if (S.bigMap) { S.bigMap.remove(); S.bigMap = null; }
+    if (S.bigMap) { S.bigMap.destroy(); S.bigMap = null; }
+    S.mapMarkers = null; S.mapToken = null;
     S.view = view;
     $$('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.view === view));
     $$('#tabbar [data-tab]').forEach((a) => a.classList.toggle('active', a.dataset.tab === view || (a.dataset.tab === 'more' && MORE_VIEWS.includes(view))));
@@ -534,7 +536,7 @@ function closePanel(silent) {
   p.classList.remove('open'); p.setAttribute('aria-hidden', 'true');
   $('#panelScrim').hidden = true;
   document.body.style.overflow = '';
-  if (S.miniMap) { S.miniMap.remove(); S.miniMap = null; }
+  if (S.miniMap) { S.miniMap.destroy(); S.miniMap = null; }
   S.detail = null; S.selectedId = null;
   $$('#mbody tr.selected').forEach((tr) => tr.classList.remove('selected'));
   setTimeout(() => { if (!p.classList.contains('open')) setHTML(p, ''); }, 250);
@@ -758,53 +760,146 @@ function lightbox(url, label, name) {
   $('#modalRoot').appendChild(el);
 }
 
-/* 지도 공통 */
-// 주의: 이 페이지는 <meta referrer=no-referrer> 라서, 타일 요청에만 출처(도메인)를 실어 보낸다.
-// OSM은 Referer 없는 요청을 "Access blocked"로 막고, CARTO 기본지도는 이제 API 키를 요구한다(2026-10 확인).
+/* 지도 공통 — 카카오맵 우선, 실패하면 Leaflet(OpenStreetMap)으로 자동 대체 */
+const KAKAO_KEY = '30cf8d591d8bd417f791b91090e8b1cd';
+// 주의: 이 페이지는 <meta referrer=no-referrer> 라서, 지도 요청에만 출처(도메인)를 실어 보낸다.
+// 카카오는 Referer로 등록 도메인을 확인하고, OSM은 Referer 없는 요청을 "Access blocked"로 막는다.
 const TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_OPT = { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors', referrerPolicy: 'strict-origin-when-cross-origin' };
 const BUSAN = [35.1796, 129.0756];
-const markerIcon = (cls) => L.divIcon({ className: '', html: `<div class="mk ${cls}"></div>`, iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] });
-function drawMiniMap(hist) {
-  const el = $('#miniMap'); if (!el || typeof L === 'undefined') return;
-  if (S.miniMap) S.miniMap.remove();
-  const pts = hist.filter((h) => h.lat != null && h.lng != null);
-  const map = L.map(el, { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
-  S.miniMap = map;
+let enginePromise = null;
+function mapEngine() {
+  if (enginePromise) return enginePromise;
+  enginePromise = new Promise((resolve) => {
+    let done = false;
+    const finish = (ok, why) => {
+      if (done) return; done = true; clearTimeout(timer);
+      if (!ok) console.warn('[HANDS] 카카오맵을 불러오지 못해 OpenStreetMap으로 대체합니다:', why);
+      resolve(ok ? 'kakao' : (typeof L !== 'undefined' ? 'leaflet' : null));
+    };
+    const timer = setTimeout(() => finish(false, 'timeout 5s'), 5000);
+    if (window.kakao && window.kakao.maps && window.kakao.maps.LatLng) { finish(true); return; }
+    const sc = document.createElement('script');
+    sc.referrerPolicy = 'strict-origin-when-cross-origin';
+    sc.async = true;
+    sc.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_KEY}&autoload=false`;
+    sc.onerror = () => finish(false, 'sdk load error');
+    sc.onload = () => {
+      try {
+        if (!(window.kakao && window.kakao.maps && typeof window.kakao.maps.load === 'function')) return finish(false, 'sdk missing');
+        window.kakao.maps.load(() => finish(!!window.kakao.maps.LatLng, 'load incomplete'));
+      } catch (e) { finish(false, e && e.message); }
+    };
+    document.head.appendChild(sc);
+  });
+  return enginePromise;
+}
+const lfZoomToKakao = (z) => Math.max(1, Math.min(14, 20 - z));
+const mkEl = (cls, title) => { const d = document.createElement('div'); d.className = 'mk ' + cls; if (title) d.title = title; return d; };
+
+/* 같은 모양으로 쓰는 지도 객체: marker / line / fit / focus / relayout / destroy */
+function createMap(el, engine, { zoom = 11, wheel = true } = {}) {
+  if (engine === 'kakao') {
+    const K = window.kakao.maps;
+    const map = new K.Map(el, { center: new K.LatLng(BUSAN[0], BUSAN[1]), level: lfZoomToKakao(zoom) });
+    map.addControl(new K.ZoomControl(), K.ControlPosition.RIGHT);
+    if (!wheel) map.setZoomable(false);
+    const info = document.createElement('div'); info.className = 'k-info';
+    const infoOv = new K.CustomOverlay({ content: info, yAnchor: 1, zIndex: 3000, clickable: true });
+    const closeInfo = () => infoOv.setMap(null);
+    K.event.addListener(map, 'click', closeInfo);
+    return {
+      engine,
+      marker(lat, lng, { cls, size = 18, popup, title, z = 0 }) {
+        const pos = new K.LatLng(lat, lng);
+        const dom = mkEl(cls, title);
+        const ov = new K.CustomOverlay({ position: pos, content: dom, xAnchor: 0.5, yAnchor: 0.5, zIndex: 100 + z, clickable: true });
+        ov.setMap(map);
+        const open = () => {
+          if (!popup) return;
+          setHTML(info, html`<button class="k-info-x" aria-label="닫기">${ico('x', 'xs')}</button>${popup}`);
+          $('.k-info-x', info).addEventListener('click', (e) => { e.stopPropagation(); closeInfo(); });
+          infoOv.setPosition(pos); infoOv.setMap(map);
+        };
+        dom.addEventListener('click', (e) => { e.stopPropagation(); open(); });
+        return { open, focus(zl) { map.setLevel(lfZoomToKakao(zl)); map.setCenter(pos); open(); } };
+      },
+      line(pts) { new K.Polyline({ map, path: pts.map((p) => new K.LatLng(p[0], p[1])), strokeWeight: 2, strokeColor: '#26437A', strokeOpacity: 0.55, strokeStyle: 'shortdash' }); },
+      fit(pts, pad = 48, single = 15) {
+        if (!pts.length) return;
+        if (pts.length === 1) { map.setLevel(lfZoomToKakao(single)); map.setCenter(new K.LatLng(pts[0][0], pts[0][1])); return; }
+        const b = new K.LatLngBounds(); pts.forEach((p) => b.extend(new K.LatLng(p[0], p[1])));
+        map.setBounds(b, pad, pad, pad, pad);
+      },
+      relayout() { map.relayout(); },
+      destroy() { closeInfo(); el.innerHTML = ''; },
+    };
+  }
+  const map = L.map(el, { zoomControl: true, scrollWheelZoom: wheel }).setView(BUSAN, zoom);
   L.tileLayer(TILE, TILE_OPT).addTo(map);
-  if (!pts.length) { map.setView(BUSAN, 11); return; }
+  return {
+    engine,
+    marker(lat, lng, { cls, size = 18, popup, title, z = 0 }) {
+      const h = size / 2;
+      const mk = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: `<div class="mk ${cls}"></div>`, iconSize: [size, size], iconAnchor: [h, h], popupAnchor: [0, -h] }), zIndexOffset: z, title: title || '' }).addTo(map);
+      if (popup) mk.bindPopup(popup.s);
+      return { open() { mk.openPopup(); }, focus(zl) { map.setView(mk.getLatLng(), zl); mk.openPopup(); } };
+    },
+    line(pts) { L.polyline(pts, { color: '#26437A', weight: 2, opacity: 0.5, dashArray: '4 4' }).addTo(map); },
+    fit(pts, pad = 48, single = 15) {
+      if (!pts.length) return;
+      if (pts.length === 1) map.setView(pts[0], single); else map.fitBounds(pts, { padding: [pad, pad], maxZoom: 16 });
+    },
+    relayout() { map.invalidateSize(); },
+    destroy() { map.remove(); },
+  };
+}
+const engineNote = (engine) => engine === 'leaflet' ? html`<div class="map-note">카카오맵을 불러오지 못해 OpenStreetMap으로 표시 중입니다.</div>` : '';
+
+async function drawMiniMap(hist) {
+  const el = $('#miniMap'); if (!el) return;
+  const engine = await mapEngine();
+  if ($('#miniMap') !== el || !el.isConnected) return;
+  if (S.miniMap) { S.miniMap.destroy(); S.miniMap = null; }
+  if (!engine) { setHTML(el, errorBox({ code: 'network' })); return; }
+  const pts = hist.filter((h) => h.lat != null && h.lng != null);
+  const map = createMap(el, engine, { zoom: 11, wheel: false });
+  S.miniMap = map;
+  if (!pts.length) return;
   const ll = pts.map((h) => [h.lat, h.lng]);
-  L.polyline(ll.slice().reverse(), { color: '#26437A', weight: 2, opacity: 0.5, dashArray: '4 4' }).addTo(map);
+  map.line(ll.slice().reverse());
   pts.slice().reverse().forEach((h, i, arr) => {
     const latest = i === arr.length - 1;
-    const cls = 'hist' + (h.source === 'sos' ? ' sos' : '') + (latest ? ' latest' : '');
-    L.marker([h.lat, h.lng], { icon: L.divIcon({ className: '', html: `<div class="mk ${cls}"></div>`, iconSize: latest ? [16, 16] : [12, 12], iconAnchor: latest ? [8, 8] : [6, 6] }), zIndexOffset: latest ? 1000 : 0 })
-      .addTo(map).bindTooltip(`${fmtDT(h.recorded_at)} · ${SOURCE[h.source] || esc(h.source || '')}`);
+    map.marker(h.lat, h.lng, { cls: 'hist' + (h.source === 'sos' ? ' sos' : '') + (latest ? ' latest' : ''), size: latest ? 16 : 12, z: latest ? 1000 : 0,
+      title: `${fmtDT(h.recorded_at)} · ${SOURCE[h.source] || h.source || ''}` });
   });
-  if (ll.length === 1) map.setView(ll[0], 15); else map.fitBounds(ll, { padding: [24, 24], maxZoom: 16 });
+  map.fit(ll, 24, 15);
 }
 
 /* ───────── 3. 지도 ───────── */
 async function renderMap() {
   const v = $('#view');
   setHTML(v, html`<div class="map-layout">
-    <div class="map-area"><div id="bigMap"></div>
+    <div class="map-area"><div id="bigMap"><div class="map-loading"><div class="spinner"></div></div></div>
       <div class="map-legend"><span><i class="lg-dot" style="background:var(--red)"></i>SOS 요청 중</span><span><i class="lg-dot" style="background:var(--teal)"></i>1시간 이내</span><span><i class="lg-dot" style="background:#94A3B8"></i>1시간 이상 경과</span></div>
+      <div id="mapNote"></div>
     </div>
     <aside class="map-side">
       <div class="map-stats"><div><div class="l">위치 공유</div><div class="v" id="msTotal">-</div></div><div><div class="l">1시간 이내</div><div class="v" id="msOn">-</div></div><div><div class="l">SOS</div><div class="v" id="msSos">-</div></div></div>
       <label class="search">${ico('search')}<input id="mapq" type="search" placeholder="이름 검색" autocomplete="off" aria-label="지도 근로자 검색"></label>
       <ul class="map-list" id="mapList"></ul>
     </aside></div>`);
-  if (typeof L === 'undefined') { setHTML($('#bigMap'), errorBox({ code: 'network' })); return; }
-  const map = L.map('bigMap', { zoomControl: true }).setView(BUSAN, 11);
+  const token = {}; S.mapToken = token;
+  const [engine, res] = await Promise.all([mapEngine(), api('map').then((j) => ({ j }), (e) => ({ e }))]);
+  if (S.view !== 'map' || S.mapToken !== token) return;
+  const el = $('#bigMap'); el.innerHTML = '';
+  if (!engine) { setHTML(el, errorBox({ code: 'network' })); return; }
+  const map = createMap(el, engine, { zoom: 11 });
   S.bigMap = map;
-  L.tileLayer(TILE, TILE_OPT).addTo(map);
-  let locs;
-  try { locs = (await api('map')).locations || []; }
-  catch (e) { if (S.view === 'map') setHTML($('#mapList'), html`<li style="cursor:default">${errorBox(e)}</li>`); bindRetry($('#mapList'), () => { S.view = null; route(); }); return; }
-  if (S.view !== 'map' || S.bigMap !== map) return;
+  setHTML($('#mapNote'), engineNote(engine));
+  if (res.e) { setHTML($('#mapList'), html`<li style="cursor:default">${errorBox(res.e)}</li>`); bindRetry($('#mapList'), () => { S.view = null; route(); }); return; }
   stamp();
+  let locs = res.j.locations || [];
   const now = Date.now();
   const kind = (l) => l.sos_active ? 'sos' : (toDate(l.updated_at) && now - toDate(l.updated_at).getTime() < 3600000 ? 'on' : 'old');
   const order = { sos: 0, on: 1, old: 2 };
@@ -818,13 +913,12 @@ async function renderMap() {
   S.mapMarkers = markers;
   locs.forEach((l) => {
     const k = kind(l);
-    const pop = html`<div class="pop-name">${l.member_name || '이름 없음'}</div>
+    const popup = html`<div class="pop-name">${l.member_name || '이름 없음'}</div>
       <div class="pop-sub">${countryName(l.member_country)} · ${relText(l.updated_at) || '-'} 갱신${l.accuracy != null ? ` · 오차 ${Math.round(l.accuracy)}m` : ''}${k === 'sos' ? ' · SOS 요청 중' : ''}</div>
-      <a class="pop-btn" href="#/members/${encodeURIComponent(l.member_id)}">상세 보기</a> <a class="pop-btn ghost" href="${gmaps(l.lat, l.lng)}" target="_blank" rel="noopener noreferrer">길찾기</a>`;
-    markers[l.member_id] = L.marker([l.lat, l.lng], { icon: markerIcon(k), zIndexOffset: k === 'sos' ? 1000 : k === 'on' ? 500 : 0 }).addTo(map).bindPopup(pop.s);
+      <a class="pop-btn" href="#/members/${encodeURIComponent(l.member_id)}">상세 보기</a> <a class="pop-btn ghost" href="${gdir(l.lat, l.lng)}" target="_blank" rel="noopener noreferrer">길찾기</a>`;
+    markers[l.member_id] = map.marker(l.lat, l.lng, { cls: k, size: 18, popup, title: l.member_name || '', z: k === 'sos' ? 1000 : k === 'on' ? 500 : 0 });
   });
-  if (locs.length === 1) map.setView([locs[0].lat, locs[0].lng], 14);
-  else if (locs.length > 1) map.fitBounds(locs.map((l) => [l.lat, l.lng]), { padding: [48, 48], maxZoom: 15 });
+  map.fit(locs.map((l) => [l.lat, l.lng]), 48, 14);
   const drawList = () => {
     const q = $('#mapq').value.trim().toLowerCase();
     const list = locs.filter((l) => !q || String(l.member_name || '').toLowerCase().includes(q));
@@ -833,19 +927,19 @@ async function renderMap() {
       : html`<li style="cursor:default">${emptyBox(q ? '검색 결과가 없습니다' : '위치를 공유한 근로자가 없습니다', '', 'pin')}</li>`);
     $$('#mapList li[data-id]').forEach((li) => li.addEventListener('click', () => {
       const mk = markers[li.dataset.id]; if (!mk) return;
-      map.setView(mk.getLatLng(), Math.max(map.getZoom(), 15)); mk.openPopup();
+      mk.focus(15);
       if (window.innerWidth <= 1024) $('#bigMap').scrollIntoView({ behavior: 'smooth' });
     }));
   };
   $('#mapq').addEventListener('input', drawList);
   drawList();
-  setTimeout(() => { map.invalidateSize(); if (S.mapFocus) focusMapMember(S.mapFocus); }, 150);
+  setTimeout(() => { map.relayout(); if (S.mapFocus) focusMapMember(S.mapFocus); }, 150);
 }
 
 function focusMapMember(id) {
   const mk = S.mapMarkers && S.mapMarkers[id];
   if (!mk || !S.bigMap) { if (S.bigMap && S.mapMarkers) toast('이 근로자의 현재 위치가 지도에 없습니다.', 'err'); return; }
-  S.bigMap.setView(mk.getLatLng(), 16); mk.openPopup();
+  mk.focus(16);
   window.scrollTo(0, 0);
 }
 
@@ -1078,7 +1172,7 @@ $('#btnLogout').addEventListener('click', () => confirmDialog({
   title: '로그아웃할까요?', okLabel: '로그아웃', message: '로그아웃하면 다시 아이디와 비밀번호를 입력해야 합니다.',
   run: () => logout(),
 }));
-window.addEventListener('resize', () => { if (S.bigMap) S.bigMap.invalidateSize(); if (S.miniMap) S.miniMap.invalidateSize(); });
+window.addEventListener('resize', () => { if (S.bigMap) S.bigMap.relayout(); if (S.miniMap) S.miniMap.relayout(); });
 
 /* ───────── 시작 ───────── */
 hydrateIcons();
