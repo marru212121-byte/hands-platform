@@ -515,6 +515,20 @@ si:{permTitle:'කැමරාව සහ ස්ථානය',permSub:'දැන�
 bn:{permTitle:'ক্যামেরা ও অবস্থান',permSub:'এখন ফোন দুইবার জিজ্ঞেস করবে। দুইবারই “Allow” চাপুন।',camLabel:'ক্যামেরা',locLabel:'অবস্থান',allowed:'অনুমতি দেওয়া হয়েছে',denied:'অনুমতি নেই',camDenied:'ক্যামেরার অনুমতি নেই। ফোনের ক্যামেরা বোতাম দিয়েও ছবি তুলতে পারবেন। পরে অনুমতি দিতে: Settings → Safari বা Chrome → Camera → Allow।',locDenied:'অবস্থানের অনুমতি নেই। জরুরি অবস্থায় ম্যানেজার জানতে পারবেন না আপনি কোথায়। অনুমতি দিতে: Settings → Privacy → Location → Safari, Chrome বা HANDS → Allow।',start:'শুরু করুন',doneSub:'এখন আপনি HANDS ব্যবহার করতে পারবেন। জরুরি অবস্থায় SOS চেপে ধরে রাখুন।'}
 };
 for (const l in STR2) Object.assign(STR[l], STR2[l]);
+/* passport auto-read strings */
+const STR_MRZ = {
+en:{mrzReading:'Reading your passport…',mrzOk:'We filled this in from your passport. Please check it.',mrzFail:'We could not read the passport automatically. Please type it in.'},
+ko:{mrzReading:'여권을 읽는 중입니다…',mrzOk:'여권에서 읽어 채웠습니다. 맞는지 확인해 주세요.',mrzFail:'여권을 자동으로 읽지 못했습니다. 직접 적어 주세요.'},
+vi:{mrzReading:'Đang đọc hộ chiếu…',mrzOk:'Thông tin được điền từ hộ chiếu. Vui lòng kiểm tra lại.',mrzFail:'Không đọc được hộ chiếu tự động. Vui lòng tự nhập.'},
+id:{mrzReading:'Membaca paspor…',mrzOk:'Data diisi dari paspor Anda. Silakan periksa.',mrzFail:'Paspor tidak dapat dibaca otomatis. Silakan ketik sendiri.'},
+th:{mrzReading:'กำลังอ่านหนังสือเดินทาง…',mrzOk:'กรอกข้อมูลจากหนังสือเดินทางแล้ว โปรดตรวจสอบ',mrzFail:'อ่านหนังสือเดินทางอัตโนมัติไม่ได้ โปรดพิมพ์เอง'},
+tl:{mrzReading:'Binabasa ang pasaporte…',mrzOk:'Pinunan namin ito mula sa pasaporte mo. Pakisuri.',mrzFail:'Hindi mabasa nang awtomatiko ang pasaporte. Pakisulat na lang.'},
+ne:{mrzReading:'राहदानी पढ्दै…',mrzOk:'राहदानीबाट भरिएको छ। कृपया जाँच गर्नुहोस्।',mrzFail:'राहदानी आफैं पढ्न सकिएन। कृपया आफैं लेख्नुहोस्।'},
+km:{mrzReading:'កំពុងអានលិខិតឆ្លងដែន…',mrzOk:'បានបំពេញពីលិខិតឆ្លងដែនរបស់អ្នក។ សូមពិនិត្យមើល។',mrzFail:'មិនអាចអានលិខិតឆ្លងដែនដោយស្វ័យប្រវត្តិបានទេ។ សូមវាយបញ្ចូលដោយខ្លួនឯង។'},
+my:{mrzReading:'နိုင်ငံကူးလက်မှတ် ဖတ်နေသည်…',mrzOk:'နိုင်ငံကူးလက်မှတ်မှ ဖြည့်ထားပါသည်။ မှန်မမှန် စစ်ဆေးပါ။',mrzFail:'နိုင်ငံကူးလက်မှတ်ကို အလိုအလျောက် မဖတ်နိုင်ပါ။ ကိုယ်တိုင် ရိုက်ထည့်ပါ။'},
+si:{mrzReading:'ගමන් බලපත්‍රය කියවමින්…',mrzOk:'ගමන් බලපත්‍රයෙන් පුරවා ඇත. කරුණාකර පරීක්ෂා කරන්න.',mrzFail:'ගමන් බලපත්‍රය ස්වයංක්‍රීයව කියවිය නොහැකි විය. කරුණාකර ඔබම ටයිප් කරන්න.'},
+bn:{mrzReading:'পাসপোর্ট পড়া হচ্ছে…',mrzOk:'আপনার পাসপোর্ট থেকে পূরণ করা হয়েছে। দয়া করে যাচাই করুন।',mrzFail:'পাসপোর্ট স্বয়ংক্রিয়ভাবে পড়া যায়নি। দয়া করে নিজে লিখুন।'}};
+for (const l in STR_MRZ) Object.assign(STR[l], STR_MRZ[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -646,7 +660,7 @@ function isStandalone() {
 }
 const S = {
   lang: 'en', token: null, profile: null, tab: 'home', route: null, cleanup: null,
-  form: { name: '', country: '', phone: '', passport_number: '', birth_date: '', company: '', emergency_contact: '' },
+  form: { name: '', country: '', phone: '', passport_number: '', birth_date: '', gender: '', company: '', emergency_contact: '' },
   consents: { terms: false, privacy: false, sensitive: false, location: false, marketing: false },
   selfie: null, passport: null, installEvt: null, installSeen: false, lostNote: false,
   posts: null, postsErr: null, sos: null, perm: null, signupPos: null
@@ -927,11 +941,142 @@ function consentBlock(onChange) {
       h('a', { class: 'view', href: '/terms.html?lang=' + S.lang + '#' + k, target: '_blank', rel: 'noopener' }, tk('view'), icon('chevRight')))));
 }
 
+/* step 1: consent only (Korean, fixed) */
 function screenSignup() {
+  const nextBtn = h('button', { class: 'btn btn-primary', disabled: !requiredOk(), onclick: () => { if (requiredOk()) go(screenPerm); } }, t('next'), icon('chevRight'));
+  const consentHost = h('div');
+  const renderConsent = () => { consentHost.replaceChildren(consentBlock(renderConsent)); nextBtn.disabled = !requiredOk(); };
+  renderConsent();
+  loadTess().catch(() => {});  // warm up the passport reader while they read
+  return h('div', { class: 'screen' }, topbar(() => go(screenWelcome)),
+    h('div', { class: 'content' },
+      progress(1),
+      h('h1', { lang: 'ko', text: tk('agreeTitle') }),
+      consentHost),
+    h('div', { class: 'footer' }, nextBtn));
+}
+
+/* ---------- passport MRZ reader (runs on the phone, free: tesseract.js) ---------- */
+let tessP = null;
+function loadTess() {
+  if (!tessP) tessP = new Promise((res, rej) => {
+    if (window.Tesseract) return res(window.Tesseract);
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    sc.onload = () => res(window.Tesseract); sc.onerror = () => { tessP = null; rej(new Error('tess_load')); };
+    document.head.appendChild(sc);
+  });
+  return tessP;
+}
+const MRZ_C3 = { VNM: 'vn', THA: 'th', IDN: 'id', PHL: 'ph', NPL: 'np', KHM: 'kh', MMR: 'mm', LKA: 'lk', BGD: 'bd' };
+const COUNTRY_LANG = { vn: 'vi', th: 'th', id: 'id', ph: 'tl', np: 'ne', kh: 'km', mm: 'my', lk: 'si', bd: 'bn' };
+function mrzCheck(str) {
+  const w = [7, 3, 1]; let sum = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    const v = c === '<' ? 0 : c >= '0' && c <= '9' ? c.charCodeAt(0) - 48 : c >= 'A' && c <= 'Z' ? c.charCodeAt(0) - 55 : 0;
+    sum += v * w[i % 3];
+  }
+  return String(sum % 10);
+}
+const toNum = (x) => x.replace(/[OQD]/g, '0').replace(/[IL]/g, '1').replace(/Z/g, '2').replace(/S/g, '5').replace(/B/g, '8').replace(/G/g, '6').replace(/A/g, '4').replace(/T/g, '7');
+const toAlpha = (x) => x.replace(/0/g, 'O').replace(/1/g, 'I').replace(/5/g, 'S').replace(/8/g, 'B').replace(/2/g, 'Z');
+// nationality: exact, else the one known code that is one letter off (OCR often reads V as U)
+function natCode(x) {
+  x = toAlpha(x || '');
+  if (MRZ_C3[x]) return x;
+  const near = Object.keys(MRZ_C3).filter((k) => [0, 1, 2].filter((i) => k[i] !== x[i]).length === 1);
+  return near.length === 1 ? near[0] : null;
+}
+function parseMRZ(text) {
+  const lines = String(text).toUpperCase().split(/\n/).map((l) => l.replace(/[^A-Z0-9<]/g, '')).filter((l) => l.length >= 20);
+  for (let i = 0; i < lines.length - 1; i++) {
+    let l1 = lines[i], l2 = lines[i + 1];
+    if (!l1.includes('<<') || l2.length < 28) continue;
+    // line 1 starts "P<": the "<" is often dropped or read as K/C/L/E
+    l1 = ('P<' + ('KCLE<'.includes(l1[1]) ? l1.slice(2) : l1.slice(1)) + '<'.repeat(44)).slice(0, 44);
+    // line 2: line up on the nationality (should sit at 10..12); a dropped first letter shifts everything
+    const n1 = natCode(l1.slice(2, 5));
+    let shift = 0;
+    for (const off of [10, 9, 11, 8, 12]) { if (natCode(l2.slice(off, off + 3)) && (!n1 || natCode(l2.slice(off, off + 3)) === n1)) { shift = 10 - off; break; } }
+    l2 = shift > 0 ? '<'.repeat(shift) + l2 : l2.slice(-shift);
+    l2 = (l2 + '<'.repeat(44)).slice(0, 44);
+    const out = {};
+    const raw = l2.slice(0, 9), ck = toNum(l2[9]);
+    for (const cand of [raw, raw.slice(0, 1) + toNum(raw.slice(1)), raw.slice(0, 2) + toNum(raw.slice(2)), toNum(raw)]) {
+      if (!/</.test(cand.replace(/<+$/, '')) && cand.replace(/</g, '').length >= 6 && mrzCheck(cand) === ck) { out.passport_number = cand.replace(/</g, ''); break; }
+    }
+    const c3 = natCode(l2.slice(10, 13)) || n1;
+    if (c3) out.country = MRZ_C3[c3];
+    const dob = toNum(l2.slice(13, 19));
+    if (/^\d{6}$/.test(dob) && mrzCheck(dob) === toNum(l2[19])) {
+      const yy = +dob.slice(0, 2), nowYY = new Date().getFullYear() % 100;
+      out.birth_date = (yy > nowYY ? '19' : '20') + dob.slice(0, 2) + '-' + dob.slice(2, 4) + '-' + dob.slice(4, 6);
+    }
+    const sex = l2[20]; if (sex === 'M' || sex === 'F') out.gender = sex;
+    // name: SURNAME<<GIVEN<NAMES<<<<  (cut at the first run of 3+ fillers; OCR sometimes reads < as K, C, L or E)
+    const nm = toAlpha(l1.slice(5)).replace(/(<[KCLE<]{2,}|<<<).*$/, '');
+    const [sur, giv] = nm.split('<<');
+    const name = [sur, giv].filter(Boolean).map((x) => x.replace(/</g, ' ').trim()).join(' ').replace(/\s+/g, ' ').trim();
+    if (name.length >= 2) out.name = name;
+    if (out.passport_number || out.birth_date || out.name) return out;
+  }
+  return null;
+}
+async function mrzCanvas(url, cropBottom) {
+  const img = await loadImg(url);
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const sy = cropBottom ? Math.round(H * (1 - cropBottom)) : 0, sh = H - sy;
+  const scale = Math.min(2.5, 1800 / W);
+  const c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(sh * scale);
+  const ctx = c.getContext('2d'); ctx.drawImage(img, 0, sy, W, sh, 0, 0, c.width, c.height);
+  const d = ctx.getImageData(0, 0, c.width, c.height), px = d.data;
+  let sum = 0; for (let i = 0; i < px.length; i += 4) { const g = (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114); px[i] = g; sum += g; }
+  const mean = sum / (px.length / 4);
+  for (let i = 0; i < px.length; i += 4) { const v = px[i] < mean * 0.72 ? 0 : 255; px[i] = px[i + 1] = px[i + 2] = v; }
+  ctx.putImageData(d, 0, 0);
+  return c;
+}
+async function readMRZ(url) {
+  const T = await loadTess();
+  const worker = await T.createWorker('eng');
+  try {
+    await worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<', tessedit_pageseg_mode: '6' });
+    // several crops; keep the first value found for each field, stop once everything is in
+    const out = {};
+    for (const crop of [0.38, 0.55, 0.25, 0]) {
+      const { data } = await worker.recognize(await mrzCanvas(url, crop));
+      const r = parseMRZ(data.text) || {};
+      for (const k in r) if (!out[k]) out[k] = r[k];
+      if (['name', 'passport_number', 'birth_date', 'country', 'gender'].every((k) => out[k])) break;
+    }
+    return Object.keys(out).length ? out : null;
+  } finally { worker.terminate().catch(() => {}); }
+}
+function startMRZ() {
+  const url = S.passport;
+  if (!url || (S.mrz && S.mrz.url === url)) return;
+  S.mrz = { url, state: 'reading' };
+  readMRZ(url).then((r) => {
+    if (!S.mrz || S.mrz.url !== url) return;
+    S.mrz.state = r ? 'ok' : 'fail';
+    if (r) {
+      const F = S.form;
+      for (const k of ['name', 'passport_number', 'birth_date', 'gender', 'country']) if (r[k] && !F[k]) F[k] = r[k];
+      // the worker never picked a language → switch to their country's language
+      if (r.country && COUNTRY_LANG[r.country] && !lsGet('hands_lang') && S.lang === 'ko') { setLang(COUNTRY_LANG[r.country]); }
+    }
+    if (S.route && S.route[0] === screenInfo) rerender();
+  }).catch(() => { if (S.mrz && S.mrz.url === url) { S.mrz.state = 'fail'; if (S.route && S.route[0] === screenInfo) rerender(); } });
+}
+
+/* step 2b: info, pre-filled from the passport */
+function screenInfo() {
+  startMRZ();
   const F = S.form;
-  const errs = {};
+  const st = S.mrz ? S.mrz.state : 'fail';
   function field(key, labelKey, { required, type = 'text', hint, attrs = {} } = {}) {
-    const inp = h('input', Object.assign({ class: 'input', id: 'f_' + key, type, value: F[key], oninput: (e) => { F[key] = e.target.value; inp.classList.remove('bad'); if (errs[key]) { errs[key].remove(); delete errs[key]; } } }, attrs));
+    const inp = h('input', Object.assign({ class: 'input', id: 'f_' + key, type, value: F[key], oninput: (e) => { F[key] = e.target.value; inp.classList.remove('bad'); } }, attrs));
     return h('div', { class: 'field' },
       h('label', { class: 'label', for: 'f_' + key }, t(labelKey), h('span', { class: 'tag' + (required ? ' req' : ''), text: required ? t('req') : t('opt') })),
       inp, hint ? h('div', { class: 'hint', text: t(hint) }) : null);
@@ -941,33 +1086,30 @@ function screenSignup() {
     COUNTRIES.map(c => h('option', { value: c, text: countryName(c) })),
     h('option', { value: 'other', text: t('other') }));
   sel.value = F.country;
-  const nextBtn = h('button', { class: 'btn btn-primary', disabled: !requiredOk(), onclick: submitInfo }, t('next'), icon('chevRight'));
-  const consentHost = h('div');
-  const renderConsent = () => { consentHost.replaceChildren(consentBlock(renderConsent)); nextBtn.disabled = !requiredOk(); };
-  renderConsent();
-  const today = new Date().toISOString().slice(0, 10);
-
   function submitInfo() {
     F.name = F.name.trim();
     let first = null;
     if (!F.name) { const el = document.getElementById('f_name'); el.classList.add('bad'); first = first || el; }
     if (!F.country) { sel.classList.add('bad'); first = first || sel; }
     if (first) { toast(t('errMissing')); first.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => first.focus({ preventScroll: true }), 300); return; }
-    if (!requiredOk()) return;
-    go(screenPerm);
+    go(screenCamera, 'selfie');
   }
-
-  return h('div', { class: 'screen' }, topbar(() => go(screenWelcome)),
+  const banner = st === 'reading'
+    ? h('div', { class: 'note', role: 'status' }, h('span', { class: 'spin', style: 'width:20px;height:20px;border-width:3px;flex:none' }), h('div', { text: t('mrzReading') }))
+    : st === 'ok' ? h('div', { class: 'note', role: 'status' }, icon('check'), h('div', { text: t('mrzOk') }))
+    : h('div', { class: 'note warn', role: 'status' }, icon('info'), h('div', { text: t('mrzFail') }));
+  return h('div', { class: 'screen' }, topbar(() => go(screenPreview, 'passport')),
     h('div', { class: 'content' },
-      progress(1),
+      progress(2),
       h('h1', { text: t('infoTitle') }),
+      banner,
       field('name', 'fName', { required: true, attrs: { autocomplete: 'name', autocapitalize: 'characters', maxlength: '80' } }),
       h('div', { class: 'field' },
         h('label', { class: 'label', for: 'f_country' }, t('fCountry'), h('span', { class: 'tag req', text: t('req') })), sel),
-      field('phone', 'fPhone', { type: 'tel', hint: 'fPhoneHint', attrs: { inputmode: 'tel', autocomplete: 'tel', maxlength: '30' } }),
-      h('h2', { class: 'fs-title', lang: 'ko', text: tk('agreeTitle') }),
-      consentHost),
-    h('div', { class: 'footer' }, nextBtn));
+      field('passport_number', 'fPassport', { attrs: { autocapitalize: 'characters', maxlength: '20' } }),
+      field('birth_date', 'fBirth', { type: 'date' }),
+      field('phone', 'fPhone', { type: 'tel', hint: 'fPhoneHint', attrs: { inputmode: 'tel', autocomplete: 'tel', maxlength: '30' } })),
+    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: submitInfo }, t('next'), icon('chevRight'))));
 }
 
 /* ---------- camera ---------- */
@@ -985,8 +1127,8 @@ function screenCamera(kind) {
     h('div', { class: 'guide ' + (selfie ? 'face' : 'pass') }),
     failBox,
     h('div', { class: 'cam-top' },
-      h('div', { class: 'row' }, h('button', { class: 'iconbtn', 'aria-label': t('back'), onclick: () => go(selfie ? screenSignup : screenPreview, 'selfie') }, icon('back')), langBtn()),
-      h('div', { class: 'cam-prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= (selfie ? 2 : 3) ? 'on' : '' }))),
+      h('div', { class: 'row' }, h('button', { class: 'iconbtn', 'aria-label': t('back'), onclick: () => selfie ? go(screenInfo) : go(screenSignup) }, icon('back')), langBtn()),
+      h('div', { class: 'cam-prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= (selfie ? 3 : 2) ? 'on' : '' }))),
       h('div', { class: 'cam-title', text: selfie ? t('selfieTitle') : t('passTitle') }),
       h('div', { class: 'cam-hint', text: selfie ? t('selfieHint') : t('passHint') })),
     h('div', { class: 'cam-bottom' },
@@ -1036,13 +1178,14 @@ function screenPreview(kind) {
   const selfie = kind === 'selfie';
   const url = selfie ? S.selfie : S.passport;
   if (!url) return screenCamera(kind);
+  if (!selfie) startMRZ();  // start reading while they look at the photo
   return h('div', { class: 'screen' }, topbar(() => go(screenCamera, kind)),
     h('div', { class: 'content' },
-      progress(selfie ? 2 : 3),
+      progress(selfie ? 3 : 2),
       h('h1', { text: selfie ? t('selfieTitle') : t('passTitle') }),
       h('div', { class: 'preview', style: 'margin-top:16px' }, h('img', { src: url, alt: selfie ? t('selfieTitle') : t('passTitle') }))),
     h('div', { class: 'footer stack' },
-      h('button', { class: 'btn btn-primary', onclick: () => selfie ? go(screenCamera, 'passport') : go(screenSubmit) }, icon('check'), t('usePhoto')),
+      h('button', { class: 'btn btn-primary', onclick: () => selfie ? go(screenSubmit) : go(screenInfo) }, icon('check'), t('usePhoto')),
       h('button', { class: 'btn btn-secondary', onclick: () => { if (selfie) S.selfie = null; else S.passport = null; go(screenCamera, kind); } }, t('retake'))));
 }
 
@@ -1055,7 +1198,7 @@ function screenSubmit() {
   const F = S.form;
   const payload = {
     name: F.name.trim(), country: F.country, phone: F.phone.trim() || null, passport_number: F.passport_number.trim().toUpperCase() || null,
-    birth_date: F.birth_date || null, company: F.company.trim() || null, emergency_contact: F.emergency_contact.trim() || null,
+    birth_date: F.birth_date || null, gender: F.gender || null, company: F.company.trim() || null, emergency_contact: F.emergency_contact.trim() || null,
     language: S.lang, consents: { ...S.consents }, selfie: S.selfie, passport: S.passport
   };
   const setP = (p) => { const v = Math.round(p * 100); bar.style.width = v + '%'; pct.textContent = v + '%'; };
@@ -1064,7 +1207,7 @@ function screenSubmit() {
       setP(1);
       await saveToken(j.token); S.profile = j.profile; cacheProfile();
       S.selfie = S.passport = null;
-      S.form = { name: '', country: '', phone: '', passport_number: '', birth_date: '', company: '', emergency_contact: '' };
+      S.form = { name: '', country: '', phone: '', passport_number: '', birth_date: '', gender: '', company: '', emergency_contact: '' }; S.mrz = null;
       S.lostNote = false;
       if (S.signupPos) { lsSet('hands_loc_at', String(Date.now())); api('location', { body: { ...S.signupPos, source: 'app_open' } }).catch(() => {}); S.signupPos = null; }
       go(screenDone);
@@ -1078,8 +1221,8 @@ function screenSubmit() {
         h('h1', { style: 'font-size:24px', text: errText(code) }),
         h('div', { class: 'stack', style: 'width:100%;margin-top:28px' },
           (!imageErr && !fieldErr) ? h('button', { class: 'btn btn-primary', onclick: () => go(screenSubmit) }, icon('chevRight'), t('retry')) : null,
-          imageErr ? h('button', { class: 'btn btn-primary', onclick: () => { S.selfie = S.passport = null; go(screenCamera, 'selfie'); } }, t('retake')) : null,
-          h('button', { class: 'btn btn-secondary', onclick: () => go(screenSignup) }, t('back'))));
+          imageErr ? h('button', { class: 'btn btn-primary', onclick: () => { S.selfie = S.passport = null; S.mrz = null; go(screenCamera, 'passport'); } }, t('retake')) : null,
+          h('button', { class: 'btn btn-secondary', onclick: () => go(code === 'consent_required' ? screenSignup : screenInfo) }, t('back'))));
     });
   return root;
 }
@@ -1105,7 +1248,7 @@ function screenPerm() {
       P2.loc = pos ? 'ok' : 'no'; S.signupPos = pos;
       if (pos) lsSet('hands_loc_ok', '1');
       if (S.route && S.route[0] === screenPerm) {
-        if (P2.cam === 'ok' && P2.loc === 'ok') go(screenCamera, 'selfie'); else rerender();
+        if (P2.cam === 'ok' && P2.loc === 'ok') go(screenCamera, 'passport'); else rerender();
       }
     })();
   }
@@ -1117,7 +1260,7 @@ function screenPerm() {
       h('div', { class: 'rows', style: 'margin-top:22px' }, stateRow(tk('camLabel'), P2.cam), stateRow(tk('locLabel'), P2.loc)),
       P2.cam === 'no' ? h('div', { class: 'note warn', style: 'margin-top:14px' }, icon('alert'), h('div', { text: tk('camDenied') })) : null,
       P2.loc === 'no' ? h('div', { class: 'note warn', style: 'margin-top:14px' }, icon('alert'), h('div', { text: tk('locDenied') })) : null),
-    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', disabled: !settled, onclick: () => go(screenCamera, 'selfie') }, tk('next'), icon('chevRight'))));
+    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', disabled: !settled, onclick: () => go(screenCamera, 'passport') }, tk('next'), icon('chevRight'))));
 }
 
 function screenDone() {
