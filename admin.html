@@ -93,6 +93,27 @@
     <main id="view" class="view" tabindex="-1"></main>
   </div>
 
+  <!-- 휴대폰 하단 탭 -->
+  <nav class="tabbar" id="tabbar" aria-label="주요 메뉴">
+    <a href="#/dashboard" data-tab="dashboard"><span class="ico" data-i="grid"></span><span>홈</span></a>
+    <a href="#/sos" data-tab="sos"><span class="tab-ico"><span class="ico" data-i="alert"></span><b class="tab-badge" id="tabSosBadge" hidden></b></span><span>SOS</span></a>
+    <a href="#/members" data-tab="members"><span class="ico" data-i="users"></span><span>근로자</span></a>
+    <a href="#/map" data-tab="map"><span class="ico" data-i="map"></span><span>지도</span></a>
+    <button type="button" id="tabMore" data-tab="more"><span class="ico" data-i="menu"></span><span>더보기</span></button>
+  </nav>
+  <div class="sheet-back" id="moreBack" hidden></div>
+  <div class="sheet" id="moreSheet" hidden role="dialog" aria-label="더보기">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <a href="#/qr"><span class="ico" data-i="qr"></span>가입 QR</a>
+    <a href="#/silent"><span class="ico" data-i="clock"></span>미접속</a>
+    <a href="#/posts"><span class="ico" data-i="message"></span>게시판</a>
+    <a href="#/logs"><span class="ico" data-i="file"></span>열람 기록</a>
+    <div class="sheet-foot">
+      <div class="sheet-who"><span id="moreEmail"></span><span class="muted">자동 로그아웃까지 <b class="num" id="moreIdle">30:00</b></span></div>
+      <button type="button" class="btn btn-secondary" id="moreLogout"><span class="ico sm" data-i="logout"></span>로그아웃</button>
+    </div>
+  </div>
+
   <!-- 근로자 상세 패널 -->
   <div class="panel-scrim" id="panelScrim" hidden></div>
   <aside class="panel" id="panel" aria-hidden="true" role="dialog" aria-label="근로자 상세"></aside>

@@ -240,6 +240,7 @@ function tickIdle() {
   if (left <= 0) { logout('idle'); return; }
   const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
   $('#idleLeft').textContent = `${pad(m)}:${pad(s)}`;
+  $('#moreIdle').textContent = `${pad(m)}:${pad(s)}`;
   if (S.detail) tickPhotoExpiry();
 }
 
@@ -260,6 +261,7 @@ function updateSosBadge() {
   const n = S.sosPending;
   const b = $('#sosBadge'); b.hidden = n <= 0; b.textContent = n > 99 ? '99+' : String(n);
   $('#topSos').hidden = n <= 0; $('#topSosN').textContent = String(n);
+  const tb = $('#tabSosBadge'); tb.hidden = n <= 0; tb.textContent = n > 99 ? '99+' : String(n);
   document.title = (n > 0 ? `(SOS ${n}) ` : '') + 'HANDS 관리자' + (S.view ? ' · ' + VIEWS[S.view].title : '');
 }
 const stamp = () => { $('#updatedAt').textContent = `${fmtTime(new Date())} 기준`; };
@@ -280,10 +282,14 @@ function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   let view = VIEWS[parts[0]] ? parts[0] : 'dashboard';
   const memberId = view === 'members' && parts[1] ? decodeURIComponent(parts[1]) : null;
+  S.mapFocus = view === 'map' && parts[1] ? decodeURIComponent(parts[1]) : null;
+  closeMore();
+  if (view === S.view && view === 'map' && S.mapFocus) focusMapMember(S.mapFocus);
   if (view !== S.view) {
     if (S.bigMap) { S.bigMap.remove(); S.bigMap = null; }
     S.view = view;
     $$('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.view === view));
+    $$('#tabbar [data-tab]').forEach((a) => a.classList.toggle('active', a.dataset.tab === view || (a.dataset.tab === 'more' && MORE_VIEWS.includes(view))));
     $('#pageTitle').textContent = VIEWS[view].title;
     $('#pageSub').textContent = VIEWS[view].sub;
     const v = $('#view');
@@ -307,7 +313,7 @@ function bindRetry(root, fn) { const b = $('[data-retry]', root); if (b) b.addEv
 async function renderDashboard(silent, preStats) {
   const v = $('#view');
   if (!silent) {
-    setHTML(v, html`<div class="kpis" id="kpis">${Array.from({ length: 6 }, () => html`<div class="kpi"><span class="skel" style="width:50%"></span><span class="skel" style="width:30%;height:24px"></span><span class="skel" style="width:70%"></span></div>`)}</div>
+    setHTML(v, html`<section class="urgent ph-only" id="dashUrgent"></section><div class="kpis" id="kpis">${Array.from({ length: 6 }, () => html`<div class="kpi"><span class="skel" style="width:50%"></span><span class="skel" style="width:30%;height:24px"></span><span class="skel" style="width:70%"></span></div>`)}</div>
       <div class="grid-2">
         <section class="card"><div class="card-head"><h2>최근 SOS</h2><div class="right"><a class="link" href="#/sos">전체 보기</a></div></div><div id="dashSos"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>
         <section class="card"><div class="card-head"><h2>3일 이상 미접속</h2><span class="count" id="dashSilentN"></span><div class="right"><a class="link" href="#/silent">전체 보기</a></div></div><div id="dashSilent"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>
@@ -338,6 +344,7 @@ async function renderDashboard(silent, preStats) {
   } else if (!silent) setHTML(kp, html`<div class="card" style="grid-column:1/-1">${errorBox(st.reason)}</div>`);
 
   const ds = $('#dashSos');
+  if (sos.status === 'fulfilled') drawUrgent(sos.value.sos || []);
   if (sos.status === 'fulfilled') {
     const list = sortSos(sos.value.sos || []).slice(0, 6);
     setHTML(ds, list.length ? html`<ul class="mini-list">${list.map((a) => {
@@ -365,6 +372,26 @@ async function renderDashboard(silent, preStats) {
     location.hash = '#/members/' + encodeURIComponent(li.dataset.member);
   }));
   bindRetry(v, () => renderDashboard());
+}
+
+/* 휴대폰 홈: 미처리 SOS를 맨 위에 큰 버튼으로 */
+function drawUrgent(all) {
+  const el = $('#dashUrgent'); if (!el) return;
+  const pend = sortSos(all).filter((a) => a.status === 'pending');
+  setHTML(el, pend.length ? html`${pend.map((a) => {
+    const m = a.member || {}; const t = telHref(m.phone); const g = gmaps(a.lat, a.lng);
+    return html`<article class="u-card">
+      <div class="u-top"><span class="u-tag"><span class="dot-pulse light"></span>SOS 요청</span><span class="u-time">${relText(a.created_at) || ''} · <span class="num">${fmtTime(toDate(a.created_at) || new Date())}</span></span></div>
+      <div class="u-name">${m.name || '알 수 없음'} <span>${countryName(m.country)}</span></div>
+      <div class="u-sub">${m.company || '근무처 미등록'}${m.phone ? html` · <span class="num">${m.phone}</span>` : ''}</div>
+      <div class="u-btns">
+        ${t ? html`<a class="u-btn call" href="${t}">${ico('phone', 'lg')}전화</a>` : html`<span class="u-btn off">${ico('phone', 'lg')}전화 없음</span>`}
+        ${g ? html`<a class="u-btn map" href="${g}" target="_blank" rel="noopener noreferrer">${ico('pin', 'lg')}지도</a>` : html`<span class="u-btn off">${ico('pin', 'lg')}위치 없음</span>`}
+      </div>
+      <button class="u-done" data-udone="${a.id}">${ico('check', 'sm')}처리 완료 기록</button>
+    </article>`;
+  })}` : html`<div class="u-calm">${ico('shield', 'sm')}미처리 SOS가 없습니다</div>`);
+  $$('[data-udone]', el).forEach((b) => b.addEventListener('click', () => resolveSos(pend.find((a) => a.id === b.dataset.udone))));
 }
 
 /* ───────── 가입 QR 포스터 ───────── */
@@ -552,6 +579,7 @@ function drawDetail() {
   };
   const c = m.consents || {};
   const hist = d.history || [];
+  const lastLoc = hist.find((h) => h.lat != null && h.lng != null);
   setHTML(p, html`
     <div class="panel-head">
       <button class="icon-btn back" data-close aria-label="목록으로">${ico('back')}</button>
@@ -563,7 +591,7 @@ function drawDetail() {
     </div>
     <div class="audit-note">${ico('eye', 'xs')}열람 기록이 남습니다. 업무 목적 외 열람·이용을 금지합니다.</div>
     <div class="panel-actions">
-      ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
+      ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
       <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
       <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '비활성화' : '활성화'}</button>
     </div>
@@ -622,6 +650,10 @@ function drawDetail() {
           <dt>앱 언어</dt><dd>${LANG[m.language] || m.language || '-'}</dd>
         </dl></div>
       </section>
+    </div>
+    <div class="panel-dock ph-only">
+      ${telHref(m.phone) ? html`<a class="dock-btn call" href="${telHref(m.phone)}">${ico('phone', 'lg')}전화 걸기</a>` : html`<span class="dock-btn off">${ico('phone', 'lg')}전화 미등록</span>`}
+      ${lastLoc ? html`<a class="dock-btn" href="#/map/${encodeURIComponent(m.id)}">${ico('map', 'lg')}지도에서 보기</a>` : html`<span class="dock-btn off">${ico('map', 'lg')}위치 없음</span>`}
     </div>`);
 
   $$('[data-close]', p).forEach((b) => b.addEventListener('click', leavePanel));
@@ -727,8 +759,10 @@ function lightbox(url, label, name) {
 }
 
 /* 지도 공통 */
-const TILE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const TILE_ATTR = '&copy; OpenStreetMap contributors';
+// 주의: 이 페이지는 <meta referrer=no-referrer> 라서, 타일 요청에만 출처(도메인)를 실어 보낸다.
+// OSM은 Referer 없는 요청을 "Access blocked"로 막고, CARTO 기본지도는 이제 API 키를 요구한다(2026-10 확인).
+const TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_OPT = { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors', referrerPolicy: 'strict-origin-when-cross-origin' };
 const BUSAN = [35.1796, 129.0756];
 const markerIcon = (cls) => L.divIcon({ className: '', html: `<div class="mk ${cls}"></div>`, iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -10] });
 function drawMiniMap(hist) {
@@ -737,7 +771,7 @@ function drawMiniMap(hist) {
   const pts = hist.filter((h) => h.lat != null && h.lng != null);
   const map = L.map(el, { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
   S.miniMap = map;
-  L.tileLayer(TILE, { maxZoom: 19, attribution: TILE_ATTR }).addTo(map);
+  L.tileLayer(TILE, TILE_OPT).addTo(map);
   if (!pts.length) { map.setView(BUSAN, 11); return; }
   const ll = pts.map((h) => [h.lat, h.lng]);
   L.polyline(ll.slice().reverse(), { color: '#26437A', weight: 2, opacity: 0.5, dashArray: '4 4' }).addTo(map);
@@ -765,7 +799,7 @@ async function renderMap() {
   if (typeof L === 'undefined') { setHTML($('#bigMap'), errorBox({ code: 'network' })); return; }
   const map = L.map('bigMap', { zoomControl: true }).setView(BUSAN, 11);
   S.bigMap = map;
-  L.tileLayer(TILE, { maxZoom: 19, attribution: TILE_ATTR }).addTo(map);
+  L.tileLayer(TILE, TILE_OPT).addTo(map);
   let locs;
   try { locs = (await api('map')).locations || []; }
   catch (e) { if (S.view === 'map') setHTML($('#mapList'), html`<li style="cursor:default">${errorBox(e)}</li>`); bindRetry($('#mapList'), () => { S.view = null; route(); }); return; }
@@ -781,11 +815,12 @@ async function renderMap() {
   const ns = locs.filter((l) => kind(l) === 'sos').length;
   $('#msSos').textContent = fmtNum(ns); $('#msSos').classList.toggle('red', ns > 0);
   const markers = {};
+  S.mapMarkers = markers;
   locs.forEach((l) => {
     const k = kind(l);
     const pop = html`<div class="pop-name">${l.member_name || '이름 없음'}</div>
       <div class="pop-sub">${countryName(l.member_country)} · ${relText(l.updated_at) || '-'} 갱신${l.accuracy != null ? ` · 오차 ${Math.round(l.accuracy)}m` : ''}${k === 'sos' ? ' · SOS 요청 중' : ''}</div>
-      <a class="pop-btn" href="#/members/${encodeURIComponent(l.member_id)}">상세 보기</a>`;
+      <a class="pop-btn" href="#/members/${encodeURIComponent(l.member_id)}">상세 보기</a> <a class="pop-btn ghost" href="${gmaps(l.lat, l.lng)}" target="_blank" rel="noopener noreferrer">길찾기</a>`;
     markers[l.member_id] = L.marker([l.lat, l.lng], { icon: markerIcon(k), zIndexOffset: k === 'sos' ? 1000 : k === 'on' ? 500 : 0 }).addTo(map).bindPopup(pop.s);
   });
   if (locs.length === 1) map.setView([locs[0].lat, locs[0].lng], 14);
@@ -804,7 +839,14 @@ async function renderMap() {
   };
   $('#mapq').addEventListener('input', drawList);
   drawList();
-  setTimeout(() => map.invalidateSize(), 100);
+  setTimeout(() => { map.invalidateSize(); if (S.mapFocus) focusMapMember(S.mapFocus); }, 150);
+}
+
+function focusMapMember(id) {
+  const mk = S.mapMarkers && S.mapMarkers[id];
+  if (!mk || !S.bigMap) { if (S.bigMap && S.mapMarkers) toast('이 근로자의 현재 위치가 지도에 없습니다.', 'err'); return; }
+  S.bigMap.setView(mk.getLatLng(), 16); mk.openPopup();
+  window.scrollTo(0, 0);
 }
 
 /* ───────── 4. SOS ───────── */
@@ -852,7 +894,7 @@ function drawSos() {
       <td class="nowrap" data-label="발생 시각"><div class="num">${fmtDT(a.created_at)}</div><div class="cell-sub">${relText(a.created_at) || ''}</div></td>
       <td class="nowrap" data-label="위치">${g ? html`<a class="ext" href="${g}" target="_blank" rel="noopener noreferrer">${ico('pin', 'xs')}구글 지도${ico('external', 'xs')}</a>` : html`<span class="muted">위치 없음</span>`}</td>
       <td class="nowrap" data-label="텔레그램 알림">${a.notified_at ? html`<span class="badge ok">${ico('bell', 'xs')}발송됨</span><div class="cell-sub num">${fmtDT(a.notified_at)}</div>` : html`<span class="badge warn">미발송</span>`}</td>
-      <td class="card-actions" data-label="처리">${pending ? html`<button class="btn btn-danger btn-sm" data-resolve="${a.id}">${ico('check', 'sm')}처리</button>`
+      <td class="card-actions" data-label="처리">${pending ? html`${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm ph-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화</a>` : ''}${g ? html`<a class="btn btn-secondary btn-sm ph-only" href="${g}" target="_blank" rel="noopener noreferrer">${ico('pin', 'sm')}지도</a>` : ''}<button class="btn btn-danger btn-sm" data-resolve="${a.id}">${ico('check', 'sm')}처리</button>`
         : html`<div style="font-size:13px"><span class="num">${fmtDT(a.resolved_at)}</span> · ${a.resolved_by || '-'}</div>${a.note ? html`<div class="cell-sub" style="max-width:280px;white-space:normal">${a.note}</div>` : ''}`}</td>
     </tr>`;
   })}`);
@@ -1000,6 +1042,29 @@ function drawLogs() {
   })}`);
   setHTML($('#gempty'), list.length ? '' : emptyBox('기록이 없습니다', '', 'file'));
 }
+
+/* ───────── 휴대폰 하단 탭·더보기 ───────── */
+const MORE_VIEWS = ['qr', 'silent', 'posts', 'logs'];
+function openMore() {
+  $('#moreEmail').textContent = S.admin ? (S.admin.email || '') : '';
+  $('#moreBack').hidden = false; $('#moreSheet').hidden = false;
+  requestAnimationFrame(() => $('#moreSheet').classList.add('open'));
+}
+function closeMore() {
+  const sh = $('#moreSheet'); if (!sh || sh.hidden) return;
+  sh.classList.remove('open'); $('#moreBack').hidden = true;
+  setTimeout(() => { if (!sh.classList.contains('open')) sh.hidden = true; }, 200);
+}
+$('#tabMore').addEventListener('click', () => ($('#moreSheet').hidden ? openMore() : closeMore()));
+$('#moreBack').addEventListener('click', closeMore);
+$$('#moreSheet a').forEach((a) => a.addEventListener('click', () => {
+  closeMore();
+  if (a.getAttribute('href') === location.hash) { S.view = null; route(); }
+}));
+$('#moreLogout').addEventListener('click', () => { closeMore(); $('#btnLogout').click(); });
+$$('#tabbar a[data-tab]').forEach((a) => a.addEventListener('click', () => {
+  if (a.getAttribute('href') === location.hash && a.dataset.tab !== 'members') { S.view = null; route(); }
+}));
 
 /* ───────── 셸 이벤트 ───────── */
 $('#btnMenu').addEventListener('click', () => $('#app').classList.add('drawer'));
