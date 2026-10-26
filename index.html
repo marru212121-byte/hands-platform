@@ -886,8 +886,17 @@ function screenWelcome() {
       h('button', { class: 'btn btn-primary', onclick: startSignup }, t('signup'), icon('chevRight')),
       (!isStandalone() && S.installEvt) ? h('button', { class: 'btn btn-secondary', onclick: doInstall }, icon('download'), t('install')) : null));
 }
+/* first run: pick your language (welcome then shows in it; top-right button still changes it) */
+function screenLangPick() {
+  return h('div', { class: 'screen' },
+    h('div', { class: 'content' },
+      h('div', { class: 'brand', style: 'display:flex;align-items:center;gap:10px;margin:8px 0 22px' }, h('img', { src: 'lic-logo.jpeg', alt: '', style: 'width:40px;height:40px;border-radius:50%' }), h('b', { text: 'HANDS', style: 'font-size:20px;letter-spacing:1px' })),
+      h('h1', { text: 'Choose your language' }),
+      h('p', { class: 'lead', lang: 'ko', text: '언어를 선택하세요' }),
+      h('div', { style: 'margin-top:18px' }, langList((c) => { setLang(c); go(screenWelcome); }))));
+}
 function startSignup() {
-  if (IS_IOS && !isStandalone()) go(screenInstall, 'signup'); else go(screenSignup);
+  if (needsInstallStep()) go(screenInstall, 'signup'); else go(screenPerm);
 }
 async function doInstall() {
   const e = S.installEvt; if (!e) return;
@@ -910,7 +919,7 @@ function screenInstall(from) {
   S.installSeen = true;
   const ios = IS_IOS;
   const back = () => go(screenWelcome);
-  const cont = () => { if (from === 'signup') go(screenSignup); else go(screenWelcome); };
+  const cont = () => { if (from === 'signup') go(screenPerm); else go(screenWelcome); };
   return h('div', { class: 'screen' }, topbar(back),
     h('div', { class: 'content' },
       h('h1', { text: t('iosTitle') }),
@@ -919,9 +928,8 @@ function screenInstall(from) {
       h('div', { class: 'steps' },
         ios ? [step(1, t('ios1'), 'share'), step(2, t('ios2'), 'add'), step(3, t('ios3'), 'homeIcon')]
             : [step(1, t('and1'), 'menu'), step(2, t('and2'), 'add'), step(3, t('ios3'), 'homeIcon')])),
-    h('div', { class: 'footer' },
-      ios ? h('button', { class: 'btn-link', onclick: cont, text: t('anyway') })
-          : h('button', { class: 'btn btn-secondary', onclick: cont }, t('anyway'), icon('chevRight'))));
+    // iPhone: Safari and the Home Screen app keep separate storage → sign-up only inside the Home Screen app (no browser option)
+    ios ? null : h('div', { class: 'footer' }, h('button', { class: 'btn-link', onclick: cont, text: t('anyway') })));
 }
 
 /* consent block (shared by signup and re-consent) */
@@ -943,16 +951,16 @@ function consentBlock(onChange) {
       h('a', { class: 'view', href: '/terms.html?lang=' + S.lang + '#' + k, target: '_blank', rel: 'noopener' }, tk('view'), icon('chevRight')))));
 }
 
-/* step 1: consent only (Korean, fixed) */
+/* last step: consent (Korean, fixed) — then upload */
 function screenSignup() {
-  const nextBtn = h('button', { class: 'btn btn-primary', disabled: !requiredOk(), onclick: () => { if (requiredOk()) go(screenPerm); } }, t('next'), icon('chevRight'));
+  const nextBtn = h('button', { class: 'btn btn-primary', disabled: !requiredOk(), onclick: () => { if (requiredOk()) go(screenSubmit); } }, t('next'), icon('chevRight'));
   const consentHost = h('div');
   const renderConsent = () => { consentHost.replaceChildren(consentBlock(renderConsent)); nextBtn.disabled = !requiredOk(); };
   renderConsent();
-  loadTess().catch(() => {});  // warm up the passport reader while they read
-  return h('div', { class: 'screen' }, topbar(() => go(screenWelcome)),
+  // photos stay on this phone until the worker agrees here; nothing is sent before 「다음」
+  return h('div', { class: 'screen' }, topbar(() => go(screenPreview, 'selfie')),
     h('div', { class: 'content' },
-      progress(1),
+      progress(3),
       h('h1', { lang: 'ko', text: tk('agreeTitle') }),
       consentHost),
     h('div', { class: 'footer' }, nextBtn));
@@ -1129,8 +1137,8 @@ function screenCamera(kind) {
     h('div', { class: 'guide ' + (selfie ? 'face' : 'pass') }),
     failBox,
     h('div', { class: 'cam-top' },
-      h('div', { class: 'row' }, h('button', { class: 'iconbtn', 'aria-label': t('back'), onclick: () => selfie ? go(screenInfo) : go(screenSignup) }, icon('back')), langBtn()),
-      h('div', { class: 'cam-prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= (selfie ? 3 : 2) ? 'on' : '' }))),
+      h('div', { class: 'row' }, h('button', { class: 'iconbtn', 'aria-label': t('back'), onclick: () => selfie ? go(screenInfo) : go(screenPerm) }, icon('back')), langBtn()),
+      h('div', { class: 'cam-prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= (selfie ? 2 : 1) ? 'on' : '' }))),
       h('div', { class: 'cam-title', text: selfie ? t('selfieTitle') : t('passTitle') }),
       h('div', { class: 'cam-hint', text: selfie ? t('selfieHint') : t('passHint') })),
     h('div', { class: 'cam-bottom' },
@@ -1183,11 +1191,11 @@ function screenPreview(kind) {
   if (!selfie) startMRZ();  // start reading while they look at the photo
   return h('div', { class: 'screen' }, topbar(() => go(screenCamera, kind)),
     h('div', { class: 'content' },
-      progress(selfie ? 3 : 2),
+      progress(selfie ? 2 : 1),
       h('h1', { text: selfie ? t('selfieTitle') : t('passTitle') }),
       h('div', { class: 'preview', style: 'margin-top:16px' }, h('img', { src: url, alt: selfie ? t('selfieTitle') : t('passTitle') }))),
     h('div', { class: 'footer stack' },
-      h('button', { class: 'btn btn-primary', onclick: () => selfie ? go(screenSubmit) : go(screenInfo) }, icon('check'), t('usePhoto')),
+      h('button', { class: 'btn btn-primary', onclick: () => selfie ? go(screenSignup) : go(screenInfo) }, icon('check'), t('usePhoto')),
       h('button', { class: 'btn btn-secondary', onclick: () => { if (selfie) S.selfie = null; else S.passport = null; go(screenCamera, kind); } }, t('retake'))));
 }
 
@@ -1254,7 +1262,8 @@ function screenPerm() {
       }
     })();
   }
-  return h('div', { class: 'screen' }, topbar(() => { S.perm = null; go(screenSignup); }),
+  loadTess().catch(() => {});
+  return h('div', { class: 'screen' }, topbar(() => { S.perm = null; go(screenWelcome); }),
     h('div', { class: 'content', lang: 'ko' },
       progress(1),
       h('h1', { text: tk('permTitle') }),
@@ -1559,7 +1568,7 @@ function screenLoading() { return h('div', { class: 'screen' }, h('div', { class
     }
     return;
   }
-  go(screenWelcome);
+  go(saved ? screenWelcome : screenLangPick);
 })();
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
