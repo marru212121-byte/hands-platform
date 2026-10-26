@@ -113,20 +113,34 @@ async function logAccess(admin, memberId, action) {
   try { await db('access_logs', { method: 'POST', body: { admin_email: admin.email, member_id: memberId, action } }); } catch (_) {}
 }
 
-// 텔레그램 — 토큰·받는 방 번호는 버셀 환경변수에만
-async function telegram(text) {
+// 텔레그램 — 봇 열쇠는 버셀 환경변수(TELEGRAM_BOT_TOKEN)에만. 받는 사람은 관리자 화면에서 고름(app_settings.telegram_chats)
+async function telegramChats() {
+  const env = String(process.env.TELEGRAM_CHAT_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  let saved = [];
+  try {
+    const rows = await db('app_settings?select=value&key=eq.telegram_chats');
+    saved = ((rows[0] && rows[0].value) || []).map(c => String(c.id));
+  } catch (_) {}
+  return [...new Set([...env, ...saved])];
+}
+
+async function telegramApi(method, body) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chats = String(process.env.TELEGRAM_CHAT_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
-  if (!token || !chats.length) return false;
+  if (!token) throw new HttpError(400, 'telegram_no_token');
+  const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!j.ok) throw new HttpError(400, 'telegram_error');
+  return j.result;
+}
+
+async function telegram(text) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) return false;
+  const chats = await telegramChats();
   let ok = false;
   for (const chat_id of chats) {
-    try {
-      const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id, text, disable_web_page_preview: true }),
-      });
-      ok = ok || r.ok;
-    } catch (_) {}
+    try { await telegramApi('sendMessage', { chat_id, text, disable_web_page_preview: true }); ok = true; } catch (_) {}
   }
   return ok;
 }
@@ -172,5 +186,5 @@ function webpush() {
   return _wp;
 }
 
-module.exports = { webpush, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
+module.exports = { webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
   handler, HttpError, sha256, newToken, newCode, clean, num };

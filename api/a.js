@@ -202,6 +202,46 @@ module.exports = L.handler({
     return { ok: true, messages: rows, subscribed_members: new Set(subs.map(s => s.member_id)).size };
   },
 
+  // 텔레그램 연결: 봇 확인 · 말 건 사람 찾기 · 받는 사람 저장 · 시험 보내기
+  async telegram_status(req) {
+    await L.adminFromReq(req);
+    const rows = await db('app_settings?select=value&key=eq.telegram_chats');
+    const chats = (rows[0] && rows[0].value) || [];
+    if (!process.env.TELEGRAM_BOT_TOKEN) return { ok: true, connected: false, bot: null, chats };
+    try {
+      const me = await L.telegramApi('getMe');
+      return { ok: true, connected: true, bot: { username: me.username, name: me.first_name }, chats };
+    } catch (_) { return { ok: true, connected: false, bot: null, chats, error: 'bad_token' }; }
+  },
+
+  async telegram_scan(req) {
+    await L.adminFromReq(req);
+    const ups = await L.telegramApi('getUpdates', { limit: 100, allowed_updates: ['message'] });
+    const seen = {};
+    for (const u of ups) {
+      const c = u.message && u.message.chat;
+      if (c && c.type === 'private') seen[c.id] = { id: String(c.id), name: [c.first_name, c.last_name].filter(Boolean).join(' ') || c.username || String(c.id), username: c.username || null };
+    }
+    return { ok: true, candidates: Object.values(seen) };
+  },
+
+  async telegram_set(req, b) {
+    const a = await L.adminFromReq(req);
+    const chats = (Array.isArray(b.chats) ? b.chats : []).slice(0, 10)
+      .filter(c => /^-?\d{3,20}$/.test(String(c.id)))
+      .map(c => ({ id: String(c.id), name: clean(c.name, 60) || String(c.id) }));
+    await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates',
+      body: { key: 'telegram_chats', value: chats, updated_at: nowIso() } });
+    await L.logAccess(a, null, 'telegram_set');
+    return { ok: true, chats };
+  },
+
+  async telegram_test(req) {
+    await L.adminFromReq(req);
+    const sent = await L.telegram('[HANDS] 텔레그램 연결 시험입니다. 이 메시지가 보이면 SOS·문의 알림이 이 방으로 옵니다.');
+    return { ok: true, sent };
+  },
+
   async posts(req) {
     await L.adminFromReq(req);
     const rows = await db('posts?select=id,category,title,body,created_at,author:members(id,name,country)&order=created_at.desc&limit=100');

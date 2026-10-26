@@ -76,6 +76,8 @@ const CONSENT_ITEMS = [
   ['location', '위치정보 수집·이용', true], ['marketing', '소식·안내 수신', false],
 ];
 const ERR = {
+  telegram_no_token: '텔레그램 봇 열쇠(TELEGRAM_BOT_TOKEN)가 설정되지 않았습니다.', telegram_error: '텔레그램 서버가 응답하지 않습니다. 잠시 후 다시 시도해 주세요.',
+  too_many_chats: '받는 사람은 최대 10명까지 등록할 수 있습니다.',
   network: '서버에 연결할 수 없습니다. 네트워크 상태를 확인해 주세요.', wrong_login: '아이디 또는 비밀번호가 올바르지 않습니다.',
   too_many: '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.', unauthorized: '로그인이 만료되었습니다. 다시 로그인해 주세요.',
   not_found: '대상을 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.', bad_id: '잘못된 요청입니다.', server_error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
@@ -284,6 +286,7 @@ const VIEWS = {
   silent: { title: '미접속', sub: '일정 기간 앱을 열지 않은 근로자입니다. 직접 연락해 안부를 확인하세요.', render: () => renderSilent() },
   inquiries: { title: '문의', sub: '근로자가 앱에서 보낸 문의입니다. 답변은 근로자 앱에 표시됩니다.', render: () => renderInquiries() },
   push: { title: '알림 보내기', sub: '근로자 휴대폰으로 알림을 보냅니다. 보낸 내용은 기록에 남습니다.', render: () => renderPush() },
+  telegram: { title: '텔레그램 연결', sub: 'SOS·집중 관리·미접속 알림을 받을 텔레그램 대화방을 관리합니다.', render: () => renderTelegram() },
   logs: { title: '열람 기록', sub: '관리자의 개인정보 열람·수정 내역입니다. 기록은 수정하거나 삭제할 수 없습니다.', render: () => renderLogs() },
 };
 function route() {
@@ -1319,6 +1322,101 @@ async function loadPushHistory() {
   }
 }
 
+/* ───────── 텔레그램 연결 ───────── */
+const TG_MAX = 10;
+async function renderTelegram() {
+  const v = $('#view');
+  setHTML(v, html`<div class="tg-wrap"><section class="card"><div class="card-body"><span class="skel" style="width:40%;height:20px"></span><span class="skel" style="width:70%;margin-top:12px"></span></div></section></div>`);
+  let st;
+  try { st = await api('telegram_status'); }
+  catch (e) { if (S.view === 'telegram') { setHTML(v, html`<div class="tg-wrap"><section class="card">${errorBox(e)}</section></div>`); bindRetry(v, renderTelegram); } return; }
+  if (S.view !== 'telegram') return;
+  stamp();
+  const T = S.tg = { chats: (st.chats || []).map((c) => ({ id: c.id, name: c.name })), cands: null, bot: st.bot };
+  if (!st.connected) {
+    setHTML(v, html`<div class="tg-wrap"><section class="card tg-status off">
+      <div class="tg-head"><span class="tg-ico off">${ico('send', 'lg')}</span><div><div class="tg-title">텔레그램이 연결되지 않았습니다</div><div class="tg-sub">SOS 알림을 받으려면 아래 순서대로 한 번만 설정하세요.</div></div></div>
+      ${st.error ? html`<div class="notice" style="margin:0 20px 16px">${ERR[st.error] || st.error}</div>` : ''}
+      <ol class="tg-steps">
+        <li><b>1</b><div>텔레그램에서 <span class="mono">BotFather</span> 검색 → <span class="mono">/newbot</span> → 봇 이름·아이디 정하기</div></li>
+        <li><b>2</b><div>받은 열쇠(토큰)를 버셀 환경변수 <span class="mono">TELEGRAM_BOT_TOKEN</span> 에 넣고 다시 배포</div></li>
+        <li><b>3</b><div>이 화면 새로고침</div></li>
+      </ol>
+      <div class="card-foot"><button class="btn btn-primary" id="tgReload">${ico('refresh', 'sm')}새로고침</button></div>
+    </section></div>`);
+    $('#tgReload').addEventListener('click', renderTelegram);
+    return;
+  }
+  const uname = (st.bot && st.bot.username) || '';
+  setHTML(v, html`<div class="tg-wrap">
+    <section class="card tg-status">
+      <div class="tg-head"><span class="tg-ico">${ico('send', 'lg')}</span>
+        <div style="flex:1;min-width:0"><div class="tg-title"><span class="mono">@${uname}</span> 연결됨 <span class="badge ok"><span class="d"></span>정상</span></div><div class="tg-sub">${(st.bot && st.bot.name) || ''}</div></div>
+        <div class="tg-head-btns"><button class="btn btn-secondary btn-sm" id="tgTest">${ico('send', 'sm')}시험 메시지 보내기</button><button class="btn btn-ghost btn-sm" id="tgReload">${ico('refresh', 'sm')}새로고침</button></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>받는 사람</h2><span class="count num" id="tgCount"></span></div>
+      <ul class="tg-list" id="tgChats"></ul>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>받는 사람 추가</h2></div>
+      <div class="card-body">
+        <p class="tg-help">받을 사람이 텔레그램에서 <b class="mono">@${uname}</b> 을 찾아 <b>[시작]</b> 을 누른 뒤 찾기를 누르세요.</p>
+        <button class="btn btn-primary" id="tgScan">${ico('search', 'sm')}말 건 사람 찾기</button>
+        <ul class="tg-list cands" id="tgCands"></ul>
+      </div>
+    </section>
+  </div>`);
+  const save = async (next, msg) => {
+    await api('telegram_set', { body: { chats: next } });
+    T.chats = next; toast(msg); draw();
+  };
+  const draw = () => {
+    $('#tgCount').textContent = `${T.chats.length}/${TG_MAX}`;
+    $('#tgTest').disabled = !T.chats.length;
+    $('#tgScan').disabled = T.chats.length >= TG_MAX;
+    setHTML($('#tgChats'), T.chats.length ? html`${T.chats.map((c) => html`<li><span class="avatar sm">${String(c.name || '?').trim().charAt(0).toUpperCase()}</span>
+      <div class="who"><b>${c.name || '이름 없음'}</b><div class="sub num">ID ${c.id}</div></div>
+      <button class="btn btn-danger-outline btn-sm" data-rm="${c.id}">${ico('trash', 'sm')}빼기</button></li>`)}`
+      : html`<li class="tg-empty">아직 받는 사람이 없습니다. 아래에서 추가하세요.</li>`);
+    $$('[data-rm]').forEach((b) => b.addEventListener('click', () => {
+      const c = T.chats.find((x) => String(x.id) === b.dataset.rm); if (!c) return;
+      confirmDialog({ title: '받는 사람에서 뺄까요?', danger: true, okLabel: '빼기', message: `${c.name || '이 대화방'} 은(는) 더 이상 SOS 알림을 받지 않습니다.`,
+        run: () => save(T.chats.filter((x) => String(x.id) !== String(c.id)), '받는 사람에서 뺐습니다.') });
+    }));
+    if (T.cands) {
+      const have = new Set(T.chats.map((c) => String(c.id)));
+      const list = T.cands.filter((c) => !have.has(String(c.id)));
+      setHTML($('#tgCands'), list.length ? html`${list.map((c) => html`<li><span class="avatar sm teal">${String(c.name || '?').trim().charAt(0).toUpperCase()}</span>
+        <div class="who"><b>${c.name || '이름 없음'}</b><div class="sub">${c.username ? '@' + c.username : ''} <span class="num">ID ${c.id}</span></div></div>
+        <button class="btn btn-primary btn-sm" data-add="${c.id}" ${T.chats.length >= TG_MAX ? 'disabled' : ''}>${ico('userPlus', 'sm')}추가</button></li>`)}`
+        : html`<li class="tg-empty">새로 말을 건 사람이 없습니다. [시작] 을 누른 뒤 다시 찾아 주세요.</li>`);
+      $$('[data-add]').forEach((b) => b.addEventListener('click', async () => {
+        const c = T.cands.find((x) => String(x.id) === b.dataset.add); if (!c) return;
+        if (T.chats.length >= TG_MAX) { toast(ERR.too_many_chats, 'err'); return; }
+        b.disabled = true;
+        try { await save([...T.chats, { id: c.id, name: c.name || (c.username ? '@' + c.username : String(c.id)) }], `${c.name || '대화방'} 을(를) 추가했습니다.`); }
+        catch (e) { toast(errText(e), 'err'); b.disabled = false; }
+      }));
+    }
+  };
+  $('#tgReload').addEventListener('click', renderTelegram);
+  $('#tgScan').addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { T.cands = (await api('telegram_scan')).candidates || []; draw(); }
+    catch (err) { toast(errText(err), 'err'); }
+    finally { b.disabled = T.chats.length >= TG_MAX; }
+  });
+  $('#tgTest').addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { const r = await api('telegram_test', { body: {} }); toast(r.sent ? '시험 메시지를 보냈습니다. 텔레그램을 확인하세요.' : '시험 메시지를 보내지 못했습니다.', r.sent ? '' : 'err'); }
+    catch (err) { toast(errText(err), 'err'); }
+    finally { b.disabled = !T.chats.length; }
+  });
+  draw();
+}
+
 /* ───────── 7. 열람 기록 ───────── */
 let logsCache = [];
 async function renderLogs() {
@@ -1361,7 +1459,7 @@ function drawLogs() {
 }
 
 /* ───────── 휴대폰 하단 탭·더보기 ───────── */
-const MORE_VIEWS = ['inquiries', 'push', 'qr', 'silent', 'logs'];
+const MORE_VIEWS = ['inquiries', 'push', 'qr', 'silent', 'logs', 'telegram'];
 function openMore() {
   $('#moreEmail').textContent = S.admin ? (S.admin.email || '') : '';
   $('#moreBack').hidden = false; $('#moreSheet').hidden = false;
