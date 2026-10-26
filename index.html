@@ -1377,10 +1377,10 @@ function screenHome() {
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
     page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push && S.push !== 'on' && S.push !== 'unsupported' && pushSupported() ? 'margin-top:14px' : '' },
-        sosTile(),
         h('button', { class: 'mtile strong', onclick: () => go(screenInquiry, 'job') }, h('span', { class: 'mi' }, icon('briefcase')), h('span', {}, h('span', { class: 'mt', text: t('job') }), h('span', { class: 'ms', text: t('jobSub') }))),
         h('button', { class: 'mtile strong', onclick: () => go(screenInquiry, 'ship') }, h('span', { class: 'mi' }, icon('ship')), h('span', {}, h('span', { class: 'mt', text: t('ship') }), h('span', { class: 'ms', text: t('shipSub') }))),
-        h('button', { class: 'mtile', onclick: toTab('places') }, h('span', { class: 'mi' }, icon('map')), h('span', {}, h('span', { class: 'mt', text: t('places') }), h('span', { class: 'ms', text: t('placesHint') })))),
+        h('button', { class: 'mtile', onclick: toTab('places') }, h('span', { class: 'mi' }, icon('map')), h('span', {}, h('span', { class: 'mt', text: t('places') }), h('span', { class: 'ms', text: t('placesHint') }))),
+        sosTile()),
       h('div', { class: 'rows', style: 'margin-top:14px' },
         h('button', { class: 'irow', onclick: () => go(screenMyInquiries) }, h('span', { class: 'k', style: 'color:var(--ink);font-weight:650;display:flex;align-items:center;gap:10px;max-width:none' }, icon('doc'), t('myInq')), h('span', { class: 'v' }, icon('chevRight')))));
   } else if (S.tab === 'places') {
