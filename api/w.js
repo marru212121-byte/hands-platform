@@ -7,7 +7,9 @@ const REQUIRED = ['terms', 'privacy', 'sensitive', 'location'];
 const COUNTRY_KO = { vn: '베트남', th: '태국', id: '인도네시아', ph: '필리핀', np: '네팔', kh: '캄보디아', mm: '미얀마', lk: '스리랑카', bd: '방글라데시', other: '기타' };
 
 const nowIso = () => new Date().toISOString();
-const mapLink = (lat, lng) => `https://maps.google.com/?q=${lat},${lng}`;
+// 카카오맵 (관리자 지도와 같은 지도). 이름은 핀 이름표로 뜸
+const mapLink = (lat, lng, name) => `https://map.kakao.com/link/map/${encodeURIComponent(String(name || 'HANDS').replace(/,/g, ' '))},${lat},${lng}`;
+const adminLink = (id) => `https://hands-platform.vercel.app/admin#/members/${encodeURIComponent(id)}`;
 
 function publicProfile(m) {
   return {
@@ -46,7 +48,8 @@ async function watchAlert(m, b, kind) {
   const lat = num(b.lat), lng = num(b.lng);
   const kst = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
   await L.telegram([`[HANDS 집중 관리] ${m.name} 앱 ${kind === 'app_open' ? '열림' : '닫힘'}`, `시각: ${kst}`,
-    lat != null && lng != null ? `위치: ${mapLink(lat, lng)}` : '위치: 받지 못함'].join('\n')).catch(() => {});
+    lat != null && lng != null ? `위치(카카오맵): ${mapLink(lat, lng, m.name)}` : '위치: 받지 못함',
+    `관리자에서 보기: ${adminLink(m.id)}`].join('\n')).catch(() => {});
 }
 
 module.exports = L.handler({
@@ -168,7 +171,8 @@ module.exports = L.handler({
       `전화: ${m.phone || '-'}`,
       m.company ? `근무처: ${m.company}` : null,
       `시각: ${kst}`,
-      hasLoc ? `위치: ${mapLink(lat, lng)}` : '위치: 받지 못함',
+      hasLoc ? `위치(카카오맵): ${mapLink(lat, lng, m.name)}` : '위치: 받지 못함',
+      `관리자에서 보기: ${adminLink(m.id)}`,
     ].filter(Boolean).join('\n'));
     if (notified) await db(`sos_alerts?id=eq.${rows[0].id}`, { method: 'PATCH', body: { notified_at: nowIso() } }).catch(() => {});
     return { ok: true, id: rows[0].id, notified };
