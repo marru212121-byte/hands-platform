@@ -2,7 +2,7 @@
 const L = require('./_lib');
 const { db, HttpError, clean } = L;
 
-const MEMBER_COLS = 'id,name,phone,country,language,company,birth_date,gender,passport_number,emergency_contact,is_active,created_at,last_seen_at,last_login_at,last_checkin_at,consent_version,consent_at,consents';
+const MEMBER_COLS = 'id,watch,name,phone,country,language,company,birth_date,gender,passport_number,emergency_contact,is_active,created_at,last_seen_at,last_login_at,last_checkin_at,consent_version,consent_at,consents';
 const nowIso = () => new Date().toISOString();
 const daysAgo = (d) => new Date(Date.now() - d * 86400000).toISOString();
 
@@ -72,7 +72,7 @@ module.exports = L.handler({
       const s = encodeURIComponent(`*${q.replace(/[*,()]/g, '')}*`);
       filter = `&or=(name.ilike.${s},phone.ilike.${s},passport_number.ilike.${s},company.ilike.${s})`;
     }
-    const rows = await db(`members?select=id,name,phone,country,company,created_at,last_seen_at,last_checkin_at,is_active,passport_number&order=created_at.desc&limit=500${filter}`);
+    const rows = await db(`members?select=id,name,phone,country,company,created_at,last_seen_at,last_checkin_at,is_active,watch,passport_number&order=created_at.desc&limit=500${filter}`);
     const locs = await db(`locations?select=member_id,lat,lng,updated_at,sos_active`);
     const byId = Object.fromEntries(locs.map(l => [l.member_id, l]));
     return { ok: true, members: rows.map(m => ({ ...m,
@@ -102,6 +102,7 @@ module.exports = L.handler({
       if (k in b) patch[k] = clean(b[k], 120);
     }
     if ('is_active' in b) patch.is_active = !!b.is_active;
+    if ('watch' in b) patch.watch = !!b.watch;
     patch.updated_at = nowIso();
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: patch });
     await L.logAccess(a, m.id, 'update_member');
@@ -162,6 +163,43 @@ module.exports = L.handler({
     const rows = await db(`inquiries?id=eq.${b.id}`, { method: 'PATCH', prefer: 'return=representation', body: { reply, status: 'answered', replied_at: nowIso() } });
     if (rows[0]) await L.logAccess(a, rows[0].member_id, 'inquiry_reply');
     return { ok: true };
+  },
+
+  // 근로자에게 푸시: 전체 / 국적 / 한 사람
+  async push_send(req, b) {
+    const a = await L.adminFromReq(req);
+    const title = clean(b.title, 80), body = clean(b.body, 300);
+    if (!title || !body) throw new HttpError(400, 'missing_fields');
+    let filter = '';
+    if (b.target === 'member') {
+      if (!/^[0-9a-f-]{36}$/i.test(String(b.member_id || ''))) throw new HttpError(400, 'bad_id');
+      filter = `&member_id=eq.${b.member_id}`;
+    } else if (b.target === 'country') {
+      const c = clean(b.country, 10); if (!c) throw new HttpError(400, 'missing_fields');
+      filter = `&member.country=eq.${encodeURIComponent(c)}`;
+    }
+    const subs = await db(`push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,country,is_active)&member.is_active=eq.true${filter}`);
+    const wp = L.webpush();
+    const payload = JSON.stringify({ title, body, url: '/?src=push' });
+    let sent = 0, failed = 0; const gone = [];
+    await Promise.all(subs.map(async (s) => {
+      try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 86400 }); sent++; }
+      catch (e) { failed++; if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
+    }));
+    if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
+    const target = b.target === 'member' ? 'member:' + b.member_id : b.target === 'country' ? 'country:' + b.country : 'all';
+    await db('push_messages', { method: 'POST', body: { admin_email: a.email, target, title, body, sent, failed } }).catch(() => {});
+    await L.logAccess(a, b.target === 'member' ? b.member_id : null, 'push_send');
+    return { ok: true, sent, failed, subscribers: subs.length };
+  },
+
+  async push_history(req) {
+    await L.adminFromReq(req);
+    const [rows, subs] = await Promise.all([
+      db('push_messages?select=id,admin_email,target,title,body,sent,failed,created_at&order=created_at.desc&limit=50'),
+      db('push_subscriptions?select=member_id'),
+    ]);
+    return { ok: true, messages: rows, subscribed_members: new Set(subs.map(s => s.member_id)).size };
   },
 
   async posts(req) {

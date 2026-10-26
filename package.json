@@ -1,0 +1,7 @@
+{
+  "name": "hands-platform",
+  "private": true,
+  "dependencies": {
+    "web-push": "3.6.7"
+  }
+}

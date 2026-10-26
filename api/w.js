@@ -37,6 +37,18 @@ async function saveLocation(m, { lat, lng, accuracy, source }) {
   return { lat, lng, acc, t };
 }
 
+// 「집중 관리」 근로자는 앱을 열고 닫을 때 텔레그램 (같은 종류 5분 안 중복은 건너뜀)
+async function watchAlert(m, b, kind) {
+  if (!m.watch) return;
+  const since = new Date(Date.now() - 5 * 60000).toISOString();
+  const recent = await db(`location_history?select=id&member_id=eq.${m.id}&source=eq.${kind}&recorded_at=gt.${encodeURIComponent(since)}&limit=1`).catch(() => []);
+  if (recent.length) return;
+  const lat = num(b.lat), lng = num(b.lng);
+  const kst = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+  await L.telegram([`[HANDS 집중 관리] ${m.name} 앱 ${kind === 'app_open' ? '열림' : '닫힘'}`, `시각: ${kst}`,
+    lat != null && lng != null ? `위치: ${mapLink(lat, lng)}` : '위치: 받지 못함'].join('\n')).catch(() => {});
+}
+
 module.exports = L.handler({
   // 가입: 동의 + 정보 + 얼굴 + 여권 한 번에. 기기 열쇠를 돌려줌.
   async signup(req, b) {
@@ -106,8 +118,19 @@ module.exports = L.handler({
 
   async location(req, b) {
     const m = await L.workerFromReq(req);
-    const source = ['app_open', 'watch'].includes(b.source) ? b.source : 'app_open';
+    const source = ['app_open', 'watch', 'tap'].includes(b.source) ? b.source : 'app_open';
+    if (source === 'app_open') await watchAlert(m, b, 'app_open');
     await saveLocation(m, { ...b, source });
+    return { ok: true };
+  },
+
+  // 앱을 내릴 때(닫을 때) — sendBeacon 이라 열쇠가 본문에 옴
+  async location_beacon(req, b) {
+    req.headers['x-hands-token'] = String(b.token || '');
+    const m = await L.workerFromReq(req);
+    await watchAlert(m, b, 'app_close');
+    if (b.lat != null && b.lng != null) await saveLocation(m, { ...b, source: 'app_close' });
+    else await db('location_history', { method: 'POST', body: { member_id: m.id, lat: null, lng: null, source: 'app_close', recorded_at: nowIso() } }).catch(() => {});
     return { ok: true };
   },
 
@@ -160,6 +183,21 @@ module.exports = L.handler({
     const m = await L.workerFromReq(req);
     const rows = await db(`inquiries?select=id,category,title,body,reply,status,created_at,replied_at&member_id=eq.${m.id}&order=created_at.desc&limit=30`);
     return { ok: true, inquiries: rows };
+  },
+
+  // 푸시: 공개 열쇠 / 이 폰 구독 저장
+  async push_key() {
+    return { ok: true, key: process.env.VAPID_PUBLIC_KEY || null };
+  },
+
+  async push_subscribe(req, b) {
+    const m = await L.workerFromReq(req);
+    const s = b.subscription || {};
+    const endpoint = clean(s.endpoint, 1000), keys = s.keys || {};
+    if (!endpoint || !/^https:\/\//.test(endpoint) || !keys.p256dh || !keys.auth) throw new HttpError(400, 'bad_subscription');
+    await db('push_subscriptions?on_conflict=endpoint', { method: 'POST', prefer: 'resolution=merge-duplicates',
+      body: { member_id: m.id, endpoint, p256dh: clean(keys.p256dh, 200), auth: clean(keys.auth, 100) } });
+    return { ok: true };
   },
 
   async posts(req) {

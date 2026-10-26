@@ -161,5 +161,16 @@ function handler(routes) {
 const clean = (s, max = 200) => (s == null ? null : String(s).trim().slice(0, max) || null);
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 
-module.exports = { db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
+// 웹 푸시(홈 화면에 추가한 근로자 폰으로) — 열쇠는 버셀 환경변수에만
+let _wp = null;
+function webpush() {
+  if (_wp) return _wp;
+  const pub = process.env.VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) throw new HttpError(500, 'push_not_configured');
+  _wp = require('web-push');
+  _wp.setVapidDetails(process.env.VAPID_SUBJECT || 'https://hands-platform.vercel.app', pub, priv);
+  return _wp;
+}
+
+module.exports = { webpush, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
   handler, HttpError, sha256, newToken, newCode, clean, num };

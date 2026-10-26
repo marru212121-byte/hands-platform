@@ -217,6 +217,15 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .mtile.done .mi{background:var(--teal);color:#fff}
 .mtile.done .mt{color:var(--teal)}
 .mtile.ok .mi{background:var(--teal-bg);color:var(--teal)}
+.pushcard{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 12px 12px 14px;margin-top:12px}
+.pushcard .pi{width:40px;height:40px;border-radius:12px;background:var(--teal-bg);color:var(--teal);display:grid;place-items:center;flex:none}
+.pushcard .pt{flex:1;min-width:0}
+.pushcard .pt b{display:block;font-size:16px;font-weight:700;line-height:1.35}
+.pushcard .pt span{display:block;font-size:13px;color:var(--ink3);line-height:1.45;margin-top:1px}
+.pushcard .pb{flex:none;min-height:44px;padding:0 16px;border-radius:12px;background:var(--teal);color:#fff;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:6px}
+.pushcard .pb:disabled{opacity:.6}
+.pushcard.denied{background:var(--red-bg);border-color:#F3D3D3}
+.pushcard.denied .pi{background:#fff;color:var(--red)}
 .inq{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .inq + .inq{margin-top:10px}
 .inq .top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
@@ -522,6 +531,21 @@ si:{"job": "රැකියාවක් සොයන්න", "ship": "නැව 
 bn:{"job": "কাজ খুঁজুন", "ship": "জাহাজ সংক্রান্ত জিজ্ঞাসা", "jobSub": "আপনি কী ধরনের কাজ খুঁজছেন জানান।", "shipSub": "জাহাজ, চুক্তি বা জাহাজে কাজ নিয়ে প্রশ্ন করুন।", "inqQ": "আমরা কীভাবে সাহায্য করতে পারি?", "inqSend": "পাঠান", "inqDone": "দায়িত্বপ্রাপ্ত ব্যক্তি দেখে আপনার সাথে যোগাযোগ করবেন।", "myInq": "আমার জিজ্ঞাসা", "inqOpen": "উত্তরের অপেক্ষায়", "inqAnswered": "উত্তর দেওয়া হয়েছে", "reply": "উত্তর", "noInq": "এখনও কোনো জিজ্ঞাসা নেই।"}
 };
 for (const l in STR3) Object.assign(STR[l], STR3[l]);
+/* push notification strings */
+const STR4 = {
+en:{"pushTitle": "Get notifications", "pushSub": "Receive notices and replies as notifications.", "pushBtn": "Turn on", "pushOn": "Notifications are on.", "pushDenied": "Notifications are blocked. To allow them: phone Settings → Notifications → HANDS or your browser → Allow.", "pushFail": "Could not turn on notifications. Please try again."},
+ko:{"pushTitle": "알림 받기", "pushSub": "공지와 답변을 알림으로 받아요.", "pushBtn": "켜기", "pushOn": "알림이 켜졌습니다.", "pushDenied": "알림이 차단되어 있습니다. 허용하려면: 휴대폰 설정 → 알림 → HANDS 또는 브라우저 → 허용.", "pushFail": "알림을 켜지 못했습니다. 다시 시도해 주세요."},
+vi:{"pushTitle": "Nhận thông báo", "pushSub": "Nhận thông báo chung và câu trả lời qua thông báo.", "pushBtn": "Bật", "pushOn": "Đã bật thông báo.", "pushDenied": "Thông báo đang bị chặn. Để cho phép: Cài đặt → Thông báo → HANDS hoặc trình duyệt → Cho phép.", "pushFail": "Không bật được thông báo. Vui lòng thử lại."},
+id:{"pushTitle": "Terima notifikasi", "pushSub": "Terima pengumuman dan jawaban sebagai notifikasi.", "pushBtn": "Aktifkan", "pushOn": "Notifikasi sudah aktif.", "pushDenied": "Notifikasi diblokir. Untuk mengizinkan: Pengaturan → Notifikasi → HANDS atau browser → Izinkan.", "pushFail": "Gagal mengaktifkan notifikasi. Silakan coba lagi."},
+th:{"pushTitle": "รับการแจ้งเตือน", "pushSub": "รับประกาศและคำตอบเป็นการแจ้งเตือน", "pushBtn": "เปิด", "pushOn": "เปิดการแจ้งเตือนแล้ว", "pushDenied": "การแจ้งเตือนถูกบล็อก หากต้องการอนุญาต: การตั้งค่า → การแจ้งเตือน → HANDS หรือเบราว์เซอร์ → อนุญาต", "pushFail": "เปิดการแจ้งเตือนไม่สำเร็จ โปรดลองอีกครั้ง"},
+tl:{"pushTitle": "Tumanggap ng notification", "pushSub": "Tumanggap ng mga abiso at sagot bilang notification.", "pushBtn": "I-on", "pushOn": "Naka-on na ang notification.", "pushDenied": "Naka-block ang notification. Para payagan: Settings → Notifications → HANDS o browser → Allow.", "pushFail": "Hindi na-on ang notification. Subukan ulit."},
+ne:{"pushTitle": "सूचना पाउनुहोस्", "pushSub": "घोषणा र जवाफहरू सूचनाका रूपमा पाउनुहोस्।", "pushBtn": "खोल्नुहोस्", "pushOn": "सूचना खुला भयो।", "pushDenied": "सूचना रोकिएको छ। अनुमति दिन: Settings → Notifications → HANDS वा ब्राउजर → Allow।", "pushFail": "सूचना खोल्न सकिएन। फेरि प्रयास गर्नुहोस्।"},
+km:{"pushTitle": "ទទួលការជូនដំណឹង", "pushSub": "ទទួលសេចក្តីជូនដំណឹង និងចម្លើយជាការជូនដំណឹង។", "pushBtn": "បើក", "pushOn": "ការជូនដំណឹងត្រូវបានបើក។", "pushDenied": "ការជូនដំណឹងត្រូវបានបិទ។ ដើម្បីអនុញ្ញាត៖ Settings → Notifications → HANDS ឬកម្មវិធីរុករក → Allow។", "pushFail": "មិនអាចបើកការជូនដំណឹងបានទេ។ សូមព្យាយាមម្តងទៀត។"},
+my:{"pushTitle": "အသိပေးချက် ရယူရန်", "pushSub": "ကြေညာချက်နှင့် အဖြေများကို အသိပေးချက်အဖြစ် ရယူပါ။", "pushBtn": "ဖွင့်ရန်", "pushOn": "အသိပေးချက် ဖွင့်ပြီးပါပြီ။", "pushDenied": "အသိပေးချက်ကို ပိတ်ထားသည်။ ခွင့်ပြုရန်: Settings → Notifications → HANDS သို့မဟုတ် ဘရောက်ဆာ → Allow။", "pushFail": "အသိပေးချက် ဖွင့်၍မရပါ။ ထပ်ကြိုးစားပါ။"},
+si:{"pushTitle": "දැනුම්දීම් ලබාගන්න", "pushSub": "නිවේදන සහ පිළිතුරු දැනුම්දීම් ලෙස ලබාගන්න.", "pushBtn": "සක්‍රිය කරන්න", "pushOn": "දැනුම්දීම් සක්‍රියයි.", "pushDenied": "දැනුම්දීම් අවහිර කර ඇත. අවසර දීමට: Settings → Notifications → HANDS හෝ බ්‍රවුසරය → Allow.", "pushFail": "දැනුම්දීම් සක්‍රිය කළ නොහැකි විය. නැවත උත්සාහ කරන්න."},
+bn:{"pushTitle": "নোটিফিকেশন পান", "pushSub": "ঘোষণা ও উত্তর নোটিফিকেশন হিসেবে পান।", "pushBtn": "চালু করুন", "pushOn": "নোটিফিকেশন চালু হয়েছে।", "pushDenied": "নোটিফিকেশন বন্ধ করা আছে। অনুমতি দিতে: Settings → Notifications → HANDS বা ব্রাউজার → Allow।", "pushFail": "নোটিফিকেশন চালু করা যায়নি। আবার চেষ্টা করুন।"}
+};
+for (const l in STR4) Object.assign(STR[l], STR4[l]);
 /* ---------- icons (inline SVG line icons) ---------- */
 const P = {
   globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9M12 3C9.4 5.6 8.2 8.6 8.2 12s1.2 6.4 3.8 9"/>',
@@ -556,6 +580,7 @@ const P = {
   map:'<path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/>',
   briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3 12.5h18"/>',
   ship:'<path d="M3 16.5l2.2 4h13.6l2.2-4L12 13.5z"/><path d="M6 15.2V9h12v6.2M12 9V4M9.5 6h5"/>',
+  bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
   menu:'<circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/>'
 };
 function svgIcon(name, sw) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' + P[name] + '</svg>'; }
@@ -660,15 +685,6 @@ function setLang(code) {
   S.lang = code; lsSet('hands_lang', code); applyLang();
   if (S.token) { api('language', { body: { language: code } }).catch(() => {}); if (S.profile) { S.profile.language = code; cacheProfile(); } }
 }
-function detectLang() {
-  const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || '']);
-  for (const l of list) {
-    const p = String(l).toLowerCase().split('-')[0];
-    const m = { fil: 'tl', tl: 'tl', in: 'id' }[p] || p;
-    if (STR[m]) return m;
-  }
-  return null;
-}
 function langBtn() {
   return h('button', { class: 'langbtn', onclick: openLangSheet, 'aria-label': t('language') + ': ' + LANG_NAME[S.lang] },
     icon('globe'), h('span', { class: 't', text: LANG_NAME[S.lang] }), icon('chevDown', 'sm'));
@@ -771,7 +787,7 @@ function getPos(timeout, high) {
     setTimeout(() => fin(null), timeout + 500);
     try {
       navigator.geolocation.getCurrentPosition(
-        (p) => { lsSet('hands_loc_ok', '1'); fin({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }); },
+        (p) => { lsSet('hands_loc_ok', '1'); S.lastPos = { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }; fin({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }); },
         () => fin(null), { enableHighAccuracy: !!high, timeout, maximumAge: high ? 0 : 60000 });
     } catch (e) { fin(null); }
   });
@@ -786,15 +802,30 @@ async function sendAppOpenLocation() {
   if (!(await locGranted())) return;
   const last = Number(lsGet('hands_loc_at')) || 0;
   if (Date.now() - last < 5 * 60 * 1000) return;
-  lsSet('hands_loc_at', String(Date.now()));
+  lsSet('hands_loc_at', String(Date.now())); lastLocSent = Date.now();
   const pos = await getPos(10000, false);
   if (pos && S.token) api('location', { body: { ...pos, source: 'app_open' } }).catch(() => {});
 }
+/* every main button tap (home tiles, place tiles, bottom tabs): at most once per 60 s, shared with the app-open send; never blocks */
+let lastLocSent = 0;
+async function tapLocation() {
+  if (!S.token || Date.now() - lastLocSent < 60000) return;
+  lastLocSent = Date.now();
+  try {
+    if (!(await locGranted())) return;
+    const pos = await getPos(6000, false);
+    if (pos && S.token) api('location', { body: { ...pos, source: 'tap' } }).catch(() => {});
+  } catch (e) {}
+}
+document.getElementById('app').addEventListener('pointerdown', (e) => {
+  if (e.target && e.target.closest && e.target.closest('.mtile, .tile, .tab')) tapLocation();
+}, true);
 async function startWatch() {
   if (!S.token || watchId != null || !navigator.geolocation || document.hidden) return;
   if (!(await locGranted()) || watchId != null) return;
   try {
     watchId = navigator.geolocation.watchPosition((p) => {
+      S.lastPos = { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy };
       if (!S.token || Date.now() - lastWatchSent < 60000) return;
       lastWatchSent = Date.now();
       api('location', { body: { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, source: 'watch' } }).catch(() => {});
@@ -803,7 +834,17 @@ async function startWatch() {
 }
 function stopWatch() { if (watchId != null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; } }
 function startLocation() { sendAppOpenLocation(); startWatch(); }
-document.addEventListener('visibilitychange', () => { if (document.hidden) stopWatch(); else if (S.token && S.profile) startLocation(); });
+/* app close: last known position by sendBeacon (no headers possible, so the token goes in the body) */
+let lastBeacon = 0;
+function sendCloseBeacon() {
+  if (!S.token || !navigator.sendBeacon || Date.now() - lastBeacon < 3000) return;
+  lastBeacon = Date.now();
+  const b = { token: S.token, source: 'app_close' };
+  if (S.lastPos) { b.lat = S.lastPos.lat; b.lng = S.lastPos.lng; b.accuracy = S.lastPos.accuracy; }
+  try { navigator.sendBeacon('/api/w?action=location_beacon', new Blob([JSON.stringify(b)], { type: 'application/json' })); } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) { sendCloseBeacon(); stopWatch(); } else if (S.token && S.profile) startLocation(); });
+window.addEventListener('pagehide', sendCloseBeacon);
 
 /* ---------- install prompt ---------- */
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -816,16 +857,6 @@ function needsInstallStep() { return !isStandalone() && (IS_IOS || IS_ANDROID); 
 /* =========================================================
    SCREENS
    ========================================================= */
-function screenLanguage() {
-  return h('div', { class: 'screen' },
-    h('div', { class: 'content', style: 'padding-top:calc(28px + var(--sat))' },
-      h('div', { class: 'brand', style: 'padding-left:0' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), h('b', { text: 'HANDS' })),
-      h('h1', { style: 'margin-top:22px', text: t('chooseLang') }),
-      S.lang !== 'en' ? h('p', { class: 'lead', text: STR.en.chooseLang }) : null,
-      langList((c) => { setLang(c); afterLanguage(); })));
-}
-function afterLanguage() { if (needsInstallStep() && !S.installSeen) go(screenInstall, 'first'); else go(screenWelcome); }
-
 function screenWelcome() {
   return h('div', { class: 'screen' }, topbar(),
     h('div', { class: 'content' },
@@ -862,7 +893,7 @@ function step(n, text, ill) {
 function screenInstall(from) {
   S.installSeen = true;
   const ios = IS_IOS;
-  const back = from === 'signup' ? () => go(screenWelcome) : () => go(screenLanguage);
+  const back = () => go(screenWelcome);
   const cont = () => { if (from === 'signup') go(screenSignup); else go(screenWelcome); };
   return h('div', { class: 'screen' }, topbar(back),
     h('div', { class: 'content' },
@@ -1090,12 +1121,14 @@ function screenPerm() {
 }
 
 function screenDone() {
+  if (S.push == null) pushCheck();
   return h('div', { class: 'screen' }, topbar(null),
     h('div', { class: 'center' },
       h('div', { class: 'badge ok' }, icon('okCircle')),
       h('h1', { text: t('doneTitle') }),
       h('p', { class: 'lead', text: t('doneSub') }),
-      (S.perm && S.perm.loc === 'no') ? h('div', { class: 'note warn', style: 'margin-top:22px;text-align:left' }, icon('alert'), h('div', { lang: 'ko', text: tk('locDenied') })) : null),
+      (S.perm && S.perm.loc === 'no') ? h('div', { class: 'note warn', style: 'margin-top:22px;text-align:left' }, icon('alert'), h('div', { lang: 'ko', text: tk('locDenied') })) : null,
+      h('div', { style: 'width:100%;text-align:left;margin-top:18px' }, pushCard())),
     h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => { S.perm = null; goHome('home'); } }, t('start'), icon('chevRight'))));
 }
 
@@ -1115,11 +1148,68 @@ function screenReconsent() {
 }
 
 /* ---------- home (tabs) ---------- */
+/* ---------- web push ---------- */
+function pushSupported() {
+  try { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && !(IS_IOS && !isStandalone()); } catch (e) { return false; }
+}
+function swReady(ms) {
+  return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error('sw_timeout')), ms || 8000))]);
+}
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  const out = new Uint8Array(raw.length); for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i); return out;
+}
+function setPush(st) { const ch = S.push !== st; S.push = st; if (ch && S.route && (S.route[0] === screenHome || S.route[0] === screenDone)) rerender(); }
+/* on app open: decide whether the card is needed; if already subscribed, re-send the subscription silently */
+async function pushCheck() {
+  if (!S.token || !pushSupported()) { S.push = 'unsupported'; return; }
+  try {
+    if (Notification.permission === 'denied') { setPush('denied'); return; }
+    const reg = await navigator.serviceWorker.getRegistration('/');
+    const sub = reg && reg.pushManager ? await reg.pushManager.getSubscription() : null;
+    if (sub && Notification.permission === 'granted') {
+      setPush('on');
+      if (!S.pushSynced) { S.pushSynced = true; api('push_subscribe', { body: { subscription: sub.toJSON() } }).catch(() => { S.pushSynced = false; }); }
+    } else setPush('needed');
+  } catch (e) { setPush('needed'); }
+}
+/* must run from a tap (iPhone requires a user gesture) */
+async function pushEnable() {
+  if (S.push === 'busy') return;
+  setPush('busy');
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { setPush(perm === 'denied' ? 'denied' : 'needed'); return; }
+    const k = await api('push_key', { method: 'GET' });
+    if (!k.key) throw { code: 'no_key' };
+    const reg = await swReady(8000);
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(k.key) });
+    await api('push_subscribe', { body: { subscription: sub.toJSON() } });
+    S.pushSynced = true; setPush('on'); toast(t('pushOn'));
+  } catch (e) {
+    setPush(typeof Notification !== 'undefined' && Notification.permission === 'denied' ? 'denied' : 'needed');
+    if (!e || e.status !== 401) toast(t('pushFail'));
+  }
+}
+function pushCard() {
+  const st = S.push;
+  if (!pushSupported() || !st || st === 'on' || st === 'unsupported') return null;
+  if (st === 'denied') return h('div', { class: 'pushcard denied', role: 'note' }, h('span', { class: 'pi' }, icon('bell')),
+    h('div', { class: 'pt' }, h('b', { text: t('pushTitle') }), h('span', { text: t('pushDenied') })));
+  return h('div', { class: 'pushcard' }, h('span', { class: 'pi' }, icon('bell')),
+    h('div', { class: 'pt' }, h('b', { text: t('pushTitle') }), h('span', { text: t('pushSub') })),
+    h('button', { class: 'pb', disabled: st === 'busy', onclick: pushEnable },
+      st === 'busy' ? h('span', { class: 'spin', style: 'width:18px;height:18px;border-width:3px;border-color:rgba(255,255,255,.35);border-top-color:#fff' }) : null, t('pushBtn')));
+}
+
 function goHome(tab) {
   if (tab) S.tab = tab;
   if (S.profile && S.profile.consent_current === false) { go(screenReconsent); return; }
   go(screenHome);
   startLocation();
+  pushCheck();
 }
 const PLACES = [
   ['pHospital', 'hospital', 'hospital'], ['pPharmacy', 'pill', 'pharmacy'], ['pPolice', 'shield', 'police station'],
@@ -1141,7 +1231,7 @@ function screenHome() {
   if (S.tab === 'home') {
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
-    page.append(h('div', { class: 'mgrid' },
+    page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push && S.push !== 'on' && S.push !== 'unsupported' && pushSupported() ? 'margin-top:14px' : '' },
         sosTile(),
         h('button', { class: 'mtile strong', onclick: () => go(screenInquiry, 'job') }, h('span', { class: 'mi' }, icon('briefcase')), h('span', {}, h('span', { class: 'mt', text: t('job') }), h('span', { class: 'ms', text: t('jobSub') }))),
         h('button', { class: 'mtile strong', onclick: () => go(screenInquiry, 'ship') }, h('span', { class: 'mi' }, icon('ship')), h('span', {}, h('span', { class: 'mt', text: t('ship') }), h('span', { class: 'ms', text: t('shipSub') }))),
@@ -1208,7 +1298,7 @@ async function sendInquiryLocation() {
   try {
     if (!S.token || !(await locGranted())) return;
     const pos = await getPos(6000, false);
-    if (pos && S.token) { lsSet('hands_loc_at', String(Date.now())); await api('location', { body: { ...pos, source: 'app_open' } }); }
+    if (pos && S.token) { lsSet('hands_loc_at', String(Date.now())); lastLocSent = Date.now(); await api('location', { body: { ...pos, source: 'app_open' } }); }
   } catch (e) {}
 }
 function screenInquiryDone(cat) {
@@ -1305,7 +1395,7 @@ function myTab() {
 function screenLoading() { return h('div', { class: 'screen' }, h('div', { class: 'loading' }, h('div', { class: 'spin' }))); }
 (async function boot() {
   const saved = lsGet('hands_lang');
-  S.lang = (saved && STR[saved]) ? saved : (detectLang() || 'en');
+  S.lang = (saved && STR[saved]) ? saved : 'ko';  // first run: Korean (airport guide switches via top-right button)
   applyLang();
   S.token = await loadToken();
   if (S.token) {
@@ -1324,9 +1414,6 @@ function screenLoading() { return h('div', { class: 'screen' }, h('div', { class
     }
     return;
   }
-  if (!saved && !detectLang()) { go(screenLanguage); return; }
-  if (!saved) lsSet('hands_lang', S.lang);
-  if (needsInstallStep() && params.get('src') !== 'home') { go(screenInstall, 'first'); return; }
   go(screenWelcome);
 })();
 </script>
