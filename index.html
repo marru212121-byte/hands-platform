@@ -546,6 +546,19 @@ my:'နိုင်ငံကူးလက်မှတ်၏ ဓာတ်ပုံ
 si:'ගමන් බලපත්‍රයේ ඡායාරූපය ඇති පිටුව රූපය පිරෙන සේ ළඟින් ගන්න. දිලිසීම වළක්වන්න.',
 bn:'পাসপোর্টের ছবির পাতাটি কাছ থেকে তুলুন যাতে পুরো ছবি জুড়ে থাকে। আলোর ঝলক এড়িয়ে চলুন।'};
 for (const l in STR_PASS2) STR[l].passHint2 = STR_PASS2[l];
+const STR_PASS3 = {
+en:'Turn your phone sideways (landscape) so the passport looks big and clear.',
+ko:'휴대폰을 가로로 눕혀서 여권이 크고 잘 보이게 찍어 주세요.',
+vi:'Xoay ngang điện thoại để hộ chiếu hiện to và rõ.',
+id:'Putar ponsel ke posisi mendatar agar paspor terlihat besar dan jelas.',
+th:'หมุนโทรศัพท์เป็นแนวนอน เพื่อให้หนังสือเดินทางเห็นใหญ่และชัด',
+tl:'Ipahiga ang phone (landscape) para malaki at malinaw ang pasaporte.',
+ne:'फोनलाई तेर्सो पारेर राहदानी ठूलो र प्रस्ट देखिने गरी खिच्नुहोस्।',
+km:'បង្វិលទូរស័ព្ទផ្តេក ដើម្បីឱ្យលិខិតឆ្លងដែនមើលឃើញធំ និងច្បាស់។',
+my:'ဖုန်းကို အလျားလိုက် လှည့်ပြီး နိုင်ငံကူးလက်မှတ် ကြီးကြီး ရှင်းရှင်း မြင်ရအောင် ရိုက်ပါ။',
+si:'ගමන් බලපත්‍රය විශාලව හා පැහැදිලිව පෙනෙන සේ දුරකථනය තිරස්ව හරවා ගන්න.',
+bn:'ফোনটি আড়াআড়ি ঘুরিয়ে নিন, যাতে পাসপোর্ট বড় ও পরিষ্কার দেখা যায়।'};
+for (const l in STR_PASS3) STR[l].passSideways = STR_PASS3[l];
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -1145,7 +1158,7 @@ function screenInfo() {
     ? h('div', { class: 'note', role: 'status' }, h('span', { class: 'spin', style: 'width:20px;height:20px;border-width:3px;flex:none' }), h('div', { text: t('mrzReading') }))
     : st === 'ok' ? h('div', { class: 'note', role: 'status' }, icon('check'), h('div', { text: t('mrzOk') }))
     : h('div', { class: 'note warn', role: 'status' }, icon('info'), h('div', { text: t('mrzFail') }));
-  return h('div', { class: 'screen' }, topbar(() => go(screenPreview, 'passport')),
+  return h('div', { class: 'screen' }, topbar(() => go(screenCamera, 'passport')),
     h('div', { class: 'content' },
       progress(2),
       h('h1', { text: t('infoTitle') }),
@@ -1169,13 +1182,14 @@ function screenPassShot() {
       if (window.createImageBitmap) { src = await createImageBitmap(f, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(f)); w = src.width; hgt = src.height; }
       else { src = await loadImg(URL.createObjectURL(f)); w = src.naturalWidth; hgt = src.naturalHeight; }
       S.passport = await compress(src, w, hgt, { sx: 0, sy: 0, sw: w, sh: hgt, max: 2000 });
-      go(screenPreview, 'passport');
+      go(screenInfo);  // straight on — reading starts on the info screen, no extra 'use this photo' tap
     } catch (err) { toast(t('errImage')); }
   } });
   return h('div', { class: 'screen' }, topbar(() => go(screenPerm)),
     h('div', { class: 'content' },
       progress(2),
       h('h1', { text: t('passTitle') }),
+      h('div', { class: 'note', role: 'note' }, icon('info'), h('div', { text: t('passSideways') })),
       h('p', { class: 'lead', text: t('passHint2') }),
       h('div', { class: 'pass-illus', 'aria-hidden': 'true' }, h('div', { class: 'pi-photo' }), h('div', { class: 'pi-lines' }, h('i'), h('i'), h('i')), h('div', { class: 'pi-mrz' }, h('i'), h('i')))),
     h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => file.click() }, icon('cam'), t('openFile'))),
