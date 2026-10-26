@@ -152,8 +152,8 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .cam video.mirror{transform:scaleX(-1)}
 .guide{position:absolute;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 200vmax rgba(0,0,0,.55);border:3px solid rgba(255,255,255,.95);pointer-events:none}
 .guide.face{top:48%;width:78%;aspect-ratio:3/4;border-radius:50%}
-.guide.pass{top:48%;width:90%;aspect-ratio:1.42;border-radius:14px}
-.guide.pass::after{content:"";position:absolute;left:6%;top:14%;width:28%;height:62%;border:2px dashed rgba(255,255,255,.55);border-radius:6px}
+.guide.pass{top:50%;width:min(86%,calc(66vh / 1.42));aspect-ratio:1/1.42;border-radius:14px}
+.guide.pass::after{content:"";position:absolute;left:14%;top:6%;width:62%;height:28%;border:2px dashed rgba(255,255,255,.55);border-radius:6px}
 .cam-top{position:absolute;left:0;right:0;top:0;padding:calc(8px + var(--sat)) 12px 20px;background:linear-gradient(rgba(0,0,0,.72),rgba(0,0,0,0))}
 .cam-top .row{display:flex;align-items:center;justify-content:space-between}
 .cam-top .iconbtn{color:#fff}
@@ -330,7 +330,7 @@ anyway:'Continue in browser',install:'Install app',infoTitle:'Your information',
 fPhone:'Korean phone number',fPhoneHint:'Enter it if you have one. Otherwise leave it empty.',fPassport:'Passport number',fBirth:'Date of birth',fCompany:'Workplace / company',fEmergency:'Emergency contact (name and phone)',
 agreeTitle:'Agreement',agreeAll:'Agree to all',cTerms:'Terms of service',cPrivacy:'Collection and use of personal information',cSensitive:'Face and passport photos (sensitive information)',cSensitiveD:'Used only by the company manager to confirm your identity.',
 cLocation:'Collection and use of location',cLocationD:'Recorded when you open the app, send an inquiry or press SOS. Only the company manager can see it, for your safety and work management.',cMarketing:'Notices and benefits',view:'View',next:'Continue',
-selfieTitle:'Photo of your face',selfieHint:'Fit your face inside the oval. Remove hat and glasses.',passTitle:'Photo of your passport',passHint:'Fit the photo page inside the frame. Avoid glare.',retake:'Retake',usePhoto:'Use this photo',camFail:'The camera could not open.',openFile:'Use phone camera',
+selfieTitle:'Photo of your face',selfieHint:'Fit your face inside the oval. Remove hat and glasses.',passTitle:'Photo of your passport',passHint:'Turn the passport sideways and fill the frame with the photo page. Avoid glare.',retake:'Retake',usePhoto:'Use this photo',camFail:'The camera could not open.',openFile:'Use phone camera',
 sending:'Sending',doneTitle:'Registration complete',hello:'Hello',
 sosHold:'Press and hold for 2 seconds',sosSent:'Help request sent',sosNotified:'The manager has been notified.',sosRecorded:'Your request was recorded. If it is urgent, call 119.',sosFail:'Not sent. Try again.',retry:'Try again',call119:'Call 119',rescuers:'Show this to rescuers',back:'Back',
 okBtn:'I’m OK today',okDone:'Checked in today',okHint:'Tap once a day so the manager knows you are safe.',lastCheck:'Last check-in',places:'Nearby places',
@@ -346,7 +346,7 @@ anyway:'브라우저에서 계속하기',install:'앱 설치',infoTitle:'내 정
 fPhone:'한국 전화번호',fPhoneHint:'있으면 적어 주세요. 없으면 비워 두세요.',fPassport:'여권번호',fBirth:'생년월일',fCompany:'근무처 / 회사',fEmergency:'비상 연락처 (이름, 전화)',
 agreeTitle:'약관 동의',agreeAll:'전체 동의',cTerms:'이용약관',cPrivacy:'개인정보 수집·이용',cSensitive:'얼굴·여권 사진 등 민감정보 처리',cSensitiveD:'사진은 회사 관리자가 본인 확인에만 사용합니다.',
 cLocation:'위치정보 수집·이용',cLocationD:'앱을 열 때, 문의를 보낼 때, SOS를 누를 때 위치가 기록됩니다. 회사 관리자만 볼 수 있으며 안전과 근무 관리에 사용합니다.',cMarketing:'공지·혜택 알림',view:'보기',next:'다음',
-selfieTitle:'얼굴 사진',selfieHint:'타원 안에 얼굴을 맞추세요. 모자와 안경은 벗어 주세요.',passTitle:'여권 사진',passHint:'사진이 있는 면을 틀 안에 맞추세요. 빛 반사를 피하세요.',retake:'다시 찍기',usePhoto:'이 사진 사용',camFail:'카메라를 열 수 없습니다.',openFile:'휴대폰 카메라로 찍기',
+selfieTitle:'얼굴 사진',selfieHint:'타원 안에 얼굴을 맞추세요. 모자와 안경은 벗어 주세요.',passTitle:'여권 사진',passHint:'여권을 옆으로 돌려 사진 면을 틀에 꽉 차게 맞추세요. 빛 반사를 피하세요.',retake:'다시 찍기',usePhoto:'이 사진 사용',camFail:'카메라를 열 수 없습니다.',openFile:'휴대폰 카메라로 찍기',
 sending:'보내는 중',doneTitle:'가입 완료',hello:'안녕하세요',
 sosHold:'2초간 길게 누르세요',sosSent:'도움 요청을 보냈습니다',sosNotified:'관리자에게 알렸습니다.',sosRecorded:'요청이 기록되었습니다. 급하면 119에 전화하세요.',sosFail:'보내지 못했습니다. 다시 시도하세요.',retry:'다시 시도',call119:'119에 전화',rescuers:'구조대원에게 보여 주세요',back:'돌아가기',
 okBtn:'오늘 괜찮아요',okDone:'오늘 확인 완료',okHint:'하루 한 번 눌러 관리자에게 안전을 알려 주세요.',lastCheck:'마지막 확인',places:'주변 장소',
@@ -362,7 +362,7 @@ anyway:'Tiếp tục trên trình duyệt',install:'Cài đặt ứng dụng',in
 fPhone:'Số điện thoại',fPhoneHint:'Chưa có số Hàn Quốc? Hãy để trống.',fPassport:'Số hộ chiếu',fBirth:'Ngày sinh',fCompany:'Nơi làm việc / công ty',fEmergency:'Liên hệ khẩn cấp (tên và số điện thoại)',
 agreeTitle:'Điều khoản đồng ý',agreeAll:'Đồng ý tất cả',cTerms:'Điều khoản sử dụng',cPrivacy:'Thu thập và sử dụng thông tin cá nhân',cSensitive:'Ảnh khuôn mặt và hộ chiếu (thông tin nhạy cảm)',cSensitiveD:'Chỉ người quản lý của công ty dùng để xác minh danh tính của bạn.',
 cLocation:'Thu thập và sử dụng vị trí',cLocationD:'Vị trí được ghi lại khi bạn mở ứng dụng, nhấn “Tôi ổn” hoặc nhấn SOS. Chỉ người quản lý của công ty xem được, nhằm đảm bảo an toàn và quản lý công việc.',cMarketing:'Thông báo và ưu đãi',view:'Xem',next:'Tiếp tục',
-selfieTitle:'Chụp ảnh khuôn mặt',selfieHint:'Đặt khuôn mặt vào trong khung bầu dục. Bỏ mũ và kính.',passTitle:'Chụp ảnh hộ chiếu',passHint:'Đặt trang có ảnh vào trong khung. Tránh bị lóa.',retake:'Chụp lại',usePhoto:'Dùng ảnh này',camFail:'Không mở được camera.',openFile:'Dùng camera điện thoại',
+selfieTitle:'Chụp ảnh khuôn mặt',selfieHint:'Đặt khuôn mặt vào trong khung bầu dục. Bỏ mũ và kính.',passTitle:'Chụp ảnh hộ chiếu',passHint:'Xoay ngang hộ chiếu và đặt trang có ảnh vừa khít khung. Tránh bị lóa.',retake:'Chụp lại',usePhoto:'Dùng ảnh này',camFail:'Không mở được camera.',openFile:'Dùng camera điện thoại',
 sending:'Đang gửi',doneTitle:'Đăng ký hoàn tất',hello:'Xin chào',
 sosHold:'Nhấn giữ 2 giây',sosSent:'Đã gửi yêu cầu trợ giúp',sosNotified:'Đã báo cho người quản lý.',sosRecorded:'Yêu cầu đã được ghi lại. Nếu khẩn cấp, hãy gọi 119.',sosFail:'Chưa gửi được. Hãy thử lại.',retry:'Thử lại',call119:'Gọi 119',rescuers:'Đưa màn hình này cho nhân viên cứu hộ',back:'Quay lại',
 okBtn:'Hôm nay tôi ổn',okDone:'Hôm nay đã báo an toàn',okHint:'Nhấn mỗi ngày một lần để người quản lý biết bạn an toàn.',lastCheck:'Lần báo gần nhất',places:'Địa điểm gần đây',
@@ -378,7 +378,7 @@ anyway:'Lanjut di browser',install:'Pasang aplikasi',infoTitle:'Data Anda',req:'
 fPhone:'Nomor telepon',fPhoneHint:'Belum punya nomor Korea? Kosongkan saja.',fPassport:'Nomor paspor',fBirth:'Tanggal lahir',fCompany:'Tempat kerja / perusahaan',fEmergency:'Kontak darurat (nama dan telepon)',
 agreeTitle:'Persetujuan',agreeAll:'Setujui semua',cTerms:'Ketentuan layanan',cPrivacy:'Pengumpulan dan penggunaan data pribadi',cSensitive:'Foto wajah dan paspor (data sensitif)',cSensitiveD:'Hanya digunakan oleh manajer perusahaan untuk memastikan identitas Anda.',
 cLocation:'Pengumpulan dan penggunaan lokasi',cLocationD:'Lokasi dicatat saat Anda membuka aplikasi, menekan “Saya baik-baik saja”, atau menekan SOS. Hanya manajer perusahaan yang dapat melihatnya, untuk keselamatan dan pengelolaan kerja.',cMarketing:'Pengumuman dan manfaat',view:'Lihat',next:'Lanjut',
-selfieTitle:'Foto wajah',selfieHint:'Posisikan wajah di dalam oval. Lepaskan topi dan kacamata.',passTitle:'Foto paspor',passHint:'Posisikan halaman foto di dalam bingkai. Hindari pantulan cahaya.',retake:'Foto ulang',usePhoto:'Pakai foto ini',camFail:'Kamera tidak dapat dibuka.',openFile:'Pakai kamera ponsel',
+selfieTitle:'Foto wajah',selfieHint:'Posisikan wajah di dalam oval. Lepaskan topi dan kacamata.',passTitle:'Foto paspor',passHint:'Putar paspor ke samping dan isi bingkai dengan halaman foto. Hindari pantulan cahaya.',retake:'Foto ulang',usePhoto:'Pakai foto ini',camFail:'Kamera tidak dapat dibuka.',openFile:'Pakai kamera ponsel',
 sending:'Mengirim',doneTitle:'Pendaftaran selesai',hello:'Halo',
 sosHold:'Tekan dan tahan 2 detik',sosSent:'Permintaan bantuan terkirim',sosNotified:'Manajer sudah diberi tahu.',sosRecorded:'Permintaan Anda sudah tercatat. Jika mendesak, telepon 119.',sosFail:'Belum terkirim. Coba lagi.',retry:'Coba lagi',call119:'Telepon 119',rescuers:'Tunjukkan ini kepada petugas penyelamat',back:'Kembali',
 okBtn:'Hari ini saya baik-baik saja',okDone:'Sudah lapor hari ini',okHint:'Ketuk sekali sehari agar manajer tahu Anda aman.',lastCheck:'Lapor terakhir',places:'Tempat terdekat',
@@ -394,7 +394,7 @@ anyway:'ทำต่อในเบราว์เซอร์',install:'ติ�
 fPhone:'หมายเลขโทรศัพท์',fPhoneHint:'ยังไม่มีเบอร์เกาหลี เว้นว่างไว้ได้',fPassport:'เลขหนังสือเดินทาง',fBirth:'วันเกิด',fCompany:'สถานที่ทำงาน / บริษัท',fEmergency:'ผู้ติดต่อฉุกเฉิน (ชื่อและเบอร์โทร)',
 agreeTitle:'ข้อตกลง',agreeAll:'ยอมรับทั้งหมด',cTerms:'ข้อกำหนดการใช้บริการ',cPrivacy:'การเก็บและใช้ข้อมูลส่วนบุคคล',cSensitive:'รูปใบหน้าและหนังสือเดินทาง (ข้อมูลอ่อนไหว)',cSensitiveD:'ผู้จัดการของบริษัทใช้เพื่อยืนยันตัวตนของคุณเท่านั้น',
 cLocation:'การเก็บและใช้ข้อมูลตำแหน่ง',cLocationD:'ตำแหน่งจะถูกบันทึกเมื่อคุณเปิดแอป กด “ฉันสบายดี” หรือกด SOS เฉพาะผู้จัดการของบริษัทเท่านั้นที่ดูได้ เพื่อความปลอดภัยและการจัดการงาน',cMarketing:'ประกาศและสิทธิประโยชน์',view:'ดู',next:'ถัดไป',
-selfieTitle:'ถ่ายรูปใบหน้า',selfieHint:'วางใบหน้าให้อยู่ในวงรี ถอดหมวกและแว่นตา',passTitle:'ถ่ายรูปหนังสือเดินทาง',passHint:'วางหน้าที่มีรูปให้อยู่ในกรอบ หลีกเลี่ยงแสงสะท้อน',retake:'ถ่ายใหม่',usePhoto:'ใช้รูปนี้',camFail:'เปิดกล้องไม่ได้',openFile:'ใช้กล้องโทรศัพท์',
+selfieTitle:'ถ่ายรูปใบหน้า',selfieHint:'วางใบหน้าให้อยู่ในวงรี ถอดหมวกและแว่นตา',passTitle:'ถ่ายรูปหนังสือเดินทาง',passHint:'หมุนหนังสือเดินทางตะแคงข้าง แล้ววางหน้าที่มีรูปให้เต็มกรอบ หลีกเลี่ยงแสงสะท้อน',retake:'ถ่ายใหม่',usePhoto:'ใช้รูปนี้',camFail:'เปิดกล้องไม่ได้',openFile:'ใช้กล้องโทรศัพท์',
 sending:'กำลังส่ง',doneTitle:'สมัครเรียบร้อย',hello:'สวัสดี',
 sosHold:'กดค้างไว้ 2 วินาที',sosSent:'ส่งคำขอความช่วยเหลือแล้ว',sosNotified:'แจ้งผู้จัดการแล้ว',sosRecorded:'บันทึกคำขอแล้ว หากเร่งด่วนให้โทร 119',sosFail:'ส่งไม่สำเร็จ ลองอีกครั้ง',retry:'ลองอีกครั้ง',call119:'โทร 119',rescuers:'แสดงหน้านี้ให้เจ้าหน้าที่กู้ภัย',back:'กลับ',
 okBtn:'วันนี้ฉันสบายดี',okDone:'วันนี้แจ้งแล้ว',okHint:'แตะวันละครั้งเพื่อให้ผู้จัดการรู้ว่าคุณปลอดภัย',lastCheck:'แจ้งล่าสุด',places:'สถานที่ใกล้เคียง',
@@ -410,7 +410,7 @@ anyway:'Ituloy sa browser',install:'I-install ang app',infoTitle:'Ang iyong impo
 fPhone:'Numero ng telepono',fPhoneHint:'Wala pang Korean number? Iwanang blangko.',fPassport:'Numero ng pasaporte',fBirth:'Petsa ng kapanganakan',fCompany:'Trabaho / kumpanya',fEmergency:'Emergency contact (pangalan at numero)',
 agreeTitle:'Pagsang-ayon',agreeAll:'Sumang-ayon sa lahat',cTerms:'Mga tuntunin ng serbisyo',cPrivacy:'Pagkolekta at paggamit ng personal na impormasyon',cSensitive:'Larawan ng mukha at pasaporte (sensitibong impormasyon)',cSensitiveD:'Gagamitin lamang ng manager ng kumpanya para kumpirmahin ang iyong pagkakakilanlan.',
 cLocation:'Pagkolekta at paggamit ng lokasyon',cLocationD:'Itinatala ang lokasyon kapag binuksan mo ang app, pinindot ang “Okay ako”, o pinindot ang SOS. Ang manager lang ng kumpanya ang makakakita nito, para sa iyong kaligtasan at pamamahala ng trabaho.',cMarketing:'Mga abiso at benepisyo',view:'Tingnan',next:'Magpatuloy',
-selfieTitle:'Larawan ng iyong mukha',selfieHint:'Ilagay ang mukha sa loob ng oval. Alisin ang sombrero at salamin.',passTitle:'Larawan ng iyong pasaporte',passHint:'Ilagay ang pahinang may larawan sa loob ng frame. Iwasan ang silaw.',retake:'Kunan ulit',usePhoto:'Gamitin ang larawang ito',camFail:'Hindi mabuksan ang camera.',openFile:'Gamitin ang camera ng phone',
+selfieTitle:'Larawan ng iyong mukha',selfieHint:'Ilagay ang mukha sa loob ng oval. Alisin ang sombrero at salamin.',passTitle:'Larawan ng iyong pasaporte',passHint:'Iikot nang patagilid ang pasaporte at punuin ang frame ng pahinang may larawan. Iwasan ang silaw.',retake:'Kunan ulit',usePhoto:'Gamitin ang larawang ito',camFail:'Hindi mabuksan ang camera.',openFile:'Gamitin ang camera ng phone',
 sending:'Ipinapadala',doneTitle:'Tapos na ang registration',hello:'Kumusta',
 sosHold:'Pindutin nang 2 segundo',sosSent:'Naipadala ang paghingi ng tulong',sosNotified:'Naabisuhan na ang manager.',sosRecorded:'Naitala ang iyong kahilingan. Kung apurahan, tumawag sa 119.',sosFail:'Hindi naipadala. Subukan ulit.',retry:'Subukan ulit',call119:'Tumawag sa 119',rescuers:'Ipakita ito sa mga rescuer',back:'Bumalik',
 okBtn:'Okay ako ngayon',okDone:'Naka-check in na ngayon',okHint:'I-tap isang beses kada araw para malaman ng manager na ligtas ka.',lastCheck:'Huling check-in',places:'Mga lugar sa malapit',
@@ -426,7 +426,7 @@ anyway:'ब्राउजरमै जारी राख्नुहोस्'
 fPhone:'फोन नम्बर',fPhoneHint:'कोरियाली नम्बर छैन भने खाली छोड्नुहोस्।',fPassport:'राहदानी नम्बर',fBirth:'जन्म मिति',fCompany:'कार्यस्थल / कम्पनी',fEmergency:'आपतकालीन सम्पर्क (नाम र फोन)',
 agreeTitle:'सहमति',agreeAll:'सबैमा सहमत',cTerms:'सेवाका सर्तहरू',cPrivacy:'व्यक्तिगत जानकारी संकलन र प्रयोग',cSensitive:'अनुहार र राहदानीको फोटो (संवेदनशील जानकारी)',cSensitiveD:'कम्पनीका व्यवस्थापकले तपाईंको पहिचान पुष्टि गर्न मात्र प्रयोग गर्छन्।',
 cLocation:'स्थान जानकारी संकलन र प्रयोग',cLocationD:'तपाईंले एप खोल्दा, “म ठीक छु” थिच्दा वा SOS थिच्दा स्थान रेकर्ड हुन्छ। सुरक्षा र काम व्यवस्थापनका लागि कम्पनीका व्यवस्थापकले मात्र हेर्न सक्छन्।',cMarketing:'सूचना र सुविधा',view:'हेर्नुहोस्',next:'अगाडि बढ्नुहोस्',
-selfieTitle:'अनुहारको फोटो',selfieHint:'अनुहार अण्डाकार घेराभित्र राख्नुहोस्। टोपी र चस्मा फुकाल्नुहोस्।',passTitle:'राहदानीको फोटो',passHint:'फोटो भएको पाना फ्रेमभित्र राख्नुहोस्। चमक नपर्ने गरी खिच्नुहोस्।',retake:'फेरि खिच्नुहोस्',usePhoto:'यो फोटो प्रयोग गर्नुहोस्',camFail:'क्यामेरा खुलेन।',openFile:'फोनको क्यामेरा प्रयोग गर्नुहोस्',
+selfieTitle:'अनुहारको फोटो',selfieHint:'अनुहार अण्डाकार घेराभित्र राख्नुहोस्। टोपी र चस्मा फुकाल्नुहोस्।',passTitle:'राहदानीको फोटो',passHint:'राहदानीलाई छेउतिर घुमाएर फोटो भएको पाना फ्रेमभरि मिलाउनुहोस्। चमक नपर्ने गरी खिच्नुहोस्।',retake:'फेरि खिच्नुहोस्',usePhoto:'यो फोटो प्रयोग गर्नुहोस्',camFail:'क्यामेरा खुलेन।',openFile:'फोनको क्यामेरा प्रयोग गर्नुहोस्',
 sending:'पठाउँदै',doneTitle:'दर्ता पूरा भयो',hello:'नमस्ते',
 sosHold:'२ सेकेन्ड थिचिराख्नुहोस्',sosSent:'मद्दतको अनुरोध पठाइयो',sosNotified:'व्यवस्थापकलाई जानकारी दिइयो।',sosRecorded:'तपाईंको अनुरोध रेकर्ड भयो। जरुरी भए 119 मा फोन गर्नुहोस्।',sosFail:'पठाउन सकिएन। फेरि प्रयास गर्नुहोस्।',retry:'फेरि प्रयास',call119:'119 मा फोन',rescuers:'यो उद्धारकर्तालाई देखाउनुहोस्',back:'फिर्ता',
 okBtn:'आज म ठीक छु',okDone:'आज जानकारी दिइसकियो',okHint:'तपाईं सुरक्षित हुनुहुन्छ भनी व्यवस्थापकलाई थाहा दिन दिनमा एक पटक थिच्नुहोस्।',lastCheck:'अन्तिम जानकारी',places:'नजिकका ठाउँहरू',
@@ -442,7 +442,7 @@ anyway:'បន្តក្នុងកម្មវិធីរុករក',inst
 fPhone:'លេខទូរស័ព្ទ',fPhoneHint:'បើមិនទាន់មានលេខកូរ៉េ សូមទុកឱ្យនៅទទេ។',fPassport:'លេខលិខិតឆ្លងដែន',fBirth:'ថ្ងៃខែឆ្នាំកំណើត',fCompany:'កន្លែងធ្វើការ / ក្រុមហ៊ុន',fEmergency:'ទំនាក់ទំនងបន្ទាន់ (ឈ្មោះ និងលេខទូរស័ព្ទ)',
 agreeTitle:'ការយល់ព្រម',agreeAll:'យល់ព្រមទាំងអស់',cTerms:'លក្ខខណ្ឌប្រើប្រាស់',cPrivacy:'ការប្រមូល និងប្រើប្រាស់ព័ត៌មានផ្ទាល់ខ្លួន',cSensitive:'រូបថតមុខ និងលិខិតឆ្លងដែន (ព័ត៌មានរសើប)',cSensitiveD:'ប្រើដោយអ្នកគ្រប់គ្រងក្រុមហ៊ុនតែប៉ុណ្ណោះ ដើម្បីបញ្ជាក់អត្តសញ្ញាណរបស់អ្នក។',
 cLocation:'ការប្រមូល និងប្រើប្រាស់ទីតាំង',cLocationD:'ទីតាំងត្រូវបានកត់ត្រា ពេលអ្នកបើកកម្មវិធី ចុច “ខ្ញុំសុខសប្បាយ” ឬចុច SOS។ មានតែអ្នកគ្រប់គ្រងក្រុមហ៊ុនទេដែលអាចមើលបាន ដើម្បីសុវត្ថិភាព និងការគ្រប់គ្រងការងារ។',cMarketing:'សេចក្តីជូនដំណឹង និងអត្ថប្រយោជន៍',view:'មើល',next:'បន្ត',
-selfieTitle:'ថតរូបមុខ',selfieHint:'ដាក់មុខនៅក្នុងរង្វង់។ ដោះមួក និងវ៉ែនតា។',passTitle:'ថតលិខិតឆ្លងដែន',passHint:'ដាក់ទំព័ររូបថតនៅក្នុងស៊ុម។ ជៀសវាងពន្លឺចាំង។',retake:'ថតម្តងទៀត',usePhoto:'ប្រើរូបនេះ',camFail:'មិនអាចបើកកាមេរ៉ាបានទេ។',openFile:'ប្រើកាមេរ៉ាទូរស័ព្ទ',
+selfieTitle:'ថតរូបមុខ',selfieHint:'ដាក់មុខនៅក្នុងរង្វង់។ ដោះមួក និងវ៉ែនតា។',passTitle:'ថតលិខិតឆ្លងដែន',passHint:'បង្វិលលិខិតឆ្លងដែនទៅចំហៀង ហើយដាក់ទំព័ររូបថតឱ្យពេញស៊ុម។ ជៀសវាងពន្លឺចាំង។',retake:'ថតម្តងទៀត',usePhoto:'ប្រើរូបនេះ',camFail:'មិនអាចបើកកាមេរ៉ាបានទេ។',openFile:'ប្រើកាមេរ៉ាទូរស័ព្ទ',
 sending:'កំពុងផ្ញើ',doneTitle:'ការចុះឈ្មោះបានបញ្ចប់',hello:'សួស្តី',
 sosHold:'ចុចឱ្យជាប់ ២ វិនាទី',sosSent:'បានផ្ញើសំណើសុំជំនួយ',sosNotified:'បានជូនដំណឹងដល់អ្នកគ្រប់គ្រងហើយ។',sosRecorded:'សំណើរបស់អ្នកត្រូវបានកត់ត្រា។ បើបន្ទាន់ សូមទូរស័ព្ទទៅ 119។',sosFail:'មិនទាន់ផ្ញើបានទេ។ សូមព្យាយាមម្តងទៀត។',retry:'ព្យាយាមម្តងទៀត',call119:'ទូរស័ព្ទទៅ 119',rescuers:'បង្ហាញនេះដល់អ្នកសង្គ្រោះ',back:'ត្រឡប់ក្រោយ',
 okBtn:'ថ្ងៃនេះខ្ញុំសុខសប្បាយ',okDone:'ថ្ងៃនេះបានរាយការណ៍រួច',okHint:'ចុចម្តងក្នុងមួយថ្ងៃ ដើម្បីឱ្យអ្នកគ្រប់គ្រងដឹងថាអ្នកមានសុវត្ថិភាព។',lastCheck:'រាយការណ៍ចុងក្រោយ',places:'ទីកន្លែងនៅជិត',
@@ -458,7 +458,7 @@ anyway:'ဘရောက်ဆာတွင် ဆက်လုပ်ရန်',ins
 fPhone:'ဖုန်းနံပါတ်',fPhoneHint:'ကိုရီးယားနံပါတ် မရှိသေးပါက ချန်ထားပါ။',fPassport:'ပတ်စ်ပို့ နံပါတ်',fBirth:'မွေးသက္ကရာဇ်',fCompany:'အလုပ်ခွင် / ကုမ္ပဏီ',fEmergency:'အရေးပေါ်ဆက်သွယ်ရန် (အမည်နှင့် ဖုန်း)',
 agreeTitle:'သဘောတူညီချက်',agreeAll:'အားလုံး သဘောတူသည်',cTerms:'ဝန်ဆောင်မှု စည်းကမ်းချက်များ',cPrivacy:'ကိုယ်ရေးအချက်အလက် စုဆောင်းခြင်းနှင့် အသုံးပြုခြင်း',cSensitive:'မျက်နှာနှင့် ပတ်စ်ပို့ ဓာတ်ပုံ (အထိခိုက်လွယ်သော အချက်အလက်)',cSensitiveD:'ကုမ္ပဏီ မန်နေဂျာက သင့်အထောက်အထား စစ်ဆေးရန်အတွက်သာ အသုံးပြုသည်။',
 cLocation:'တည်နေရာ စုဆောင်းခြင်းနှင့် အသုံးပြုခြင်း',cLocationD:'အက်ပ်ဖွင့်သည့်အခါ၊ “ကျွန်ုပ် အဆင်ပြေသည်” ကို နှိပ်သည့်အခါ သို့မဟုတ် SOS နှိပ်သည့်အခါ တည်နေရာကို မှတ်တမ်းတင်သည်။ ဘေးကင်းရေးနှင့် အလုပ်စီမံခန့်ခွဲမှုအတွက် ကုမ္ပဏီ မန်နေဂျာသာ ကြည့်နိုင်သည်။',cMarketing:'အသိပေးချက်နှင့် အကျိုးခံစားခွင့်များ',view:'ကြည့်ရန်',next:'ဆက်သွားရန်',
-selfieTitle:'မျက်နှာဓာတ်ပုံ',selfieHint:'မျက်နှာကို ဘဲဥပုံအတွင်း ထားပါ။ ဦးထုပ်နှင့် မျက်မှန် ချွတ်ပါ။',passTitle:'ပတ်စ်ပို့ ဓာတ်ပုံ',passHint:'ဓာတ်ပုံပါသော စာမျက်နှာကို ဘောင်အတွင်း ထားပါ။ အလင်းပြန်ခြင်းကို ရှောင်ပါ။',retake:'ပြန်ရိုက်ရန်',usePhoto:'ဤဓာတ်ပုံကို သုံးမည်',camFail:'ကင်မရာ ဖွင့်၍မရပါ။',openFile:'ဖုန်းကင်မရာ သုံးရန်',
+selfieTitle:'မျက်နှာဓာတ်ပုံ',selfieHint:'မျက်နှာကို ဘဲဥပုံအတွင်း ထားပါ။ ဦးထုပ်နှင့် မျက်မှန် ချွတ်ပါ။',passTitle:'ပတ်စ်ပို့ ဓာတ်ပုံ',passHint:'နိုင်ငံကူးလက်မှတ်ကို ဘေးတိုက်လှည့်ပြီး ဓာတ်ပုံပါသော စာမျက်နှာကို ဘောင်ပြည့် ထားပါ။ အလင်းပြန်ခြင်းကို ရှောင်ပါ။',retake:'ပြန်ရိုက်ရန်',usePhoto:'ဤဓာတ်ပုံကို သုံးမည်',camFail:'ကင်မရာ ဖွင့်၍မရပါ။',openFile:'ဖုန်းကင်မရာ သုံးရန်',
 sending:'ပို့နေသည်',doneTitle:'စာရင်းသွင်းခြင်း ပြီးပါပြီ',hello:'မင်္ဂလာပါ',
 sosHold:'၂ စက္ကန့် ဖိထားပါ',sosSent:'အကူအညီတောင်းခံချက် ပို့ပြီးပါပြီ',sosNotified:'မန်နေဂျာထံ အသိပေးပြီးပါပြီ။',sosRecorded:'သင့်တောင်းခံချက်ကို မှတ်တမ်းတင်ပြီးပါပြီ။ အရေးပေါ်ဖြစ်ပါက 119 ကို ခေါ်ပါ။',sosFail:'မပို့နိုင်ပါ။ ထပ်ကြိုးစားပါ။',retry:'ထပ်ကြိုးစားရန်',call119:'119 ကို ခေါ်ရန်',rescuers:'ကယ်ဆယ်ရေးသမားများကို ဤစာမျက်နှာ ပြပါ',back:'နောက်သို့',
 okBtn:'ဒီနေ့ ကျွန်ုပ် အဆင်ပြေသည်',okDone:'ဒီနေ့ အသိပေးပြီး',okHint:'သင် ဘေးကင်းကြောင်း မန်နေဂျာသိစေရန် တစ်နေ့တစ်ကြိမ် နှိပ်ပါ။',lastCheck:'နောက်ဆုံး အသိပေးချိန်',places:'အနီးအနားရှိ နေရာများ',
@@ -474,7 +474,7 @@ anyway:'බ්‍රවුසරයේම ඉදිරියට යන්න',in
 fPhone:'දුරකථන අංකය',fPhoneHint:'කොරියානු අංකයක් තවම නැත්නම් හිස්ව තබන්න.',fPassport:'ගමන් බලපත්‍ර අංකය',fBirth:'උපන් දිනය',fCompany:'සේවා ස්ථානය / සමාගම',fEmergency:'හදිසි සම්බන්ධතාව (නම සහ දුරකථනය)',
 agreeTitle:'එකඟතාව',agreeAll:'සියල්ලට එකඟ වෙමි',cTerms:'සේවා කොන්දේසි',cPrivacy:'පුද්ගලික තොරතුරු එකතු කිරීම සහ භාවිතය',cSensitive:'මුහුණේ සහ ගමන් බලපත්‍රයේ ඡායාරූප (සංවේදී තොරතුරු)',cSensitiveD:'ඔබගේ අනන්‍යතාව තහවුරු කිරීමට පමණක් සමාගමේ කළමනාකරු භාවිත කරයි.',
 cLocation:'ස්ථාන තොරතුරු එකතු කිරීම සහ භාවිතය',cLocationD:'ඔබ යෙදුම විවෘත කරන විට, “මම හොඳින්” ඔබන විට හෝ SOS ඔබන විට ස්ථානය සටහන් වේ. ආරක්ෂාව සහ වැඩ කළමනාකරණය සඳහා සමාගමේ කළමනාකරුට පමණක් බැලිය හැක.',cMarketing:'දැනුම්දීම් සහ ප්‍රතිලාභ',view:'බලන්න',next:'ඉදිරියට',
-selfieTitle:'මුහුණේ ඡායාරූපය',selfieHint:'මුහුණ ඕවලාකාරය තුළ තබන්න. තොප්පිය සහ කණ්ණාඩි ඉවත් කරන්න.',passTitle:'ගමන් බලපත්‍රයේ ඡායාරූපය',passHint:'ඡායාරූපය ඇති පිටුව රාමුව තුළ තබන්න. දිලිසීම වළක්වන්න.',retake:'නැවත ගන්න',usePhoto:'මෙම ඡායාරූපය භාවිත කරන්න',camFail:'කැමරාව විවෘත කළ නොහැක.',openFile:'දුරකථන කැමරාව භාවිත කරන්න',
+selfieTitle:'මුහුණේ ඡායාරූපය',selfieHint:'මුහුණ ඕවලාකාරය තුළ තබන්න. තොප්පිය සහ කණ්ණාඩි ඉවත් කරන්න.',passTitle:'ගමන් බලපත්‍රයේ ඡායාරූපය',passHint:'ගමන් බලපත්‍රය පැත්තට හරවා ඡායාරූපය ඇති පිටුව රාමුව පිරෙන සේ තබන්න. දිලිසීම වළක්වන්න.',retake:'නැවත ගන්න',usePhoto:'මෙම ඡායාරූපය භාවිත කරන්න',camFail:'කැමරාව විවෘත කළ නොහැක.',openFile:'දුරකථන කැමරාව භාවිත කරන්න',
 sending:'යවමින්',doneTitle:'ලියාපදිංචිය සම්පූර්ණයි',hello:'ආයුබෝවන්',
 sosHold:'තත්පර 2ක් ඔබාගෙන සිටින්න',sosSent:'උදව් ඉල්ලීම යවන ලදී',sosNotified:'කළමනාකරුට දැනුම් දෙන ලදී.',sosRecorded:'ඔබගේ ඉල්ලීම සටහන් විය. හදිසි නම් 119 අමතන්න.',sosFail:'යැවීමට නොහැකි විය. නැවත උත්සාහ කරන්න.',retry:'නැවත උත්සාහ කරන්න',call119:'119 අමතන්න',rescuers:'මෙය ගලවා ගැනීමේ නිලධාරීන්ට පෙන්වන්න',back:'ආපසු',
 okBtn:'අද මම හොඳින්',okDone:'අද දැනුම් දී ඇත',okHint:'ඔබ ආරක්ෂිත බව කළමනාකරුට දැනගැනීමට දිනකට වරක් ඔබන්න.',lastCheck:'අවසන් දැනුම්දීම',places:'අවට ස්ථාන',
@@ -490,7 +490,7 @@ anyway:'ব্রাউজারেই চালিয়ে যান',install:
 fPhone:'ফোন নম্বর',fPhoneHint:'এখনও কোরিয়ান নম্বর না থাকলে খালি রাখুন।',fPassport:'পাসপোর্ট নম্বর',fBirth:'জন্ম তারিখ',fCompany:'কর্মস্থল / কোম্পানি',fEmergency:'জরুরি যোগাযোগ (নাম ও ফোন)',
 agreeTitle:'সম্মতি',agreeAll:'সবগুলোতে সম্মত',cTerms:'সেবার শর্তাবলি',cPrivacy:'ব্যক্তিগত তথ্য সংগ্রহ ও ব্যবহার',cSensitive:'মুখ ও পাসপোর্টের ছবি (সংবেদনশীল তথ্য)',cSensitiveD:'শুধু কোম্পানির ম্যানেজার আপনার পরিচয় নিশ্চিত করতে ব্যবহার করেন।',
 cLocation:'অবস্থান তথ্য সংগ্রহ ও ব্যবহার',cLocationD:'আপনি অ্যাপ খুললে, “আমি ভালো আছি” চাপলে বা SOS চাপলে অবস্থান রেকর্ড হয়। নিরাপত্তা ও কাজ ব্যবস্থাপনার জন্য শুধু কোম্পানির ম্যানেজার দেখতে পারেন।',cMarketing:'বিজ্ঞপ্তি ও সুবিধা',view:'দেখুন',next:'এগিয়ে যান',
-selfieTitle:'মুখের ছবি',selfieHint:'মুখ ডিম্বাকৃতির ভেতরে রাখুন। টুপি ও চশমা খুলুন।',passTitle:'পাসপোর্টের ছবি',passHint:'ছবির পাতাটি ফ্রেমের ভেতরে রাখুন। আলোর ঝলক এড়িয়ে চলুন।',retake:'আবার তুলুন',usePhoto:'এই ছবি ব্যবহার করুন',camFail:'ক্যামেরা খোলা যায়নি।',openFile:'ফোনের ক্যামেরা ব্যবহার করুন',
+selfieTitle:'মুখের ছবি',selfieHint:'মুখ ডিম্বাকৃতির ভেতরে রাখুন। টুপি ও চশমা খুলুন।',passTitle:'পাসপোর্টের ছবি',passHint:'পাসপোর্টটি পাশে ঘুরিয়ে ছবির পাতাটি পুরো ফ্রেমে বসান। আলোর ঝলক এড়িয়ে চলুন।',retake:'আবার তুলুন',usePhoto:'এই ছবি ব্যবহার করুন',camFail:'ক্যামেরা খোলা যায়নি।',openFile:'ফোনের ক্যামেরা ব্যবহার করুন',
 sending:'পাঠানো হচ্ছে',doneTitle:'নিবন্ধন সম্পন্ন',hello:'হ্যালো',
 sosHold:'২ সেকেন্ড চেপে ধরে রাখুন',sosSent:'সাহায্যের অনুরোধ পাঠানো হয়েছে',sosNotified:'ম্যানেজারকে জানানো হয়েছে।',sosRecorded:'আপনার অনুরোধ রেকর্ড হয়েছে। জরুরি হলে 119-এ ফোন করুন।',sosFail:'পাঠানো যায়নি। আবার চেষ্টা করুন।',retry:'আবার চেষ্টা করুন',call119:'119-এ ফোন করুন',rescuers:'উদ্ধারকর্মীদের এটি দেখান',back:'ফিরে যান',
 okBtn:'আজ আমি ভালো আছি',okDone:'আজ জানানো হয়েছে',okHint:'আপনি নিরাপদ আছেন জানাতে দিনে একবার চাপুন।',lastCheck:'শেষ জানানো',places:'কাছাকাছি জায়গা',
@@ -1027,19 +1027,27 @@ function parseMRZ(text) {
     // name: SURNAME<<GIVEN<NAMES<<<<  (cut at the first run of 3+ fillers; OCR sometimes reads < as K, C, L or E)
     const nm = toAlpha(l1.slice(5)).replace(/(<[KCLE<]{2,}|<<<).*$/, '');
     const [sur, giv] = nm.split('<<');
-    const name = [sur, giv].filter(Boolean).map((x) => x.replace(/</g, ' ').trim()).join(' ').replace(/\s+/g, ' ').trim();
+    // a lone trailing letter is almost always a misread filler ("AN<S<<<" → AN)
+    const clip = (x) => { const t = x.split('<').filter(Boolean); while (t.length > 1 && t[t.length - 1].length === 1) t.pop(); return t.join(' '); };
+    const name = [sur, giv].filter(Boolean).map(clip).join(' ').replace(/\s+/g, ' ').trim();
     if (name.length >= 2) out.name = name;
     if (out.passport_number || out.birth_date || out.name) return out;
   }
   return null;
 }
-async function mrzCanvas(url, cropBottom) {
-  const img = await loadImg(url);
+async function mrzCanvas(url, cropBottom, rot = 0) {
+  let img = await loadImg(url);
+  if (rot) {  // passport held sideways in the portrait frame → turn it back to landscape first
+    const r = document.createElement('canvas'); r.width = img.naturalHeight; r.height = img.naturalWidth;
+    const rc = r.getContext('2d'); rc.translate(r.width / 2, r.height / 2); rc.rotate(rot * Math.PI / 180); rc.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    img = { naturalWidth: r.width, naturalHeight: r.height, _c: r };
+  }
+  const src = img._c || img;
   const W = img.naturalWidth, H = img.naturalHeight;
   const sy = cropBottom ? Math.round(H * (1 - cropBottom)) : 0, sh = H - sy;
   const scale = Math.min(2.5, 1800 / W);
   const c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(sh * scale);
-  const ctx = c.getContext('2d'); ctx.drawImage(img, 0, sy, W, sh, 0, 0, c.width, c.height);
+  const ctx = c.getContext('2d'); ctx.drawImage(src, 0, sy, W, sh, 0, 0, c.width, c.height);
   const d = ctx.getImageData(0, 0, c.width, c.height), px = d.data;
   let sum = 0; for (let i = 0; i < px.length; i += 4) { const g = (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114); px[i] = g; sum += g; }
   const mean = sum / (px.length / 4);
@@ -1054,8 +1062,12 @@ async function readMRZ(url) {
     await worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<', tessedit_pageseg_mode: '6' });
     // several crops; keep the first value found for each field, stop once everything is in
     const out = {};
-    for (const crop of [0.38, 0.55, 0.25, 0]) {
-      const { data } = await worker.recognize(await mrzCanvas(url, crop));
+    const im = await loadImg(url);
+    const tall = im.naturalHeight > im.naturalWidth;
+    const tries = (tall ? [[0.38, 90], [0.38, -90], [0.55, 90], [0.55, -90], [0, 90], [0, -90]] : [])
+      .concat([[0.38, 0], [0.55, 0], [0.25, 0], [0, 0]]);
+    for (const [crop, rot] of tries) {
+      const { data } = await worker.recognize(await mrzCanvas(url, crop, rot));
       const r = parseMRZ(data.text) || {};
       for (const k in r) if (!out[k]) out[k] = r[k];
       if (['name', 'passport_number', 'birth_date', 'country', 'gender'].every((k) => out[k])) break;
