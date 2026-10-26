@@ -138,8 +138,12 @@ module.exports = L.handler({
 
   async map(req) {
     await L.adminFromReq(req);
-    const rows = await db(`locations?select=member_id,lat,lng,accuracy,updated_at,sos_active,member_name,member_country`);
-    return { ok: true, locations: rows };
+    const [rows, mem] = await Promise.all([
+      db(`locations?select=member_id,lat,lng,accuracy,updated_at,sos_active,member_name,member_country`),
+      db(`members?select=id,company,watch`),
+    ]);
+    const byId = Object.fromEntries(mem.map(m => [m.id, m]));
+    return { ok: true, locations: rows.map(l => ({ ...l, company: (byId[l.member_id] || {}).company || null, watch: (byId[l.member_id] || {}).watch === true })) };
   },
 
   async logs(req) {

@@ -729,3 +729,11 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
   .tg-status .card-foot .btn { width: 100%; }
 }
 .tg-steps li > div, .tg-help { word-break: keep-all; }
+
+/* 국적·근무처 고르기, 지도 필터 */
+.select.sel-sm { height: 38px; font-size: 13px; max-width: 180px; }
+.map-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; padding: 0 16px; }
+.map-filters #mapSel { display: contents; }
+.map-filters .select.sel-sm { flex: 1 1 140px; max-width: none; }
+#mSel { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 768px) { .select.sel-sm { height: 44px; font-size: 15px; } #mSel { width: 100%; } #mSel .select { flex: 1; max-width: none; } }

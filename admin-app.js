@@ -102,6 +102,15 @@ function relText(s) {
   if (days < 365) return `${Math.floor(days / 30)}개월 전`;
   return `${Math.floor(days / 365)}년 전`;
 }
+// 국적·근무처 고르기 (있는 값만 보기로)
+const countrySelect = (id, rows, cur) => {
+  const codes = [...new Set(rows.map((r) => r).filter(Boolean))].sort((a, b) => countryName(a).localeCompare(countryName(b), 'ko'));
+  return html`<select class="select sel-sm" id="${id}" aria-label="국적 고르기"><option value="">국적 전체</option>${codes.map((c) => html`<option value="${c}" ${c === cur ? 'selected' : ''}>${countryName(c)}</option>`)}</select>`;
+};
+const companySelect = (id, rows, cur) => {
+  const names = [...new Set(rows.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko'));
+  return html`<select class="select sel-sm" id="${id}" aria-label="근무처 고르기"><option value="">근무처 전체</option>${names.map((c) => html`<option value="${c}" ${c === cur ? 'selected' : ''}>${c}</option>`)}</select>`;
+};
 // 위치 활성 = 최근 LOC_ACTIVE_HOURS 시간 안에 위치가 잡힌 근로자
 const LOC_ACTIVE_HOURS = 24;
 const locActive = (s) => { const d = toDate(s); return !!d && Date.now() - d.getTime() < LOC_ACTIVE_HOURS * 3600e3; };
@@ -140,7 +149,7 @@ async function api(action, { params = {}, body } = {}) {
 /* ───────── 상태 ───────── */
 const S = {
   admin: null, view: null, timers: [], sosPending: 0, firstPoll: true,
-  members: [], memberQuery: '', memberFilter: 'all', selectedId: null,
+  members: [], memberQuery: '', memberFilter: 'all', memberCountry: '', memberCompany: '', mapF: { country: '', company: '', watch: false, loc: false }, selectedId: null,
   sosFilter: 'pending', silentDays: 3, logAction: 'all',
   bigMap: null, miniMap: null, detail: null,
 };
@@ -475,6 +484,7 @@ function renderMembers() {
         <button data-f="all">전체 <span class="c" data-c="all"></span></button>
         <button data-f="loc" title="최근 ${LOC_ACTIVE_HOURS}시간 안에 위치가 잡힌 근로자">위치 활성 <span class="c" data-c="loc"></span></button>
       </div>
+      <span id="mSel"></span>
       <button class="chip chip-watch" id="mWatch" aria-pressed="false">${ico('eye', 'xs')}집중 관리 <span class="num" id="mWatchN"></span></button>
       <div class="right"><button class="btn btn-ghost btn-sm" id="mreload">${ico('refresh', 'sm')}새로고침</button></div>
     </div>
@@ -514,7 +524,11 @@ function drawMembers() {
   $$('#mfilter [data-c]').forEach((c) => { c.textContent = fmtNum(counts[c.dataset.c]); });
   const wb = $('#mWatch'); wb.classList.toggle('on', !!S.memberWatchOnly); wb.setAttribute('aria-pressed', String(!!S.memberWatchOnly));
   $('#mWatchN').textContent = fmtNum(all.filter((m) => m.watch === true).length);
+  setHTML($('#mSel'), html`${countrySelect('mCountry', all.map((m) => m.country), S.memberCountry)} ${companySelect('mCompany', all.map((m) => m.company), S.memberCompany)}`);
+  $('#mCountry').addEventListener('change', (e) => { S.memberCountry = e.target.value; drawMembers(); });
+  $('#mCompany').addEventListener('change', (e) => { S.memberCompany = e.target.value; drawMembers(); });
   const list = all.filter((m) => S.memberFilter === 'all' || locActive(m.location && m.location.updated_at))
+    .filter((m) => (!S.memberCountry || m.country === S.memberCountry) && (!S.memberCompany || m.company === S.memberCompany))
     .filter((m) => !S.memberWatchOnly || m.watch === true);
   setHTML($('#mbody'), html`${list.map((m) => {
     const sos = m.location && m.location.sos_active;
@@ -865,7 +879,7 @@ function createMap(el, engine, { zoom = 11, wheel = true } = {}) {
           infoOv.setPosition(pos); infoOv.setMap(map);
         };
         dom.addEventListener('click', (e) => { e.stopPropagation(); open(); });
-        return { open, focus(zl) { map.setLevel(lfZoomToKakao(zl)); map.setCenter(pos); open(); } };
+        return { open, focus(zl) { map.setLevel(lfZoomToKakao(zl)); map.setCenter(pos); open(); }, show(on) { ov.setMap(on ? map : null); } };
       },
       line(pts) { new K.Polyline({ map, path: pts.map((p) => new K.LatLng(p[0], p[1])), strokeWeight: 2, strokeColor: '#26437A', strokeOpacity: 0.55, strokeStyle: 'shortdash' }); },
       fit(pts, pad = 48, single = 15) {
@@ -886,7 +900,7 @@ function createMap(el, engine, { zoom = 11, wheel = true } = {}) {
       const h = size / 2;
       const mk = L.marker([lat, lng], { icon: L.divIcon({ className: '', html: `<div class="mk ${cls}"></div>`, iconSize: [size, size], iconAnchor: [h, h], popupAnchor: [0, -h] }), zIndexOffset: z, title: title || '' }).addTo(map);
       if (popup) mk.bindPopup(popup.s);
-      return { open() { mk.openPopup(); }, focus(zl) { map.setView(mk.getLatLng(), zl); mk.openPopup(); } };
+      return { open() { mk.openPopup(); }, focus(zl) { map.setView(mk.getLatLng(), zl); mk.openPopup(); }, show(on) { if (on) mk.addTo(map); else mk.remove(); } };
     },
     line(pts) { L.polyline(pts, { color: '#26437A', weight: 2, opacity: 0.5, dashArray: '4 4' }).addTo(map); },
     fit(pts, pad = 48, single = 15) {
@@ -930,6 +944,9 @@ async function renderMap() {
     <aside class="map-side">
       <div class="map-stats"><div><div class="l">위치 공유</div><div class="v" id="msTotal">-</div></div><div><div class="l">1시간 이내</div><div class="v" id="msOn">-</div></div><div><div class="l">SOS</div><div class="v" id="msSos">-</div></div></div>
       <label class="search">${ico('search')}<input id="mapq" type="search" placeholder="이름 검색" autocomplete="off" aria-label="지도 근로자 검색"></label>
+      <div class="map-filters"><span id="mapSel"></span>
+        <button class="chip" id="mfWatch" aria-pressed="false">집중 관리만</button>
+        <button class="chip" id="mfLoc" aria-pressed="false" title="최근 ${LOC_ACTIVE_HOURS}시간 안에 위치가 잡힌 근로자">위치 활성만</button></div>
       <ul class="map-list" id="mapList"></ul>
     </aside></div>`);
   const token = {}; S.mapToken = token;
@@ -964,7 +981,13 @@ async function renderMap() {
   map.fit(locs.map((l) => [l.lat, l.lng]), 48, 14);
   const drawList = () => {
     const q = $('#mapq').value.trim().toLowerCase();
-    const list = locs.filter((l) => !q || String(l.member_name || '').toLowerCase().includes(q));
+    const F = S.mapF;
+    const pass = (l) => (!F.country || l.member_country === F.country) && (!F.company || l.company === F.company)
+      && (!F.watch || l.watch === true) && (!F.loc || locActive(l.updated_at));
+    locs.forEach((l) => markers[l.member_id] && markers[l.member_id].show(pass(l)));
+    $('#mfWatch').classList.toggle('on', F.watch); $('#mfWatch').setAttribute('aria-pressed', String(F.watch));
+    $('#mfLoc').classList.toggle('on', F.loc); $('#mfLoc').setAttribute('aria-pressed', String(F.loc));
+    const list = locs.filter(pass).filter((l) => !q || String(l.member_name || '').toLowerCase().includes(q));
     setHTML($('#mapList'), list.length ? html`${list.map((l) => html`<li data-id="${l.member_id}"><span class="m-dot ${kind(l)}"></span>
       <div class="who"><b>${l.member_name || '이름 없음'}</b> <span class="muted">· ${countryName(l.member_country)}</span><div class="sub">${kind(l) === 'sos' ? 'SOS 요청 중 · ' : ''}${rel(l.updated_at)}</div></div>${ico('chevron', 'sm')}</li>`)}`
       : html`<li style="cursor:default">${emptyBox(q ? '검색 결과가 없습니다' : '위치를 공유한 근로자가 없습니다', '', 'pin')}</li>`);
@@ -975,6 +998,11 @@ async function renderMap() {
     }));
   };
   $('#mapq').addEventListener('input', drawList);
+  setHTML($('#mapSel'), html`${countrySelect('mfCountry', locs.map((l) => l.member_country), S.mapF.country)} ${companySelect('mfCompany', locs.map((l) => l.company), S.mapF.company)}`);
+  $('#mfCountry').addEventListener('change', (e) => { S.mapF.country = e.target.value; drawList(); });
+  $('#mfCompany').addEventListener('change', (e) => { S.mapF.company = e.target.value; drawList(); });
+  $('#mfWatch').addEventListener('click', () => { S.mapF.watch = !S.mapF.watch; drawList(); });
+  $('#mfLoc').addEventListener('click', () => { S.mapF.loc = !S.mapF.loc; drawList(); });
   drawList();
   setTimeout(() => { map.relayout(); if (S.mapFocus) focusMapMember(S.mapFocus); }, 150);
 }
