@@ -66,7 +66,7 @@ const hydrateIcons = (root = document) => $$('[data-i]', root).forEach((el) => {
 const COUNTRY = { vn: '베트남', th: '태국', id: '인도네시아', ph: '필리핀', np: '네팔', kh: '캄보디아', mm: '미얀마', lk: '스리랑카', bd: '방글라데시', other: '기타' };
 const LANG = { ko: '한국어', en: '영어', vi: '베트남어', th: '태국어', id: '인도네시아어', tl: '필리핀어', fil: '필리핀어', ne: '네팔어', km: '캄보디아어', my: '미얀마어', si: '싱할라어', ta: '타밀어', bn: '벵골어', uz: '우즈베크어', zh: '중국어' };
 const GENDER = { M: '남성', F: '여성', m: '남성', f: '여성', male: '남성', female: '여성' };
-const SOURCE = { app_open: '앱 실행', watch: '위치 추적', checkin: '안부 확인', sos: 'SOS' };
+const SOURCE = { app_open: '앱 실행', app_close: '앱 닫음', tap: '버튼 누름', watch: '위치 추적', checkin: '안부 확인', sos: 'SOS' };
 const ACTION = {
   view_member: ['근로자 정보 열람', 'navy'], update_member: ['근로자 정보 수정', 'warn'],
   relink_code: ['재연결 번호 발급', 'navy'], sos_resolve: ['SOS 처리', 'ok'], post_delete: ['게시글 삭제', 'danger'],
@@ -283,6 +283,7 @@ const VIEWS = {
   sos: { title: 'SOS', sub: '긴급 도움 요청을 확인하고 처리합니다. 30초마다 자동으로 갱신됩니다.', render: () => renderSos() },
   silent: { title: '미접속', sub: '일정 기간 앱을 열지 않은 근로자입니다. 직접 연락해 안부를 확인하세요.', render: () => renderSilent() },
   inquiries: { title: '문의', sub: '근로자가 앱에서 보낸 문의입니다. 답변은 근로자 앱에 표시됩니다.', render: () => renderInquiries() },
+  push: { title: '알림 보내기', sub: '근로자 휴대폰으로 알림을 보냅니다. 보낸 내용은 기록에 남습니다.', render: () => renderPush() },
   logs: { title: '열람 기록', sub: '관리자의 개인정보 열람·수정 내역입니다. 기록은 수정하거나 삭제할 수 없습니다.', render: () => renderLogs() },
 };
 function route() {
@@ -465,6 +466,7 @@ function renderMembers() {
         <button data-f="active">활성 <span class="c" data-c="active"></span></button>
         <button data-f="inactive">비활성 <span class="c" data-c="inactive"></span></button>
       </div>
+      <button class="chip chip-watch" id="mWatch" aria-pressed="false">${ico('eye', 'xs')}집중 관리 <span class="num" id="mWatchN"></span></button>
       <div class="right"><button class="btn btn-ghost btn-sm" id="mreload">${ico('refresh', 'sm')}새로고침</button></div>
     </div>
     <div class="table-wrap"><table class="data">
@@ -479,6 +481,7 @@ function renderMembers() {
     searchTimer = setTimeout(() => { S.memberQuery = input.value.trim(); loadMembers(); }, 300);
   });
   $$('#mfilter button').forEach((b) => b.addEventListener('click', () => { S.memberFilter = b.dataset.f; drawMembers(); }));
+  $('#mWatch').addEventListener('click', () => { S.memberWatchOnly = !S.memberWatchOnly; drawMembers(); });
   $('#mreload').addEventListener('click', () => loadMembers());
   loadMembers();
 }
@@ -501,11 +504,14 @@ function drawMembers() {
   counts.inactive = counts.all - counts.active;
   $$('#mfilter button').forEach((b) => b.classList.toggle('on', b.dataset.f === S.memberFilter));
   $$('#mfilter [data-c]').forEach((c) => { c.textContent = fmtNum(counts[c.dataset.c]); });
-  const list = all.filter((m) => S.memberFilter === 'all' || (S.memberFilter === 'active' ? m.is_active !== false : m.is_active === false));
+  const wb = $('#mWatch'); wb.classList.toggle('on', !!S.memberWatchOnly); wb.setAttribute('aria-pressed', String(!!S.memberWatchOnly));
+  $('#mWatchN').textContent = fmtNum(all.filter((m) => m.watch === true).length);
+  const list = all.filter((m) => S.memberFilter === 'all' || (S.memberFilter === 'active' ? m.is_active !== false : m.is_active === false))
+    .filter((m) => !S.memberWatchOnly || m.watch === true);
   setHTML($('#mbody'), html`${list.map((m) => {
     const sos = m.location && m.location.sos_active;
     return html`<tr class="clickable ${sos ? 'row-danger' : ''} ${S.selectedId === m.id ? 'selected' : ''}" data-id="${m.id}" tabindex="0">
-      <td class="card-title" data-label="이름"><div class="cell-main">${m.name || '-'}</div><div class="cell-sub num">여권 ${m.passport_number || '미등록'}</div></td>
+      <td class="card-title" data-label="이름"><div class="cell-main">${m.name || '-'}${m.watch === true ? html` <span class="badge watch" title="집중 관리: 앱을 열고 닫을 때 텔레그램 알림">집중</span>` : ''}</div><div class="cell-sub num">여권 ${m.passport_number || '미등록'}</div></td>
       <td data-label="국적">${flag(m.country)}</td>
       <td data-label="근무처"><div class="cell-clip" title="${m.company || ''}">${m.company || html`<span class="muted">미등록</span>`}</div></td>
       <td class="nowrap num" data-label="전화">${m.phone || html`<span class="muted">-</span>`}</td>
@@ -600,10 +606,17 @@ function drawDetail() {
     <div class="audit-note">${ico('eye', 'xs')}열람 기록이 남습니다. 업무 목적 외 열람·이용을 금지합니다.</div>
     <div class="panel-actions">
       ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
+      <button class="btn btn-secondary btn-sm" data-act="push">${ico('bell', 'sm')}알림 보내기</button>
       <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
       <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '비활성화' : '활성화'}</button>
     </div>
     <div class="panel-body">
+      <section class="sec watch-sec ${m.watch === true ? 'on' : ''}">
+        <div class="watch-row">
+          <div class="watch-text"><div class="watch-title">${ico('eye', 'sm')}집중 관리</div><div class="watch-desc">앱을 열고 닫을 때 텔레그램 알림</div></div>
+          <button type="button" class="switch" role="switch" aria-checked="${m.watch === true ? 'true' : 'false'}" aria-label="집중 관리" data-act="watch"><span class="switch-knob"></span></button>
+        </div>
+      </section>
       <section class="sec">
         <div class="sec-head"><h3>본인 확인 사진</h3><div class="right"><span id="photoLeft" class="num"></span><button class="btn btn-ghost btn-sm" data-act="reload">${ico('refresh', 'sm')}새로고침</button></div></div>
         <div class="sec-body"><div class="photos">${photo(ph.selfie, '얼굴 사진')}${photo(ph.passport, '여권 사진')}</div></div>
@@ -628,11 +641,11 @@ function drawDetail() {
 
       <section class="sec">
         <div class="sec-head"><h3>위치 기록</h3><div class="right">최근 ${fmtNum(hist.length)}건</div></div>
-        <div class="sec-body">${hist.length ? html`<div class="mini-map" id="miniMap"></div>
+        <div class="sec-body">${hist.length ? html`${lastLoc ? html`<div class="mini-map" id="miniMap"></div>` : ''}
           <table class="inner"><thead><tr><th>시각</th><th>경로</th><th>좌표</th><th class="right">정확도</th></tr></thead><tbody>
           ${hist.slice(0, 15).map((h) => html`<tr><td class="num nowrap">${fmtDT(h.recorded_at)}</td>
             <td>${h.source === 'sos' ? html`<span class="badge danger">SOS</span>` : html`<span class="badge">${SOURCE[h.source] || h.source || '-'}</span>`}</td>
-            <td>${gmaps(h.lat, h.lng) ? html`<a class="ext num" href="${gmaps(h.lat, h.lng)}" target="_blank" rel="noopener noreferrer">${coord(h.lat, h.lng)}${ico('external', 'xs')}</a>` : '-'}</td>
+            <td>${gmaps(h.lat, h.lng) ? html`<a class="ext num" href="${gmaps(h.lat, h.lng)}" target="_blank" rel="noopener noreferrer">${coord(h.lat, h.lng)}${ico('external', 'xs')}</a>` : html`<span class="muted">위치 없음</span>`}</td>
             <td class="num right nowrap">${h.accuracy != null ? `${Math.round(h.accuracy)}m` : '-'}</td></tr>`)}
           </tbody></table>${hist.length > 15 ? html`<div class="muted" style="font-size:12px;margin-top:8px">최근 15건만 표시합니다.</div>` : ''}`
           : emptyBox('위치 기록이 없습니다', '근로자가 앱에서 위치 공유를 허용하면 기록됩니다.', 'pin')}</div>
@@ -665,12 +678,29 @@ function drawDetail() {
 
   $$('[data-close]', p).forEach((b) => b.addEventListener('click', leavePanel));
   $('[data-act="reload"]', p).addEventListener('click', () => loadDetail(m.id, d.editing));
+  $('[data-act="push"]', p).addEventListener('click', () => {
+    S.pushPrefill = { id: m.id, name: m.name, country: m.country, phone: m.phone, company: m.company };
+    if (S.view === 'push') { S.view = null; } location.hash = '#/push';
+    if (S.view === null) route();
+  });
   $('[data-act="edit"]', p).addEventListener('click', () => { d.editing = true; drawInfo(); $('[data-act="edit"]', p).disabled = true; });
   $('[data-act="toggle"]', p).addEventListener('click', () => toggleActive(m));
+  $('[data-act="watch"]', p).addEventListener('click', async (e) => {
+    const sw = e.currentTarget; const next = m.watch !== true;
+    sw.disabled = true; sw.setAttribute('aria-checked', String(next)); sw.closest('.watch-sec').classList.toggle('on', next);
+    try {
+      await api('update', { body: { id: m.id, watch: next } });
+      m.watch = next; refreshMemberRow(m);
+      toast(next ? '집중 관리를 켰습니다. 앱을 열고 닫을 때 텔레그램으로 알려 드립니다.' : '집중 관리를 껐습니다.');
+    } catch (err) {
+      sw.setAttribute('aria-checked', String(!next)); sw.closest('.watch-sec').classList.toggle('on', !next);
+      toast(errText(err), 'err');
+    } finally { sw.disabled = false; }
+  });
   $$('[data-zoom]', p).forEach((b) => b.addEventListener('click', () => { if (!b.classList.contains('is-expired')) lightbox(b.dataset.zoom, b.dataset.label, m.name); }));
   bindInfo();
   tickPhotoExpiry();
-  if (hist.length) setTimeout(() => drawMiniMap(hist), 260);
+  if (lastLoc) setTimeout(() => drawMiniMap(hist), 260);
 }
 function infoList(m) {
   return html`<dl class="dl">
@@ -725,7 +755,7 @@ function bindInfo() {
 }
 function refreshMemberRow(m) {
   const row = S.members.find((x) => x.id === m.id);
-  if (row) { ['name', 'phone', 'company', 'is_active'].forEach((k) => { if (k in m) row[k] = m[k]; }); if (S.view === 'members') drawMembers(); }
+  if (row) { ['name', 'phone', 'company', 'is_active', 'watch'].forEach((k) => { if (k in m) row[k] = m[k]; }); if (S.view === 'members') drawMembers(); }
 }
 function toggleActive(m) {
   const active = m.is_active !== false;
@@ -1136,6 +1166,159 @@ function drawInquiries() {
   }));
 }
 
+/* ───────── 알림 보내기 ───────── */
+const pushTargetText = (t, names) => {
+  if (!t || t === 'all') return '전체';
+  if (t.startsWith('country:')) return `국적: ${countryName(t.slice(8))}`;
+  if (t.startsWith('member:')) { const id = t.slice(7); return `근로자: ${(names && names[id]) || '1명'}`; }
+  return t;
+};
+async function renderPush() {
+  const P = S.push = { target: 'all', country: '', member: null, subs: null };
+  if (S.pushPrefill) { P.target = 'member'; P.member = S.pushPrefill; S.pushPrefill = null; }
+  const v = $('#view');
+  setHTML(v, html`<div class="push-layout">
+    <div class="push-main">
+      <div class="push-summary card">
+        <span class="push-sum-ico">${ico('bell', 'lg')}</span>
+        <div><div class="push-sum-label">알림 받는 근로자</div><div class="push-sum-n"><b class="num" id="pushSubs">-</b> 명</div></div>
+        <div class="push-note">${ico('alert', 'xs')}아이폰은 홈 화면에 추가하고 알림을 허용한 근로자만 받습니다.</div>
+      </div>
+      <form class="card push-form" id="pushForm" novalidate>
+        <div class="card-head"><h2>새 알림</h2></div>
+        <div class="card-body push-fields">
+          <div class="field"><span class="field-label">대상</span>
+            <div class="seg push-target" id="pTarget">${[['all', '전체'], ['country', '국적 선택'], ['member', '근로자 한 명']].map(([k, l]) => html`<button type="button" data-t="${k}">${l}</button>`)}</div>
+          </div>
+          <div class="field" id="pCountryWrap"><span class="field-label">국적</span>
+            <select class="select" id="pCountry"><option value="">국적을 선택하세요</option>${Object.entries(COUNTRY).map(([k, l]) => html`<option value="${k}">${l}</option>`)}</select>
+          </div>
+          <div class="field" id="pMemberWrap"><span class="field-label">근로자</span>
+            <div id="pMemberChosen"></div>
+            <div class="picker" id="pPicker">
+              <label class="search">${ico('search')}<input id="pMemberQ" type="search" placeholder="이름·전화번호·여권번호·근무처 검색" autocomplete="off" aria-label="근로자 검색"></label>
+              <ul class="picker-list" id="pMemberList" hidden></ul>
+            </div>
+          </div>
+          <label class="field"><span class="field-label">제목 <span class="counter num" id="cTitle">0/80</span></span>
+            <input id="pTitle" maxlength="80" placeholder="예) 내일 오전 안전교육 안내" autocomplete="off"></label>
+          <label class="field"><span class="field-label">내용 <span class="counter num" id="cBody">0/300</span></span>
+            <textarea id="pBody" maxlength="300" rows="5" placeholder="근로자 휴대폰 알림에 표시될 내용입니다."></textarea></label>
+        </div>
+        <div class="card-foot push-foot"><span class="muted" id="pWho"></span><button type="submit" class="btn btn-primary" id="pSend">${ico('send', 'sm')}보내기</button></div>
+      </form>
+    </div>
+    <aside class="push-preview-wrap">
+      <div class="push-preview-label">휴대폰 미리보기</div>
+      <div class="phone-mock"><div class="phone-time num" id="pvClock"></div><div class="phone-date" id="pvDate"></div>
+        <div class="notif"><div class="notif-top"><span class="brand-mark notif-ico" aria-hidden="true"></span><span class="notif-app">HANDS</span><span class="notif-when">지금</span></div>
+          <div class="notif-title" id="pvTitle"></div><div class="notif-body" id="pvBody"></div></div>
+      </div>
+    </aside>
+  </div>
+  <section class="card" style="margin-top:24px">
+    <div class="card-head"><h2>보낸 기록</h2><span class="count" id="phCount"></span><div class="right"><button class="btn btn-ghost btn-sm" id="phReload">${ico('refresh', 'sm')}새로고침</button></div></div>
+    <div class="table-wrap auto"><table class="data"><thead><tr><th>보낸 시각</th><th>대상</th><th>제목·내용</th><th class="right">보냄</th><th class="right">실패</th><th>보낸 사람</th></tr></thead>
+      <tbody id="phBody">${loadingRows(6, 3)}</tbody></table><div id="phEmpty"></div></div>
+  </section>`);
+  const now = new Date();
+  $('#pvClock').textContent = fmtTime(now);
+  $('#pvDate').textContent = `${now.getMonth() + 1}월 ${now.getDate()}일 ${'일월화수목금토'[now.getDay()]}요일`;
+  const sync = () => {
+    $$('#pTarget button').forEach((b) => b.classList.toggle('on', b.dataset.t === P.target));
+    $('#pCountryWrap').hidden = P.target !== 'country';
+    $('#pMemberWrap').hidden = P.target !== 'member';
+    setHTML($('#pMemberChosen'), P.member ? html`<div class="chosen"><div><b>${P.member.name || '-'}</b> <span class="muted">· ${countryName(P.member.country)}${P.member.company ? ` · ${P.member.company}` : ''}</span><div class="cell-sub num">${P.member.phone || ''}</div></div><button type="button" class="icon-btn" id="pClear" aria-label="선택 해제">${ico('x', 'sm')}</button></div>` : '');
+    $('#pPicker').hidden = !!P.member;
+    if (P.member) $('#pClear').addEventListener('click', () => { P.member = null; sync(); $('#pMemberQ').focus(); });
+    const t = $('#pTitle').value, b = $('#pBody').value;
+    $('#cTitle').textContent = `${t.length}/80`; $('#cBody').textContent = `${b.length}/300`;
+    $('#pvTitle').textContent = t || '제목'; $('#pvBody').textContent = b || '내용이 여기에 표시됩니다.';
+    $('#pvTitle').classList.toggle('ph', !t); $('#pvBody').classList.toggle('ph', !b);
+    $('#pWho').textContent = P.target === 'all' ? `알림 받는 근로자 전체${P.subs != null ? ` ${fmtNum(P.subs)}명` : ''}`
+      : P.target === 'country' ? (P.country ? `${countryName(P.country)} 국적 근로자` : '국적을 선택하세요')
+      : (P.member ? `${P.member.name || '근로자'} 님 1명` : '근로자를 선택하세요');
+  };
+  $$('#pTarget button').forEach((b) => b.addEventListener('click', () => { P.target = b.dataset.t; sync(); }));
+  $('#pCountry').addEventListener('change', (e) => { P.country = e.target.value; sync(); });
+  $('#pTitle').addEventListener('input', sync); $('#pBody').addEventListener('input', sync);
+  let qt = null, qreq = 0;
+  $('#pMemberQ').addEventListener('input', (e) => {
+    clearTimeout(qt); const q = e.target.value.trim(); const list = $('#pMemberList');
+    if (!q) { list.hidden = true; return; }
+    qt = setTimeout(async () => {
+      const my = ++qreq;
+      try {
+        const j = await api('members', { params: { q } });
+        if (my !== qreq || S.view !== 'push') return;
+        const rows = (j.members || []).filter((m) => m.is_active !== false).slice(0, 8);
+        list.hidden = false;
+        setHTML(list, rows.length ? html`${rows.map((m) => html`<li><button type="button" data-pick="${m.id}"><b>${m.name || '-'}</b> <span class="muted">· ${countryName(m.country)}${m.company ? ` · ${m.company}` : ''}</span><span class="cell-sub num">${m.phone || ''}</span></button></li>`)}`
+          : html`<li class="picker-empty">검색 결과가 없습니다</li>`);
+        $$('[data-pick]', list).forEach((b) => b.addEventListener('click', () => {
+          const m = rows.find((x) => x.id === b.dataset.pick);
+          P.member = { id: m.id, name: m.name, country: m.country, phone: m.phone, company: m.company };
+          $('#pMemberQ').value = ''; list.hidden = true; sync();
+        }));
+      } catch (err) { if (my === qreq) toast(errText(err), 'err'); }
+    }, 300);
+  });
+  $('#pushForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = $('#pTitle').value.trim(), body = $('#pBody').value.trim();
+    if (P.target === 'country' && !P.country) { toast('국적을 선택해 주세요.', 'err'); return; }
+    if (P.target === 'member' && !P.member) { toast('알림을 받을 근로자를 선택해 주세요.', 'err'); return; }
+    if (!title) { toast('제목을 입력해 주세요.', 'err'); $('#pTitle').focus(); return; }
+    if (!body) { toast('내용을 입력해 주세요.', 'err'); $('#pBody').focus(); return; }
+    const who = P.target === 'all' ? (P.subs != null ? `${fmtNum(P.subs)}명에게 보냅니다.` : '알림 받는 근로자 전체에게 보냅니다.')
+      : P.target === 'country' ? `${countryName(P.country)} 국적 근로자 중 알림을 받는 사람에게 보냅니다.`
+      : `${P.member.name || '근로자'} 님 1명에게 보냅니다.`;
+    confirmDialog({
+      title: '알림을 보낼까요?', okLabel: '보내기',
+      details: html`<dl class="kv"><dt>대상</dt><dd>${P.target === 'all' ? '전체' : P.target === 'country' ? `국적: ${countryName(P.country)}` : `${P.member.name || '-'} · ${countryName(P.member.country)}`}</dd><dt>제목</dt><dd>${title}</dd><dt>내용</dt><dd style="white-space:pre-wrap">${body}</dd></dl>`,
+      message: who + ' 보낸 알림은 취소할 수 없습니다.',
+      run: async () => {
+        const payload = { target: P.target, title, body };
+        if (P.target === 'country') payload.country = P.country;
+        if (P.target === 'member') payload.member_id = P.member.id;
+        const r = await api('push_send', { body: payload });
+        toast(`보냄 ${fmtNum(r.sent)} · 실패 ${fmtNum(r.failed)}`, r.failed > 0 && !r.sent ? 'err' : '');
+        $('#pTitle').value = ''; $('#pBody').value = ''; sync();
+        loadPushHistory();
+      },
+    });
+  });
+  $('#phReload').addEventListener('click', loadPushHistory);
+  sync();
+  loadPushHistory();
+}
+async function loadPushHistory() {
+  try {
+    const j = await api('push_history');
+    if (S.view !== 'push') return;
+    stamp();
+    S.push.subs = Number(j.subscribed_members) || 0;
+    $('#pushSubs').textContent = fmtNum(S.push.subs);
+    const names = Object.fromEntries((S.members || []).map((m) => [m.id, m.name]));
+    if (S.push.member) names[S.push.member.id] = S.push.member.name;
+    const list = j.messages || [];
+    $('#phCount').textContent = `${fmtNum(list.length)}건`;
+    setHTML($('#phBody'), html`${list.map((m) => html`<tr>
+      <td class="nowrap card-title" data-label="보낸 시각"><span class="num cell-main">${fmtDT(m.created_at)}</span> <span class="muted" style="font-size:12px">${relText(m.created_at) || ''}</span></td>
+      <td class="nowrap" data-label="대상"><span class="badge ${m.target === 'all' ? 'navy' : ''}">${pushTargetText(m.target, names)}</span></td>
+      <td class="card-block" data-label="제목·내용"><div class="cell-main">${m.title || ''}</div><div class="post-body">${m.body || ''}</div></td>
+      <td class="num right" data-label="보냄">${fmtNum(m.sent)}</td>
+      <td class="num right" data-label="실패">${m.failed > 0 ? html`<span style="color:var(--red);font-weight:600">${fmtNum(m.failed)}</span>` : '0'}</td>
+      <td data-label="보낸 사람"><div class="cell-clip">${m.admin_email || '-'}</div></td>
+    </tr>`)}`);
+    setHTML($('#phEmpty'), list.length ? '' : emptyBox('보낸 알림이 없습니다', '', 'bell'));
+    const w = $('#pWho'); if (w && S.push.target === 'all') w.textContent = `알림 받는 근로자 전체 ${fmtNum(S.push.subs)}명`;
+  } catch (e) {
+    if (S.view !== 'push') return;
+    setHTML($('#phBody'), ''); setHTML($('#phEmpty'), errorBox(e)); bindRetry($('#phEmpty'), loadPushHistory);
+  }
+}
+
 /* ───────── 7. 열람 기록 ───────── */
 let logsCache = [];
 async function renderLogs() {
@@ -1178,7 +1361,7 @@ function drawLogs() {
 }
 
 /* ───────── 휴대폰 하단 탭·더보기 ───────── */
-const MORE_VIEWS = ['inquiries', 'qr', 'silent', 'logs'];
+const MORE_VIEWS = ['inquiries', 'push', 'qr', 'silent', 'logs'];
 function openMore() {
   $('#moreEmail').textContent = S.admin ? (S.admin.email || '') : '';
   $('#moreBack').hidden = false; $('#moreSheet').hidden = false;
