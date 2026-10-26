@@ -70,6 +70,7 @@ const SOURCE = { app_open: '앱 실행', app_close: '앱 닫음', tap: '버튼 �
 const ACTION = {
   view_member: ['근로자 정보 열람', 'navy'], update_member: ['근로자 정보 수정', 'warn'],
   relink_code: ['재연결 번호 발급', 'navy'], sos_resolve: ['SOS 처리', 'ok'], post_delete: ['게시글 삭제', 'danger'],
+  inquiry_reply: ['문의 답변 보냄', 'ok'], push_send: ['알림 보냄', 'navy'], telegram_set: ['텔레그램 받는 사람 변경', 'warn'], login: ['관리자 로그인', ''],
 };
 const CONSENT_ITEMS = [
   ['terms', '서비스 이용약관', true], ['privacy', '개인정보 수집·이용', true], ['sensitive', '민감정보(신분증·얼굴 사진) 처리', true],
@@ -101,6 +102,12 @@ function relText(s) {
   if (days < 365) return `${Math.floor(days / 30)}개월 전`;
   return `${Math.floor(days / 365)}년 전`;
 }
+// 위치 활성 = 최근 LOC_ACTIVE_HOURS 시간 안에 위치가 잡힌 근로자
+const LOC_ACTIVE_HOURS = 24;
+const locActive = (s) => { const d = toDate(s); return !!d && Date.now() - d.getTime() < LOC_ACTIVE_HOURS * 3600e3; };
+const locBadge = (s) => locActive(s)
+  ? html`<span class="badge ok" title="마지막 위치 ${fmtDT(s)}"><span class="d"></span>위치 활성</span>`
+  : html`<span class="badge off" title="${s ? '마지막 위치 ' + fmtDT(s) : '위치 기록 없음'}">위치 없음</span>`;
 const rel = (s, empty = '기록 없음') => { const t = relText(s); return t ? html`<span class="rel" title="${fmtDT(s)}">${t}</span>` : html`<span class="muted">${empty}</span>`; };
 const daysSince = (s) => { const d = toDate(s); return d ? Math.floor((Date.now() - d.getTime()) / 86400000) : null; };
 const isToday = (s) => { const d = toDate(s); if (!d) return false; const t = new Date(); return d.toDateString() === t.toDateString(); };
@@ -466,14 +473,13 @@ function renderMembers() {
       <label class="search">${ico('search')}<input id="mq" type="search" placeholder="이름·전화번호·여권번호·근무처 검색" value="${S.memberQuery}" autocomplete="off" aria-label="근로자 검색"></label>
       <div class="seg" id="mfilter" role="tablist">
         <button data-f="all">전체 <span class="c" data-c="all"></span></button>
-        <button data-f="active">활성 <span class="c" data-c="active"></span></button>
-        <button data-f="inactive">비활성 <span class="c" data-c="inactive"></span></button>
+        <button data-f="loc" title="최근 ${LOC_ACTIVE_HOURS}시간 안에 위치가 잡힌 근로자">위치 활성 <span class="c" data-c="loc"></span></button>
       </div>
       <button class="chip chip-watch" id="mWatch" aria-pressed="false">${ico('eye', 'xs')}집중 관리 <span class="num" id="mWatchN"></span></button>
       <div class="right"><button class="btn btn-ghost btn-sm" id="mreload">${ico('refresh', 'sm')}새로고침</button></div>
     </div>
     <div class="table-wrap"><table class="data">
-      <thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>전화</th><th>가입일</th><th>마지막 접속</th><th>상태</th></tr></thead>
+      <thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>전화</th><th>가입일</th><th>마지막 접속</th><th>위치</th></tr></thead>
       <tbody id="mbody">${loadingRows(7)}</tbody>
     </table><div id="mempty"></div></div>
     <div class="card-foot muted" id="mfoot">불러오는 중</div>
@@ -503,13 +509,12 @@ async function loadMembers() {
 }
 function drawMembers() {
   const all = S.members;
-  const counts = { all: all.length, active: all.filter((m) => m.is_active !== false).length };
-  counts.inactive = counts.all - counts.active;
+  const counts = { all: all.length, loc: all.filter((m) => locActive(m.location && m.location.updated_at)).length };
   $$('#mfilter button').forEach((b) => b.classList.toggle('on', b.dataset.f === S.memberFilter));
   $$('#mfilter [data-c]').forEach((c) => { c.textContent = fmtNum(counts[c.dataset.c]); });
   const wb = $('#mWatch'); wb.classList.toggle('on', !!S.memberWatchOnly); wb.setAttribute('aria-pressed', String(!!S.memberWatchOnly));
   $('#mWatchN').textContent = fmtNum(all.filter((m) => m.watch === true).length);
-  const list = all.filter((m) => S.memberFilter === 'all' || (S.memberFilter === 'active' ? m.is_active !== false : m.is_active === false))
+  const list = all.filter((m) => S.memberFilter === 'all' || locActive(m.location && m.location.updated_at))
     .filter((m) => !S.memberWatchOnly || m.watch === true);
   setHTML($('#mbody'), html`${list.map((m) => {
     const sos = m.location && m.location.sos_active;
@@ -520,7 +525,7 @@ function drawMembers() {
       <td class="nowrap num" data-label="전화">${m.phone || html`<span class="muted">-</span>`}</td>
       <td class="nowrap num" data-label="가입일">${fmtDate(m.created_at)}</td>
       <td class="nowrap" data-label="마지막 접속">${rel(m.last_seen_at)}</td>
-      <td class="nowrap" data-label="상태">${sos ? html`<span class="badge danger"><span class="d"></span>SOS</span> ` : ''}${m.is_active === false ? html`<span class="badge off">비활성</span>` : html`<span class="badge ok"><span class="d"></span>활성</span>`}</td>
+      <td class="nowrap" data-label="위치">${sos ? html`<span class="badge danger"><span class="d"></span>SOS</span> ` : ''}${locBadge(m.location && m.location.updated_at)}${m.is_active === false ? html` <span class="badge off">관리 중지</span>` : ''}</td>
     </tr>`;
   })}`);
   setHTML($('#mempty'), list.length ? '' : (S.memberQuery
@@ -601,7 +606,7 @@ function drawDetail() {
     <div class="panel-head">
       <button class="icon-btn back" data-close aria-label="목록으로">${ico('back')}</button>
       <div style="min-width:0;flex:1">
-        <div class="panel-name">${m.name || '-'} ${flag(m.country)} ${active ? html`<span class="badge ok"><span class="d"></span>활성</span>` : html`<span class="badge off">비활성</span>`}${pendingSos ? html` <span class="badge danger"><span class="d"></span>SOS 미처리</span>` : ''}</div>
+        <div class="panel-name">${m.name || '-'} ${flag(m.country)} ${locBadge(lastLoc && lastLoc.recorded_at)}${active ? '' : html` <span class="badge off">관리 중지</span>`}${pendingSos ? html` <span class="badge danger"><span class="d"></span>SOS 미처리</span>` : ''}</div>
         <div class="panel-meta num">${m.company || '근무처 미등록'} · ${m.phone || '전화 미등록'} · 가입 ${fmtDate(m.created_at)}</div>
       </div>
       <button class="icon-btn close" data-close aria-label="닫기">${ico('x')}</button>
@@ -611,7 +616,7 @@ function drawDetail() {
       ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
       <button class="btn btn-secondary btn-sm" data-act="push">${ico('bell', 'sm')}알림 보내기</button>
       <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
-      <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '비활성화' : '활성화'}</button>
+      <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '관리 중지' : '관리 다시 시작'}</button>
     </div>
     <div class="panel-body">
       <section class="sec watch-sec ${m.watch === true ? 'on' : ''}">
@@ -763,14 +768,14 @@ function refreshMemberRow(m) {
 function toggleActive(m) {
   const active = m.is_active !== false;
   confirmDialog({
-    title: active ? '근로자 계정을 비활성화할까요?' : '근로자 계정을 다시 활성화할까요?',
-    danger: active, okLabel: active ? '비활성화' : '활성화',
+    title: active ? '이 근로자 관리를 중지할까요?' : '이 근로자 관리를 다시 시작할까요?',
+    danger: active, okLabel: active ? '관리 중지' : '다시 시작',
     details: html`<dl class="kv"><dt>이름</dt><dd>${m.name || '-'}</dd><dt>국적</dt><dd>${countryName(m.country)}</dd><dt>근무처</dt><dd>${m.company || '-'}</dd></dl>`,
-    message: active ? '비활성화하면 현황 집계와 미접속 알림에서 제외됩니다. 퇴사·출국 등으로 관리 대상이 아닐 때 사용하세요.' : '다시 현황 집계와 미접속 알림에 포함됩니다.',
+    message: active ? '관리를 중지하면 현황 집계와 미접속 알림에서 제외됩니다. 퇴사·출국 등으로 관리 대상이 아닐 때 사용하세요.' : '다시 현황 집계와 미접속 알림에 포함됩니다.',
     run: async () => {
       await api('update', { body: { id: m.id, is_active: !active } });
       m.is_active = !active;
-      toast(active ? '비활성화했습니다.' : '활성화했습니다.');
+      toast(active ? '관리를 중지했습니다.' : '관리를 다시 시작했습니다.');
       drawDetail(); refreshMemberRow(m);
     },
   });
