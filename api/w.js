@@ -76,17 +76,18 @@ const WRN_TITLE = {
   si: (k, w) => `${WRN_NAME.si[k]} ${w ? 'අනතුරු ඇඟවීම' : 'අවධානය'}`,
   bn: (k, w) => `${WRN_NAME.bn[k]} ${w ? 'বিপদ সংকেত' : 'সতর্কতা'}`,
 };
+// 제목에 특보 이름이 이미 있으니 본문은 되풀이 없이 짧게 — 잠금화면 4줄 안에 [한국어] 줄까지 보이게 (10-27 밤 시안에서 잘림 확인)
 const WRN_BODY = {
-  en: (t) => `${t} has been issued for your area. Please be prepared. Check the weather in the app.`,
-  vi: (t) => `${t} đã được ban hành tại khu vực của bạn. Hãy chuẩn bị. Xem thời tiết trong ứng dụng.`,
-  id: (t) => `${t} telah dikeluarkan untuk wilayah Anda. Bersiaplah. Cek cuaca di aplikasi.`,
-  th: (t) => `มี${t}ในพื้นที่ของคุณ เตรียมตัวให้พร้อม ดูสภาพอากาศในแอป`,
-  tl: (t) => `May ${t} sa inyong lugar. Maghanda. Tingnan ang panahon sa app.`,
-  ne: (t) => `तपाईंको क्षेत्रमा ${t} जारी गरिएको छ। तयारी गर्नुहोस्। एपमा मौसम हेर्नुहोस्।`,
-  km: (t) => `មាន${t}នៅតំបន់របស់អ្នក។ សូមត្រៀមខ្លួន។ មើលអាកាសធាតុក្នុងកម្មវិធី។`,
-  my: (t) => `သင့်နေရာတွင် ${t} ထုတ်ပြန်ထားသည်။ ကြိုတင်ပြင်ဆင်ပါ။ အက်ပ်တွင် ရာသီဥတုကို ကြည့်ပါ။`,
-  si: (t) => `ඔබේ ප්‍රදේශයට ${t} නිකුත් කර ඇත. සූදානම් වන්න. යෙදුමේ කාලගුණය බලන්න.`,
-  bn: (t) => `আপনার এলাকায় ${t} জারি করা হয়েছে। প্রস্তুত থাকুন। অ্যাপে আবহাওয়া দেখুন।`,
+  en: 'Issued for your area. Please be prepared. Check the weather in the app.',
+  vi: 'Đã ban hành tại khu vực của bạn. Hãy chuẩn bị. Xem thời tiết trong ứng dụng.',
+  id: 'Berlaku di wilayah Anda. Bersiaplah. Cek cuaca di aplikasi.',
+  th: 'ประกาศในพื้นที่ของคุณ เตรียมตัวให้พร้อม ดูสภาพอากาศในแอป',
+  tl: 'Para sa inyong lugar. Maghanda. Tingnan ang panahon sa app.',
+  ne: 'तपाईंको क्षेत्रमा जारी। तयारी गर्नुहोस्। एपमा मौसम हेर्नुहोस्।',
+  km: 'សម្រាប់តំបន់របស់អ្នក។ សូមត្រៀមខ្លួន។ មើលអាកាសធាតុក្នុងកម្មវិធី។',
+  my: 'သင့်နေရာအတွက် ထုတ်ပြန်ထားသည်။ ကြိုတင်ပြင်ဆင်ပါ။ အက်ပ်တွင် ရာသီဥတုကို ကြည့်ပါ။',
+  si: 'ඔබේ ප්‍රදේශයට නිකුත් කර ඇත. සූදානම් වන්න. යෙදුමේ කාලගුණය බලන්න.',
+  bn: 'আপনার এলাকায় জারি করা হয়েছে। প্রস্তুত থাকুন। অ্যাপে আবহাওয়া দেখুন।',
 };
 // 시·도 이름(정식·줄임·옛 이름) → 줄인 이름 하나로
 const PROV = [['서울', '서울'], ['부산', '부산'], ['대구', '대구'], ['인천', '인천'], ['광주', '광주'], ['대전', '대전'], ['울산', '울산'], ['세종', '세종'], ['경기', '경기'], ['강원', '강원'],
@@ -166,13 +167,13 @@ async function wxFor(nx, ny) {
     for (const it of fc) {
       const k = it.fcstDate + it.fcstTime;
       (hours[k] = hours[k] || { date: it.fcstDate, time: it.fcstTime })[it.category] = it.fcstValue;
-      const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], pty: [], pop: 0, wav: null });
+      const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], skyAll: [], pty: [], pop: 0, wav: null });
       if (it.category === 'WAV' && +it.fcstValue > 0 && +it.fcstValue < 50) d.wav = Math.max(d.wav || 0, +it.fcstValue);  // 물결 높이(m) — 바다·해안 격자만 (사장님 10-27 바다 날씨)
       if (it.category === 'TMP') d.tmps.push(+it.fcstValue);
       if (it.category === 'TMN') d.tmn = +it.fcstValue;
       if (it.category === 'TMX') d.tmx = +it.fcstValue;
       if (it.category === 'POP') d.pop = Math.max(d.pop, +it.fcstValue);
-      if (it.category === 'SKY' && it.fcstTime >= '0900' && it.fcstTime <= '1800') d.sky.push(+it.fcstValue);
+      if (it.category === 'SKY') { d.skyAll.push(+it.fcstValue); if (it.fcstTime >= '0900' && it.fcstTime <= '1800') d.sky.push(+it.fcstValue); }  // 저녁엔 낮 예보가 없어 남은 시간으로 (총 검수 10-27: 18시 뒤 늘 맑음)
       if (it.category === 'PTY' && +it.fcstValue > 0) d.pty.push(+it.fcstValue);
     }
     const hl = Object.keys(hours).sort().map((k) => hours[k]);
@@ -180,7 +181,7 @@ async function wxFor(nx, ny) {
     const next = hl.filter((x) => x.date + x.time >= nowKey).filter((x) => x.TMP != null).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP, pcp: x.PCP, wav: x.WAV != null && +x.WAV > 0 && +x.WAV < 50 ? +x.WAV : null, wsd: x.WSD != null ? +x.WSD : null }));  // 글피까지 시간별 전부 (사장님 10-27: 내일·모레 눌러 시간별)
     const mode = (a) => a.length ? +Object.entries(a.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {})).sort((p, q) => q[1] - p[1])[0][0] : 1;
     const dl = Object.keys(days).sort().slice(0, 3).map((k) => { const d = days[k];
-      return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop, wav: d.wav }; });
+      return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky.length ? d.sky : d.skyAll), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop, wav: d.wav }; });
     wx = { at: now, out: {
       // 바다 한가운데 등 관측소가 없는 격자는 실황이 -999 → 예보 첫 시간 값으로 (10-27 시험에서 발견)
       now: (() => { const ok = (v) => v != null && +v > -90; const h0 = next[0] || {};
@@ -673,7 +674,7 @@ module.exports = L.handler({
       const kname = w.kind + (w.warn ? '경보' : '주의보'), ko = `${w.area}에 ${kname}가 내려졌습니다. 대비하세요. 앱에서 날씨를 확인하세요.`;
       const lang = WRN_TITLE[s.member.language] ? s.member.language : (s.member.language === 'ko' ? 'ko' : 'en');
       const title = lang === 'ko' ? kname : WRN_TITLE[lang](w.kind, w.warn);
-      const body = lang === 'ko' ? ko : WRN_BODY[lang](title) + '\n\n[한국어] ' + ko;
+      const body = lang === 'ko' ? ko : WRN_BODY[lang] + '\n\n[한국어] ' + ko;
       try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title, body, url: '/?wx=1' }), { TTL: 21600 }); sent++; count[w.key] = (count[w.key] || 0) + 1; done.add(s.member.id); }
       catch (e) { if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
     }

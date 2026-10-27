@@ -34,7 +34,7 @@ a{color:inherit}
 .ic{display:inline-flex;width:24px;height:24px;flex:none}
 .ic svg{width:100%;height:100%}
 .screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
-.content{flex:1;padding:8px 20px 28px}
+.content{flex:1;padding:8px 20px calc(28px + env(safe-area-inset-bottom))}
 .grow{flex:1}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
@@ -256,6 +256,7 @@ button.wxpick{font:inherit;font-size:15px;font-weight:600;color:var(--ink2);curs
 .wxd .mm span{color:var(--ink3);font-weight:500}
 .trbar{display:flex;align-items:center;gap:8px;margin:14px 0 12px}
 .trchip{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:14px;font-weight:650;font-size:15px;text-align:center}
+.trpick{cursor:pointer;color:inherit;font-family:inherit}.trpick .ic{width:16px;height:16px;opacity:.55}
 .trchip .flag{width:26px;height:18px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(20,40,75,.12)}
 .trswap{flex:none;background:var(--navy-bg);color:var(--navy);border-radius:12px}
 .trinput{min-height:120px;resize:vertical;font-size:18px;line-height:1.5}
@@ -888,6 +889,7 @@ const app = document.getElementById('app');
 function go(fn, ...args) {
   if (S.cleanup) { try { S.cleanup(); } catch (e) {} S.cleanup = null; }
   S.route = [fn, args];
+  document.querySelectorAll('.toast').forEach(n => n.remove());
   app.replaceChildren(fn(...args));
   window.scrollTo(0, 0);
 }
@@ -917,11 +919,11 @@ function langBtn() {
   return h('button', { class: 'langbtn', onclick: openLangSheet, 'aria-label': t('language') + ': ' + LANG_NAME[S.lang] },
     icon('globe'), h('span', { class: 't', text: LANG_NAME[S.lang] }), icon('chevDown', 'sm'));
 }
-function langList(onPick) {
-  return h('div', { class: 'langlist', role: 'list' }, LANGS.map(([c, n, e]) =>
-    h('button', { class: 'langrow' + (c === S.lang ? ' on' : ''), lang: c === 'tl' ? 'fil' : c, onclick: () => onPick(c) },
+function langList(onPick, cur = S.lang, noKo) {
+  return h('div', { class: 'langlist', role: 'list' }, LANGS.filter(([c]) => !(noKo && c === 'ko')).map(([c, n, e]) =>
+    h('button', { class: 'langrow' + (c === cur ? ' on' : ''), lang: c === 'tl' ? 'fil' : c, onclick: () => onPick(c) },
       h('img', { class: 'flag', src: '/flags/' + FLAG[c] + '.png', alt: '', width: '28', height: '20', loading: 'lazy' }),
-      h('span', { class: 'n', text: n }), c !== 'en' ? h('span', { class: 'e', text: e }) : null, c === S.lang ? icon('check') : null)));
+      h('span', { class: 'n', text: n }), c !== 'en' ? h('span', { class: 'e', text: e }) : null, c === cur ? icon('check') : null)));
 }
 function openLangSheet() {
   const close = () => scrim.remove();
@@ -933,11 +935,11 @@ function openLangSheet() {
 }
 
 /* ---------- common pieces ---------- */
-function topbar(back) {
+function topbar(back, noLang) {
   return h('header', { class: 'topbar' },
     back ? h('button', { class: 'iconbtn', onclick: back, 'aria-label': t('back') }, icon('back'))
          : h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), brandText()),
-    h('div', { class: 'grow' }), langBtn());
+    h('div', { class: 'grow' }), noLang ? null : langBtn());
 }
 function progress(n) { return h('div', { class: 'prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= n ? 'on' : '' }))); }
 function errText(code) {
@@ -1210,7 +1212,7 @@ function screenSignup() {
     if (!requiredOk()) return;
     try { if (pushSupported() && Notification.permission === 'default') await Promise.race([Notification.requestPermission(), new Promise(r => setTimeout(r, 10000))]); } catch (e) {}
     go(screenPerm);
-  } }, t('next'), icon('chevRight'));
+  } }, tk('next'), icon('chevRight'));
   const consentHost = h('div');
   const renderConsent = () => { consentHost.replaceChildren(consentBlock(renderConsent)); nextBtn.disabled = !requiredOk(); };
   renderConsent();
@@ -1516,7 +1518,7 @@ function screenSubmit() {
   const body = h('div', { class: 'center' },
     h('div', { class: 'badge wait' }, h('div', { class: 'spin' })),
     h('h1', { text: t('sending') }), h('div', { class: 'bar' }, bar), pct);
-  const root = h('div', { class: 'screen' }, topbar(null), body);
+  const root = h('div', { class: 'screen' }, topbar(null, true), body);  // 보내는 중 언어를 바꾸면 화면을 다시 그리며 가입이 두 번 나가서 언어 단추 뺌 (총 검수 10-27)
   const F = S.form;
   const payload = {
     name: F.name.trim(), country: F.country, phone: F.phone.trim() || null, passport_number: F.passport_number.trim().toUpperCase() || null,
@@ -1604,7 +1606,7 @@ function screenReconsent() {
     btn.disabled = true;
     try { await api('consent', { body: { consents: { ...S.consents } } }); S.profile.consent_current = true; cacheProfile(); goHome(); }
     catch (e) { btn.disabled = false; if (e.status !== 401) toast(errText(e.code)); }
-  } }, t('next'), icon('chevRight'));
+  } }, tk('next'), icon('chevRight'));
   const host = h('div');
   const render = () => { host.replaceChildren(consentBlock(render)); btn.disabled = !requiredOk(); };
   render();
@@ -1787,12 +1789,22 @@ function openWeather() { go(screenWeather); }
 /* ---------- 통역 (사장님 10-27): 근로자 말 ↔ 한국어, 하이쿠 ---------- */
 function screenTranslate() {
   const p = S.profile || {};
-  const mine = S.lang !== 'ko' ? S.lang : (p.language && p.language !== 'ko' ? p.language : (COUNTRY_LANG[p.country] || 'en'));
+  // 상대 말: 통역 화면에서 고른 말(사장님 10-27 밤) → 오른쪽 위 언어 → 가입 언어 → 나라 말. 한국어 쪽은 그대로
+  const mine = S.trLang || (S.lang !== 'ko' ? S.lang : (p.language && p.language !== 'ko' ? p.language : (COUNTRY_LANG[p.country] || 'en')));
   if (!S.trDir) S.trDir = { from: mine, to: 'ko' };
   if (S.trDir.from !== 'ko' && S.trDir.from !== mine) S.trDir = { from: mine, to: 'ko' };
   if (S.trDir.to !== 'ko' && S.trDir.to !== mine) S.trDir = { from: 'ko', to: mine };
-  const chip = (l) => h('span', { class: 'trchip' }, h('img', { class: 'flag', src: '/flags/' + FLAG[l] + '.png', alt: '' }), LANG_NAME[l]);
-  const ta = h('textarea', { class: 'input trinput', rows: '4', maxlength: '1000', placeholder: t('trPh'), lang: S.trDir.from === 'tl' ? 'fil' : S.trDir.from });
+  const pickTr = () => {  // 통역 상대 말만 바꿈 (앱 언어는 그대로)
+    const close = () => scrim.remove();
+    const scrim = h('div', { class: 'scrim', onclick: (e) => { if (e.target === scrim) close(); } },
+      h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('chooseLang') },
+        h('div', { class: 'grab' }), h('h2', { text: t('chooseLang') }),
+        langList((c) => { close(); const ko = S.trDir.from === 'ko'; S.trLang = c; S.trDir = ko ? { from: 'ko', to: c } : { from: c, to: 'ko' }; S.trText = ''; rerender(); }, mine, true)));
+    document.body.append(scrim);
+  };
+  const chip = (l) => l === 'ko' ? h('span', { class: 'trchip' }, h('img', { class: 'flag', src: '/flags/' + FLAG[l] + '.png', alt: '' }), LANG_NAME[l])
+    : h('button', { class: 'trchip trpick', type: 'button', onclick: pickTr }, h('img', { class: 'flag', src: '/flags/' + FLAG[l] + '.png', alt: '' }), LANG_NAME[l], icon('chevDown'));
+  const ta = h('textarea', { class: 'input trinput', rows: '4', maxlength: '1000', placeholder: (STR[S.trDir.from] && STR[S.trDir.from].trPh) || t('trPh'), lang: S.trDir.from === 'tl' ? 'fil' : S.trDir.from });
   ta.value = S.trText || '';
   ta.addEventListener('input', () => { S.trText = ta.value; });
   const out = h('div', { class: 'trout', hidden: true });
@@ -1860,10 +1872,17 @@ function screenWeather() {
   const box = h('div', {}, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
   let loc = 'en-US'; try { if (Intl.DateTimeFormat.supportedLocalesOf([LOCALE[S.lang]]).length) loc = LOCALE[S.lang]; } catch (e) {}
   let sel = null;
+  const choose = (v) => { lsSet('hands_wx_city', v); S.wxCache = null; box.replaceChildren(h('div', { class: 'loading' }, h('div', { class: 'spin' }))); load(); };
+  // 위치를 못 받으면 안내 글 아래에 시·도 목록을 바로 보여 줌 (총 검수 10-27: 막다른 화면이었음)
+  const noLoc = (msg) => box.replaceChildren(h('p', { class: 'lead', text: msg }),
+    h('div', { class: 'langlist', role: 'list' }, WX_CITIES.map((c) => h('button', { class: 'langrow wxrow', onclick: () => choose(c[1]) },
+      h('span', { class: 'wi2' }, icon('pin')), h('span', { class: 'n', text: cityName(c) })))));
   const show = (w) => {
     const [ck, ci] = wxKind(w.now.sky, w.now.pty);
     const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10).replace(/-/g, '');
-    const dayName = (d) => { const diff = Math.round((kstDate(d) - kstDate(today)) / 86400000); return t(['wxToday', 'wxTomorrow', 'wxDayAfter'][diff] || 'wxToday'); };
+    const dDiff = (d) => Math.round((kstDate(d) - kstDate(today)) / 86400000);
+    const dayName = (d) => t(['wxToday', 'wxTomorrow', 'wxDayAfter'][dDiff(d)]);
+    w = { ...w, days: w.days.filter((d) => dDiff(d.date) >= 0 && dDiff(d.date) <= 2) };  // 밤 11시 넘으면 내일부터 와서 「오늘」로 잘못 붙던 것 (총 검수 10-27)
     const rn = w.now.rn1 && w.now.rn1 !== '강수없음' ? String(w.now.rn1).replace('mm', '') + ' mm' : '0 mm';
     // 아래 날짜(오늘·내일·모레)를 누르면 그날 시간별 — 기온·비 확률·강수량 (사장님 10-27)
     if (!sel || !w.days.some((d) => d.date === sel)) sel = (w.days[0] || {}).date;
@@ -1875,11 +1894,10 @@ function screenWeather() {
     // 바다(물결): 기상청 단기예보가 바다·해안 격자에만 주는 물결 높이 — 있을 때만 보임
     const seaH = w.hours.filter((x) => x.date === sel && x.wav != null);
     const seaBox = seaH.length ? h('div', { class: 'wxsea' }, h('span', { class: 'si' }, icon('wave')), h('div', {},
-      h('b', { text: t('wxSea') }), h('div', { text: t('wxWave') + ' ' + Math.min(...seaH.map((x) => x.wav)) + '–' + Math.max(...seaH.map((x) => x.wav)) + 'm · ' + t('wxWind') + ' ' + Math.max(...seaH.map((x) => x.wsd || 0)) + 'm/s' }))) : null;
+      h('b', { text: t('wxSea') }), h('div', { text: t('wxWave') + ' ' + [...new Set([Math.min(...seaH.map((x) => x.wav)), Math.max(...seaH.map((x) => x.wav))])].join('–') + 'm · ' + t('wxWind') + ' ' + Math.max(...seaH.map((x) => x.wsd || 0)) + 'm/s' }))) : null;
     const cur = lsGet('hands_wx_city') || '';
     const city = WX_CITIES.find((x) => x[1] === cur);
     // 위치 고르기 창: 맨 위 「내 위치」(지도 앱 화살표 아이콘), 아래 시·도(선 핀) (사장님 10-27)
-    const choose = (v) => { lsSet('hands_wx_city', v); S.wxCache = null; box.replaceChildren(h('div', { class: 'loading' }, h('div', { class: 'spin' }))); load(); };
     const openPick = () => {
       const close = () => scrim.remove();
       const row = (v, ic, label, sub) => h('button', { class: 'langrow wxrow' + (v === cur ? ' on' : ''), onclick: () => { close(); choose(v); } },
@@ -1904,9 +1922,9 @@ function screenWeather() {
     const key = S.lang + '|' + (lsGet('hands_wx_city') || ''), c = S.wxCache;
     if (c && c.key === key && Date.now() - c.at < 20 * 60000) return show(c.w);  // 홈에서 미리 받은 것 바로
     const p = (await wxPos()) || await getPos(10000, false);
-    if (!p) return box.replaceChildren(h('p', { class: 'lead', text: t('wxNeedLoc') }));
+    if (!p) return noLoc(t('wxNeedLoc'));
     try { const w = await api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }); S.wxCache = { at: Date.now(), key, w }; show(w); }
-    catch (e) { box.replaceChildren(h('p', { class: 'lead', text: e.code === 'bad_location' ? t('wxNeedLoc') : errText(e.code) })); }
+    catch (e) { if (e.code === 'bad_location') noLoc(t('wxNeedLoc')); else box.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); }
   };
   load();
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('weather') }), box));
@@ -1931,7 +1949,7 @@ function fxFmt(v, code) {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: d }).format(v);
 }
 function screenFx() {
-  let cur = fxDefault(), side = 'krw', input = '10000', data = null;
+  let cur = fxDefault(), side = 'krw', input = '10000', data = null, fresh = true;  // fresh: 처음 값·바꿔 온 값은 숫자를 누르면 지우고 새로 (총 검수 10-27: 10000 뒤에 붙던 것)
   const amtK = h('span', { class: 'fxamt' }), amtF = h('span', { class: 'fxamt' });
   const flagF = h('img', { class: 'fl', alt: '' }), codeF = h('b'), nameF = h('span', { class: 'fxname' });
   const note = h('p', { class: 'fxnote' }, h('div', { class: 'spin', style: 'width:18px;height:18px' }));
@@ -1977,15 +1995,16 @@ function screenFx() {
     const [k, f] = vals();
     const v = s === 'krw' ? k : f;
     input = String(Math.round(v * (FX_NODEC.includes(s === 'krw' ? 'KRW' : cur.code) ? 1 : 100)) / (FX_NODEC.includes(s === 'krw' ? 'KRW' : cur.code) ? 1 : 100));
-    side = s; draw();
+    side = s; fresh = true; draw();
   }
   function key(k) {
+    const f0 = fresh; fresh = false;
     if (k === 'C') input = '0';
     else if (k === 'del') input = input.length > 1 ? input.slice(0, -1) : '0';
     else if (k === '.') { if (!input.includes('.') && !(side === 'krw' || FX_NODEC.includes(cur.code))) input += '.'; }
     else if (input.replace('.', '').length < 12) {
-      if (input.includes('.') && input.split('.')[1].length >= 2) return;
-      input = input === '0' ? k : input + k;
+      if (!f0 && input.includes('.') && input.split('.')[1].length >= 2) return;
+      input = input === '0' || f0 ? k : input + k;
     }
     draw();
   }
