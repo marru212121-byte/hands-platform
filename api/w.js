@@ -402,15 +402,33 @@ module.exports = L.handler({
     const lat = num(b.lat), lng = num(b.lng);
     if (lat == null || lng == null || lat < 32 || lat > 39.5 || lng < 124 || lng > 132) throw new HttpError(400, 'bad_location');
     const { nx, ny } = kmaGrid(lat, lng), gk = nx + ',' + ny, now = Date.now();
+    const placeP = (async () => {  // 지역 이름은 날씨와 동시에
+    // 지역 이름: 1km 단위로 저장, 근로자 말로 (구·동은 한국어로 옴)
+    const lang = clean(b.lang, 10) || 'en', pk = lat.toFixed(2) + ',' + lng.toFixed(2) + ',' + lang;
+    let place = placeCache.get(pk);
+    if (place !== undefined) return place;
+    {
+      place = null;
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&zoom=14&accept-language=${encodeURIComponent(lang)}`,
+          { headers: { 'User-Agent': 'hands-platform/1.0 (https://hands-platform.vercel.app)' } });
+        const a = (await r.json()).address || {};
+        place = [a.city || a.province || a.state, a.borough || a.county || a.town, a.suburb || a.village || a.quarter].filter(Boolean).filter((v, i, x) => x.indexOf(v) === i).join(' · ') || null;
+      } catch (e) {}
+      placeCache.set(pk, place);
+    }
+    return place;
+    })();
     let wx = wxCache.get(gk);
     if (!wx || now - wx.at > 20 * 60000) {
       // 실황: 매시 정각 자료가 40분쯤 나옴
       const n = kst(now - 40 * 60000);
-      const ncst = await kmaCall('getUltraSrtNcst', { base_date: n.ymd, base_time: String(n.h).padStart(2, '0') + '00', nx, ny });
-      // 단기예보: 02·05·08·11·14·17·20·23시 발표, 10분쯤 뒤에 나옴
+      // 단기예보: 02·05·08·11·14·17·20·23시 발표, 10분쯤 뒤에 나옴 — 두 자료를 한꺼번에 물음
       const f = kst(now - 15 * 60000), bh = [23, 20, 17, 14, 11, 8, 5, 2].find((x) => x <= f.h);
       const fb = bh == null ? { ...kst(now - 15 * 60000 - 24 * 3600000), bh: 23 } : { ...f, bh };
-      const fc = await kmaCall('getVilageFcst', { base_date: fb.ymd, base_time: String(fb.bh).padStart(2, '0') + '00', nx, ny });
+      const [ncst, fc] = await Promise.all([
+        kmaCall('getUltraSrtNcst', { base_date: n.ymd, base_time: String(n.h).padStart(2, '0') + '00', nx, ny }),
+        kmaCall('getVilageFcst', { base_date: fb.ymd, base_time: String(fb.bh).padStart(2, '0') + '00', nx, ny })]);
       const cur = {}; for (const it of ncst) cur[it.category] = it.obsrValue;
       const hours = {}, days = {};
       for (const it of fc) {
@@ -426,7 +444,7 @@ module.exports = L.handler({
       }
       const hl = Object.keys(hours).sort().map((k) => hours[k]);
       const nowKey = kst(now).ymd + String(kst(now).h).padStart(2, '0') + '00';
-      const next = hl.filter((x) => x.date + x.time >= nowKey).slice(0, 24).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP }));
+      const next = hl.filter((x) => x.date + x.time >= nowKey).filter((x) => x.TMP != null).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP, pcp: x.PCP }));  // 글피까지 시간별 전부 (사장님 10-27: 내일·모레 눌러 시간별)
       const mode = (a) => a.length ? +Object.entries(a.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {})).sort((p, q) => q[1] - p[1])[0][0] : 1;
       const dl = Object.keys(days).sort().slice(0, 3).map((k) => { const d = days[k];
         return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop }; });
@@ -435,19 +453,7 @@ module.exports = L.handler({
         hours: next, days: dl, base: now } };
       wxCache.set(gk, wx);
     }
-    // 지역 이름: 1km 단위로 저장, 근로자 말로 (구·동은 한국어로 옴)
-    const lang = clean(b.lang, 10) || 'en', pk = lat.toFixed(2) + ',' + lng.toFixed(2) + ',' + lang;
-    let place = placeCache.get(pk);
-    if (place === undefined) {
-      place = null;
-      try {
-        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&zoom=14&accept-language=${encodeURIComponent(lang)}`,
-          { headers: { 'User-Agent': 'hands-platform/1.0 (https://hands-platform.vercel.app)' } });
-        const a = (await r.json()).address || {};
-        place = [a.city || a.province || a.state, a.borough || a.county || a.town, a.suburb || a.village || a.quarter].filter(Boolean).filter((v, i, x) => x.indexOf(v) === i).join(' · ') || null;
-      } catch (e) {}
-      placeCache.set(pk, place);
-    }
+    const place = await placeP;
     return { ok: true, place, ...wx.out };
   },
 

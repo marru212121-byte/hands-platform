@@ -236,7 +236,8 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .wxh{flex:none;width:64px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
 .wxh .tm{font-size:12px;color:var(--ink3)} .wxh .ic{width:24px;height:24px;margin:6px auto;color:var(--navy)} .wxh b{display:block;font-size:16px} .wxh .pp{font-size:11px;color:#2563EB;margin-top:2px}
 .wxdays{background:#fff;border:1px solid var(--line);border-radius:18px;margin-top:14px;overflow:hidden}
-.wxd{display:flex;align-items:center;gap:12px;padding:14px 16px} .wxd+.wxd{border-top:1px solid var(--line)}
+.wxd{display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;background:#fff;border:0;text-align:left;font:inherit;color:var(--ink)}
+.wxd.on{background:var(--navy-bg);box-shadow:inset 4px 0 0 var(--navy)} .wxd+.wxd{border-top:1px solid var(--line)}
 .wxd .dn{font-weight:650;min-width:72px} .wxd .ic{width:24px;height:24px;color:var(--navy)} .wxd .cd{flex:1;color:var(--ink2);font-size:14px} .wxd .pp{font-size:12px;color:#2563EB} .wxd .mm{font-weight:700;font-variant-numeric:tabular-nums}
 .wxd .mm span{color:var(--ink3);font-weight:500}
 .fxkeys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
@@ -1648,6 +1649,11 @@ function prefetchHome() {
   S.prefetchAt = Date.now();
   api('notices', { method: 'GET' }).then((j) => { S.noticeCache = j.notices; S.noticeLang = S.lang; }).catch(() => {});
   api('contacts', { method: 'GET' }).then((j) => { S.contactCache = j.contacts; }).catch(() => {});
+  (async () => {  // 날씨도 위치가 있으면 미리 (권한 창은 띄우지 않음)
+    const p = S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null);
+    if (p && !(S.wxCache && S.wxCache.lang === S.lang && Date.now() - S.wxCache.at < 20 * 60000))
+      api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }).then((w) => { S.wxCache = { at: Date.now(), lang: S.lang, w }; }).catch(() => {});
+  })();
   if (!S.fxCache || Date.now() - S.fxCache.at > 3 * 3600000) api('fx', { method: 'GET' }).then((j) => { S.fxCache = { at: Date.now(), j }; }).catch(() => {});
 }
 function screenHome() {
@@ -1716,27 +1722,35 @@ function kstDate(date, time) { return new Date(Date.UTC(+date.slice(0, 4), +date
 function screenWeather() {
   const box = h('div', {}, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
   let loc = 'en-US'; try { if (Intl.DateTimeFormat.supportedLocalesOf([LOCALE[S.lang]]).length) loc = LOCALE[S.lang]; } catch (e) {}
+  let sel = null;
   const show = (w) => {
     const [ck, ci] = wxKind(w.now.sky, w.now.pty);
     const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10).replace(/-/g, '');
     const dayName = (d) => { const diff = Math.round((kstDate(d) - kstDate(today)) / 86400000); return t(['wxToday', 'wxTomorrow', 'wxDayAfter'][diff] || 'wxToday'); };
     const rn = w.now.rn1 && w.now.rn1 !== '강수없음' ? String(w.now.rn1).replace('mm', '') + ' mm' : '0 mm';
+    // 아래 날짜(오늘·내일·모레)를 누르면 그날 시간별 — 기온·비 확률·강수량 (사장님 10-27)
+    if (!sel || !w.days.some((d) => d.date === sel)) sel = (w.days[0] || {}).date;
+    const pcp = (v) => !v || v === '강수없음' ? '' : v === '1mm 미만' ? '<1mm' : String(v).replace(/\s/g, '').replace('이상', '+');
+    const hoursBox = h('div', { class: 'wxhours' }, w.hours.filter((x) => x.date === sel).map((x) => { const [k2, i2] = wxKind(x.sky, x.pty);
+      return h('div', { class: 'wxh', 'aria-label': t(k2) }, h('div', { class: 'tm', text: kstDate(x.date, x.time).toLocaleTimeString(loc, { hour: 'numeric', timeZone: 'Asia/Seoul' }) }), icon(i2), h('b', { text: Math.round(x.tmp) + '°' }),
+        h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' }), pcp(x.pcp) ? h('div', { class: 'pp', style: 'font-weight:700', text: pcp(x.pcp) }) : null); }));
     box.replaceChildren(...[
       w.place ? h('div', { class: 'wxplace' }, icon('pin'), w.place) : null,
       h('div', { class: 'wxnow' },
         h('div', { class: 'wxtop' }, h('span', { class: 'wi' }, icon(ci)), h('div', {}, h('div', { class: 'wxtemp', text: Math.round(w.now.tmp) + '°' }), h('div', { class: 'wxcond', text: t(ck) }))),
         h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh + '%' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd + ' m/s' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
-      h('div', { class: 'wxhours' }, w.hours.map((x) => { const [k2, i2] = wxKind(x.sky, x.pty);
-        return h('div', { class: 'wxh', 'aria-label': t(k2) }, h('div', { class: 'tm', text: kstDate(x.date, x.time).toLocaleTimeString(loc, { hour: 'numeric', timeZone: 'Asia/Seoul' }) }), icon(i2), h('b', { text: Math.round(x.tmp) + '°' }), h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' })); })),
+      hoursBox,
       h('div', { class: 'wxdays' }, w.days.map((d) => { const [k3, i3] = wxKind(d.sky, d.pty);
-        return h('div', { class: 'wxd' }, h('span', { class: 'dn', text: dayName(d.date) }), icon(i3), h('span', { class: 'cd' }, t(k3), d.pop ? h('span', { class: 'pp', style: 'display:block', text: t('wxPop') + ' ' + d.pop + '%' }) : null),
+        return h('button', { class: 'wxd' + (d.date === sel ? ' on' : ''), onclick: () => { sel = d.date; show(w); } }, h('span', { class: 'dn', text: dayName(d.date) }), icon(i3), h('span', { class: 'cd' }, t(k3), d.pop ? h('span', { class: 'pp', style: 'display:block', text: t('wxPop') + ' ' + d.pop + '%' }) : null),
           h('span', { class: 'mm' }, h('span', { text: Math.round(d.min) + '° / ' }), Math.round(d.max) + '°')); })),
       h('p', { class: 'fxnote' }, h('b', { text: t('wxSource').replace('{t}', fmtDate(new Date(w.base).toISOString(), true)) }), h('br'), h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener', text: '© OpenStreetMap' }))].filter(Boolean));
   };
   (async () => {
+    const c = S.wxCache;
+    if (c && c.lang === S.lang && Date.now() - c.at < 20 * 60000) return show(c.w);  // 홈에서 미리 받은 것 바로
     const p = S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null) || await getPos(10000, false);
     if (!p) return box.replaceChildren(h('p', { class: 'lead', text: t('wxNeedLoc') }));
-    try { show(await api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } })); }
+    try { const w = await api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }); S.wxCache = { at: Date.now(), lang: S.lang, w }; show(w); }
     catch (e) { box.replaceChildren(h('p', { class: 'lead', text: e.code === 'bad_location' ? t('wxNeedLoc') : errText(e.code) })); }
   })();
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('weather') }), box));
