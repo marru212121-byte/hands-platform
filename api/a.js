@@ -19,11 +19,13 @@ async function translate(title, body, lang) {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const { Anthropic } = require('@anthropic-ai/sdk');
   const client = new Anthropic();
+  const t0 = Date.now();
   const msg = await client.messages.create({
     model: 'claude-haiku-5-5', max_tokens: 1024,
     output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' } }, required: ['title', 'body'], additionalProperties: false } } },
     messages: [{ role: 'user', content: `Translate this Korean notice from a company to its foreign workers into ${LANG_NAMES[lang]}. Keep numbers, names, places, dates and phone numbers exactly. Plain, friendly words.\n\nTITLE: ${title}\n\nBODY: ${body}` }],
   });
+  await db('ai_usage', { method: 'POST', body: { kind: 'notice_' + lang, model: msg.model, input_tokens: msg.usage && msg.usage.input_tokens, output_tokens: msg.usage && msg.usage.output_tokens, ms: Date.now() - t0 } }).catch(() => {});  // 실제 토큰 기록
   const txt = (msg.content.find((c) => c.type === 'text') || {}).text || '';
   const r = JSON.parse(txt);
   return { title: String(r.title || '').slice(0, 120), body: String(r.body || '').slice(0, 600) };

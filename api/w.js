@@ -39,6 +39,8 @@ async function kmaCall(op, q) {
   }
   return items;
 }
+// 하이쿠 실제 토큰 기록 (사장님 10-27: 관리자 화면 없이, 사장님과 나만 봄) — 표 ai_usage
+const logAI = (kind, msg, t0, memberId) => db('ai_usage', { method: 'POST', body: { kind, model: msg && msg.model, input_tokens: msg && msg.usage ? msg.usage.input_tokens : null, output_tokens: msg && msg.usage ? msg.usage.output_tokens : null, ms: Date.now() - t0, member_id: memberId || null } }).catch(() => {});
 const wxCache = new Map(), placeCache = new Map();
 // 통역 (사장님 10-27): 하이쿠, 근로자 말 ↔ 한국어. 한 사람 1시간 120번
 const TR_LANGS = { ko: 'Korean', en: 'English', vi: 'Vietnamese', id: 'Indonesian', th: 'Thai', tl: 'Filipino (Tagalog)', ne: 'Nepali', km: 'Khmer', my: 'Burmese', si: 'Sinhala', bn: 'Bengali' };
@@ -154,6 +156,7 @@ module.exports = L.handler({
     const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
     if (!m || m[2].length > 4500000) throw new HttpError(400, 'bad_image');
     const client = new Anthropic({ timeout: 20000, maxRetries: 1 });  // 앱이 20초면 폰 판독으로 넘어감
+    const t0 = Date.now();
     const msg = await client.messages.create({
       model: 'claude-haiku-5-5', max_tokens: 2048,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: PASS_SCHEMA } },
@@ -162,6 +165,7 @@ module.exports = L.handler({
         { type: 'text', text: PASS_PROMPT },
       ] }],
     });
+    await logAI('passport', msg, t0, null);
     if (msg.stop_reason === 'refusal') throw new HttpError(422, 'refused');
     const txt = (msg.content.find((c) => c.type === 'text') || {}).text || '';
     let r; try { r = JSON.parse(txt); } catch (e) { throw new HttpError(502, 'bad_reply'); }
@@ -471,11 +475,13 @@ module.exports = L.handler({
     hits.push(now); trHits.set(m.id, hits);
     const { Anthropic } = require('@anthropic-ai/sdk');
     const client = new Anthropic({ timeout: 20000, maxRetries: 1 });
+    const t0 = Date.now();
     const msg = await client.messages.create({
       model: 'claude-haiku-5-5', max_tokens: 2048,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'], additionalProperties: false } } },
       messages: [{ role: 'user', content: `You are an interpreter between foreign seafarers / fishing-boat and port workers in Korea and Koreans (bosses, doctors, shop staff). The text may come from speech recognition or quick typing: misspellings, sound-alike words, missing accents, slang and abbreviations are common. Work out what the speaker most likely meant in that work-and-daily-life context (e.g. "sheep" on a boat is "ship"), then translate it into ${TR_LANGS[to]}. Never add facts that are not in the text. Write entirely in ${TR_LANGS[to]} script — no English words mixed in; if there is no exact word, say it simply in ${TR_LANGS[to]}. Keep numbers, names, places, times and phone numbers exactly. Natural spoken words. Put only the translation in the text field.\n\nTEXT:\n${text}` }],
     });
+    await logAI('translate', msg, t0, m.id);
     const r = JSON.parse((msg.content.find((c) => c.type === 'text') || {}).text || '{}');
     let out = String(r.text || '').trim();
     if (out.startsWith('{')) { try { const inner = JSON.parse(out); if (inner && inner.text) out = String(inner.text); } catch (e) {} }  // 겹쳐 온 모양 풀기
