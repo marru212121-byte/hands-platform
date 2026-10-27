@@ -1704,7 +1704,6 @@ function myTab() {
       h('div', { class: 'rows', style: 'border:0;border-radius:0' },
         row(t('fPhone'), p.phone), row(t('fPassport'), p.passport_last4 ? '•••• ' + p.passport_last4 : null),
         p.company ? row(t('fCompany'), p.company) : null, row(t('joined'), fmtDate(p.created_at)))),
-    h('div', { class: 'note', style: 'margin-top:14px' }, icon('lock'), h('div', { text: t('device') })),
     h('div', { class: 'rows', style: 'margin-top:14px' },
       h('button', { class: 'irow', onclick: openLangSheet }, h('span', { class: 'k', text: t('language') }), h('span', { class: 'v' }, LANG_NAME[S.lang], icon('chevRight'))),
       h('a', { class: 'irow', href: '/terms.html?lang=' + S.lang, onclick: (e) => { e.preventDefault(); openTerms(''); } }, h('span', { class: 'k', text: t('terms') }), h('span', { class: 'v' }, icon('external'))),
