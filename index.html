@@ -323,6 +323,10 @@ button.fxcur{background:none;border:0;padding:0;font:inherit;color:inherit;text-
 .empty{padding:40px 16px;text-align:center;color:var(--ink3)}
 
 /* my info */
+.empty{display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 20px;background:#fff;border:1px solid var(--line);border-radius:18px;text-align:center}
+.empty .ei{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy)}
+.empty .ei .ic{width:28px;height:28px}
+.empty p{margin:0;font-size:16px;font-weight:600;color:var(--ink2);line-height:1.5}
 .rows{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .irow{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:56px;padding:12px 16px;width:100%;text-align:left;text-decoration:none;color:var(--ink)}
 .irow + .irow{border-top:1px solid var(--line)}
@@ -1683,7 +1687,8 @@ function screenHome() {
       h('div', { class: 'rows', style: 'margin-top:14px' },
         h('button', { class: 'irow', onclick: () => go(screenMyInquiries) }, h('span', { class: 'k', style: 'color:var(--ink);font-weight:650;display:flex;align-items:center;gap:10px;max-width:none' }, icon('doc'), t('myInq')), h('span', { class: 'v' }, icon('chevRight')))));
   } else if (S.tab === 'places') {
-    page.append(h('h1', { style: 'margin-top:8px', text: t('places') }), h('p', { class: 'lead', style: 'margin-bottom:18px', text: t('placesHint') }),
+    page.append(h('button', { class: 'iconbtn', style: 'margin:2px 0 0 -8px', 'aria-label': t('back'), onclick: () => { S.tab = 'home'; rerender(); window.scrollTo(0, 0); } }, icon('back')),  // 뒤로 가기 (사장님 10-27)
+      h('h1', { style: 'margin-top:4px', text: t('places') }), h('p', { class: 'lead', style: 'margin-bottom:18px', text: t('placesHint') }),
       h('div', { class: 'grid' }, PLACES.map(placeTile)));
   } else {
     page.append(myTab());
@@ -1864,14 +1869,18 @@ function screenFx() {
   draw();
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('fx') }), h('div', { class: 'fxbox' }, rowK, rowF), keys, note));
 }
+// 빈 화면 카드 (사장님 10-27: 「아직 없습니다」가 칸과 어긋나 보임 → 아이콘 + 가운데 글씨)
+function emptyCard(ic, text) {
+  return h('div', { class: 'empty' }, h('span', { class: 'ei' }, icon(ic)), h('p', { text }));
+}
 function screenNotices() {
-  const list = h('div', { class: 'stack', style: 'margin-top:12px' }, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
-  const draw = (ns) => list.replaceChildren(...(ns.length ? ns.map((n) => h('button', { class: 'irow', style: 'flex-direction:column;align-items:flex-start;gap:4px;text-align:left', onclick: () => go(screenNotice, n.id) },
-      h('b', { text: n.title }), h('span', { class: 'muted small', text: fmtDate(n.created_at, true) }))) : [h('p', { class: 'lead', text: t('noNotices') })]));
+  const list = h('div', { style: 'margin-top:12px' }, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
+  const draw = (ns) => (list.className = ns.length ? 'rows' : '', list.replaceChildren(...(ns.length ? ns.map((n) => h('button', { class: 'irow', style: 'flex-direction:column;align-items:flex-start;gap:4px;text-align:left', onclick: () => go(screenNotice, n.id) },
+      h('b', { text: n.title }), h('span', { class: 'muted small', text: fmtDate(n.created_at, true) }))) : [emptyCard('bell', t('noNotices'))])));
   if (S.noticeCache && S.noticeLang === S.lang) draw(S.noticeCache);  // 홈에서 미리 받은 것 바로 (사장님 10-27)
   api('notices', { method: 'GET' }).then((j) => { S.noticeCache = j.notices; S.noticeLang = S.lang; draw(j.notices); })
     .catch((e) => { if (!S.noticeCache) list.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); });
-  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('notices') }), h('div', { class: 'rows' }, list)));
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('notices') }), list));
 }
 function screenNotice(id) {
   const box = h('div', {}, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
@@ -1885,13 +1894,13 @@ function screenNotice(id) {
 }
 function screenContacts() {
   const list = h('div', {}, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
-  const draw = (cs) => list.replaceChildren(...(cs.length ? cs.map((c) => h('a', { class: 'irow', href: 'tel:' + c.phone.replace(/[^0-9+]/g, '') },
+  const draw = (cs) => (list.className = cs.length ? 'rows' : '', list.replaceChildren(...(cs.length ? cs.map((c) => h('a', { class: 'irow', href: 'tel:' + c.phone.replace(/[^0-9+]/g, '') },
       h('span', { class: 'k', style: 'color:var(--ink);font-weight:650;max-width:none' }, c.name + (c.role ? ' · ' + c.role : '')),
-      h('span', { class: 'v', style: 'color:var(--teal);font-weight:700' }, icon('phone'), c.phone))) : [h('p', { class: 'lead', text: t('noContacts') })]));
+      h('span', { class: 'v', style: 'color:var(--teal);font-weight:700' }, icon('phone'), c.phone))) : [emptyCard('phone', t('noContacts'))])));
   if (S.contactCache) draw(S.contactCache);  // 홈에서 미리 받은 것 바로 (사장님 10-27)
   api('contacts', { method: 'GET' }).then((j) => { S.contactCache = j.contacts; draw(j.contacts); })
     .catch((e) => { if (!S.contactCache) list.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); });
-  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('contacts') }), h('div', { class: 'rows', style: 'margin-top:12px' }, list)));
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('contacts') }), h('div', { style: 'margin-top:12px' }, list)));
 }
 /* ---------- inquiries (job / ship) ---------- */
 function screenInquiry(cat) {
