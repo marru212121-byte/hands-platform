@@ -206,7 +206,7 @@ function showLogin(notice) {
   const n = $('#loginNotice'); n.hidden = !notice; n.textContent = notice || '';
   $('#loginError').hidden = true;
   $('#loginPw').value = '';
-  document.title = 'HANDS 관리자 로그인';
+  document.title = '위해연교 로그인';
   setTimeout(() => ($('#loginId').value ? $('#loginPw') : $('#loginId')).focus(), 0);
 }
 function sessionEnded(reason) {
@@ -240,7 +240,9 @@ const ADMIN_ONLY_VIEWS = ['sos', 'map', 'logs', 'telegram', 'staff'];
 function applyRole() {
   if (MGR()) {
     ADMIN_ONLY_VIEWS.forEach((k) => { delete VIEWS[k]; });
+    VIEWS.dashboard.sub = '근로자 현황을 한눈에 확인합니다.';  // 매니저는 SOS 없음
     $$('#nav a, #tabbar a, #moreSheet a').forEach((a) => { const k = (a.getAttribute('href') || '').replace(/^#\/?/, '').split('/')[0]; if (ADMIN_ONLY_VIEWS.includes(k)) a.remove(); });
+    const tb = $('#tabbar'); if (tb) tb.style.gridTemplateColumns = `repeat(${tb.children.length}, 1fr)`;  // 빠진 칸만큼 탭을 넓게
     const top = $('#topSos'); if (top) top.hidden = true;
     $$('#nav .nav-group').forEach((g) => { const nx = g.nextElementSibling; if (!nx || nx.classList.contains('nav-group')) g.remove(); });
     const sub = $('.side-sub'); if (sub) sub.textContent = '매니저' + (S.admin.company ? ' · ' + S.admin.company : '');
@@ -299,12 +301,12 @@ async function pollSos() {
   } catch (_) { /* 다음 주기에 다시 */ }
 }
 function updateSosBadge() {
-  if (MGR()) { document.title = 'HANDS 매니저' + (S.view && VIEWS[S.view] ? ' · ' + VIEWS[S.view].title : ''); return; }
+  if (MGR()) { document.title = '위해연교 매니저' + (S.view && VIEWS[S.view] ? ' · ' + VIEWS[S.view].title : ''); return; }
   const n = S.sosPending;
   const b = $('#sosBadge'); b.hidden = n <= 0; b.textContent = n > 99 ? '99+' : String(n);
   $('#topSos').hidden = n <= 0; $('#topSosN').textContent = String(n);
   const tb = $('#tabSosBadge'); tb.hidden = n <= 0; tb.textContent = n > 99 ? '99+' : String(n);
-  document.title = (n > 0 ? `(SOS ${n}) ` : '') + 'HANDS 관리자' + (S.view ? ' · ' + VIEWS[S.view].title : '');
+  document.title = (n > 0 ? `(SOS ${n}) ` : '') + '위해연교 관리자' + (S.view ? ' · ' + VIEWS[S.view].title : '');
 }
 function setInqCount(v) {
   const n = Number(v) || 0; S.inqOpen = n;
@@ -716,7 +718,7 @@ function drawDetail() {
         </dl></div>
       </section>
     </div>
-    <div class="panel-dock ph-only">
+    <div class="panel-dock ph-only${MGR() ? ' one' : ''}">
       ${telHref(m.phone) ? html`<a class="dock-btn call" href="${telHref(m.phone)}">${ico('phone', 'lg')}전화 걸기</a>` : html`<span class="dock-btn off">${ico('phone', 'lg')}전화 미등록</span>`}
       ${MGR() ? '' : lastLoc ? html`<a class="dock-btn" href="#/map/${encodeURIComponent(m.id)}">${ico('map', 'lg')}지도에서 보기</a>` : html`<span class="dock-btn off">${ico('map', 'lg')}위치 없음</span>`}
     </div>`);
@@ -1303,8 +1305,8 @@ async function renderPush() {
     if (P.member) $('#pClear').addEventListener('click', () => { P.member = null; sync(); $('#pMemberQ').focus(); });
     const t = $('#pTitle').value, b = $('#pBody').value;
     $('#cTitle').textContent = `${t.length}/80`; $('#cBody').textContent = `${b.length}/300`;
-    $('#pvTitle').textContent = t || '제목'; $('#pvBody').textContent = b || '내용이 여기에 표시됩니다.';
-    $('#pvTitle').classList.toggle('ph', !t); $('#pvBody').classList.toggle('ph', !b);
+    // 실제로 폰에 뜨는 알림은 이 두 줄(근로자 말 + 한국어) — 쓴 내용은 앱 공지사항에서 근로자 말로 봄 (api/a.js NOTICE_MSG)
+    $('#pvTitle').textContent = '새로운 공지가 도착했습니다'; $('#pvBody').textContent = '지금 앱을 열어 확인해 주세요.';
     $('#pWho').textContent = P.target === 'all' ? `알림 받는 근로자 전체${P.subs != null ? ` ${fmtNum(P.subs)}명` : ''}`
       : P.target === 'country' ? (P.country ? `${countryName(P.country)} 국적 근로자` : '국적을 선택하세요')
       : (P.member ? `${P.member.name || '근로자'} 님 1명` : '근로자를 선택하세요');

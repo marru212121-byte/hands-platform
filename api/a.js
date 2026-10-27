@@ -113,7 +113,7 @@ module.exports = L.handler({
       total: active.length,
       seen_today: active.filter(m => m.last_seen_at && new Date(m.last_seen_at) >= today).length,
       checkin_today: active.filter(m => m.last_checkin_at && new Date(m.last_checkin_at) >= today).length,
-      sos_pending: sos.length,
+      sos_pending: me.role === 'manager' ? null : sos.length,
       silent_3d: silent3,
       new_7d: active.filter(m => m.created_at >= daysAgo(7)).length,
       located: me.role === 'admin' ? locs.length : null,
@@ -362,13 +362,13 @@ module.exports = L.handler({
   },
 
   async posts(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const rows = await db('posts?select=id,category,title,body,created_at,author:members(id,name,country)&order=created_at.desc&limit=100');
     return { ok: true, posts: rows };
   },
 
   async post_delete(req, b) {
-    const a = await L.adminFromReq(req);
+    const a = await L.adminOnly(req);
     if (!/^[0-9a-f-]{36}$/i.test(String(b.id || ''))) throw new HttpError(400, 'bad_id');
     await db(`posts?id=eq.${b.id}`, { method: 'DELETE' });
     await L.logAccess(a, null, 'post_delete');
