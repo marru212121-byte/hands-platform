@@ -29,6 +29,14 @@ async function translate(title, body, lang) {
   return { title: String(r.title || '').slice(0, 120), body: String(r.body || '').slice(0, 600) };
 }
 
+// 공지 알림 문구 (사장님 10-27): 알림엔 「새 공지 도착」만 근로자 말 + 아래 한국어, 내용은 앱 안 공지(번역본)에서
+const NOTICE_MSG = {
+  ko: ['새로운 공지가 도착했습니다', '지금 앱을 열어 확인해 주세요.'], en: ['A new notice has arrived', 'Open the app now to check it.'],
+  vi: ['Có thông báo mới', 'Hãy mở ứng dụng để xem ngay.'], id: ['Ada pengumuman baru', 'Buka aplikasi sekarang untuk melihatnya.'],
+  th: ['มีประกาศใหม่', 'เปิดแอปตอนนี้เพื่อดูประกาศ'], tl: ['May bagong abiso', 'Buksan ang app ngayon para tingnan.'],
+  ne: ['नयाँ सूचना आएको छ', 'हेर्न अहिले एप खोल्नुहोस्।'], km: ['មានសេចក្តីជូនដំណឹងថ្មី', 'សូមបើកកម្មវិធីឥឡូវនេះដើម្បីមើល។'],
+  my: ['အသိပေးချက်အသစ် ရောက်ရှိလာပါပြီ', 'ကြည့်ရန် အက်ပ်ကို ယခုဖွင့်ပါ။'], si: ['නව දැනුම්දීමක් ලැබී ඇත', 'බැලීමට දැන් යෙදුම විවෘත කරන්න.'],
+  bn: ['নতুন নোটিশ এসেছে', 'দেখতে এখনই অ্যাপটি খুলুন।'] };
 // 월급날 알림 (사장님 10-27): 크론(아침 9시)에서 그날이 월급날인 근로자에게. 그 달에 날짜가 없으면(31일 등) 마지막 날에
 const PAY_MSG = {
   ko: ['오늘은 월급날입니다', '오늘 환율을 확인해 보세요.'], en: ['Today is payday', 'Check today\'s exchange rate.'],
@@ -291,10 +299,8 @@ module.exports = L.handler({
     const wp = L.webpush();
     let sent = 0, failed = 0; const gone = [];
     await Promise.all(subs.map(async (s) => {
-      const tr = i18n[s.member.language];
-      const payload = JSON.stringify(tr
-        ? { title: tr.title, body: tr.body + '\n\n[한국어] ' + body, url: '/?notice=' + msgId }
-        : { title, body, url: '/?notice=' + msgId });
+      const lang = s.member.language || 'en', [nt, nb] = NOTICE_MSG[lang] || NOTICE_MSG.en;
+      const payload = JSON.stringify({ title: nt, body: lang === 'ko' ? nb : nb + '\n\n[한국어] ' + NOTICE_MSG.ko[0] + '. ' + NOTICE_MSG.ko[1], url: '/?notice=' + msgId });
       try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 86400 }); sent++; }
       catch (e) { failed++; if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
     }));
