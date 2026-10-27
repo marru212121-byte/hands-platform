@@ -216,9 +216,11 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .fxcur{position:relative;display:flex;align-items:center;gap:10px;flex:none}
 .fxcur b{font-size:18px;font-weight:700}
 .fxcur .ic{width:16px;height:16px;color:var(--ink3)}
-.fxcur select{position:absolute;inset:0;opacity:0;width:100%;font-size:16px}
+button.fxcur{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left}
+.currow .cc{font-size:18px;font-weight:700;min-width:48px}
+.currow .e{flex:1;font-size:15px;color:var(--ink2);line-height:1.35}
 .fxname{display:block;font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
-.fxamt{margin-left:auto;min-width:0;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere;line-height:1.2}
+.fxamt{flex:1;margin-left:auto;min-width:0;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;overflow:hidden;line-height:1.2}
 .fxrow.on .fxamt{color:var(--navy)}
 .fxamt .sym{font-size:.62em;font-weight:600;color:var(--ink3);margin-right:4px;vertical-align:.12em}
 .fxamt .sym.after{margin:0 0 0 4px}
@@ -1801,25 +1803,37 @@ function screenFx() {
   const amtK = h('span', { class: 'fxamt' }), amtF = h('span', { class: 'fxamt' });
   const flagF = h('img', { class: 'fl', alt: '' }), codeF = h('b'), nameF = h('span', { class: 'fxname' });
   const note = h('p', { class: 'fxnote' }, h('div', { class: 'spin', style: 'width:18px;height:18px' }));
-  const sel = h('select', { 'aria-label': t('fx'), onchange: (e) => { const x = FX.find((f) => f[0] === e.target.value); if (side === 'fx') { input = String(Math.round(vals()[0])); side = 'krw'; } cur = { code: x[0], flag: x[1] }; draw(); } },
-    FX.map(([c]) => h('option', { value: c, text: c + ' · ' + curName(c) })));
+  // 통화 고르기: 아래에서 올라오는 목록 — 국기 · VND · 베트남 동 순, 긴 이름도 안 잘림 (사장님 10-27)
+  const choose = (code) => { const x = FX.find((f) => f[0] === code); if (side === 'fx') { input = String(Math.round(vals()[0])); side = 'krw'; } cur = { code: x[0], flag: x[1] }; draw(); };
+  const openCur = () => {
+    const close = () => scrim.remove();
+    const scrim = h('div', { class: 'scrim', onclick: (e) => { if (e.target === scrim) close(); } },
+      h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('fx') },
+        h('div', { class: 'grab' }), h('h2', { text: t('fx') }),
+        h('div', { class: 'langlist', role: 'list' }, FX.map(([c, fl]) => h('button', { class: 'langrow currow' + (c === cur.code ? ' on' : ''), onclick: () => { close(); choose(c); } },
+          h('img', { class: 'flag', src: '/flags/' + fl + '.png', alt: '', width: '28', height: '20', loading: 'lazy' }),
+          h('span', { class: 'cc', text: c }), h('span', { class: 'e', text: curName(c) }), c === cur.code ? icon('check') : null)))));
+    document.body.append(scrim);
+  };
   const rowK = h('button', { class: 'fxrow', onclick: () => pick('krw') },
     h('span', { class: 'fxcur' }, h('img', { class: 'fl', src: '/flags/kr.png', alt: '' }), h('span', {}, h('b', { text: 'KRW' }), h('span', { class: 'fxname', text: curName('KRW') }))), amtK);
-  const rowF = h('div', { class: 'fxrow', role: 'button', tabindex: '0', onclick: (e) => { if (e.target !== sel) pick('fx'); } },
-    h('span', { class: 'fxcur' }, flagF, h('span', {}, h('span', { style: 'display:flex;align-items:center;gap:4px' }, codeF, icon('chevDown')), nameF), sel), amtF);
+  const rowF = h('div', { class: 'fxrow', role: 'button', tabindex: '0', onclick: () => pick('fx') },
+    h('button', { class: 'fxcur', 'aria-label': t('fx'), onclick: (e) => { e.stopPropagation(); openCur(); } }, flagF, h('span', {}, h('span', { style: 'display:flex;align-items:center;gap:4px' }, codeF, icon('chevDown')), nameF)), amtF);
   const rate = () => (data && data.rates[cur.code]) || 0;  // 1원 = rate 외화
   function vals() {
     const n = parseFloat(input) || 0, r = rate();
     return side === 'krw' ? [n, n * r] : [r ? n / r : 0, n];
   }
   function draw() {
-    flagF.src = '/flags/' + cur.flag + '.png'; codeF.textContent = cur.code; nameF.textContent = curName(cur.code); sel.value = cur.code;
+    flagF.src = '/flags/' + cur.flag + '.png'; codeF.textContent = cur.code; nameF.textContent = curName(cur.code);
     rowK.classList.toggle('on', side === 'krw'); rowF.classList.toggle('on', side === 'fx');
     const [k, f] = vals(), typed = (x) => x.includes('.') ? fxFmt(parseFloat(x.split('.')[0]) || 0, 'KRW') + '.' + x.split('.')[1] : fxFmt(parseFloat(x) || 0, 'KRW');
     const sym = (c) => h('span', { class: 'sym', text: FX_SYM[c] || '' });
     const withSym = (c, txt) => FX_SYM_AFTER.includes(c) ? [txt, h('span', { class: 'sym after', text: FX_SYM[c] })] : [sym(c), txt];
     amtK.replaceChildren(...withSym('KRW', side === 'krw' ? typed(input) : fxFmt(k, 'KRW')));
     amtF.replaceChildren(...withSym(cur.code, side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…')));
+    requestAnimationFrame(() => [amtK, amtF].forEach((el) => {  // 좁은 폰(갤럭시·작은 아이폰)에서 줄 안 바뀌게 글자 크기를 줄임 (사장님 10-27)
+      let fs = 26; el.style.fontSize = ''; while (el.scrollWidth > el.clientWidth && fs > 13) el.style.fontSize = (--fs) + 'px'; }));
     if (data) {
       const r = rate(), unit = FX_NODEC.includes(cur.code) ? 1000 : 1;
       note.replaceChildren(h('b', { text: t('fxAsOf').replace('{d}', fmtDate(new Date(data.updated).toISOString(), true)) }), h('br'), unit.toLocaleString('en-US') + ' ' + cur.code + ' = ' + fxFmt(r ? unit / r : 0, 'KRW') + ' KRW',
