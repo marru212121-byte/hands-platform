@@ -511,7 +511,7 @@ module.exports = L.handler({
     return { ok: true, payday: day };
   },
 
-  // 매일 11시(버셀 크론): 근로자 마지막 위치의 오늘 남은 예보 → 비·눈·물결 2m↑·바람 9m/s↑·영하·33도↑ 중 먼저 걸리는 하나만
+  // 매일 11시(버셀 크론): 근로자 마지막 위치의 오늘 남은 예보 → 비·눈·물결 2m↑·바람 9m/s↑·영하 5도↓·31도↑ 중 먼저 걸리는 하나만
   async wxcron(req) {
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}` || !process.env.CRON_SECRET) throw new HttpError(401, 'no');
     const subs = await db('push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,language,is_active)&member.is_active=eq.true');
@@ -531,8 +531,8 @@ module.exports = L.handler({
         else if (hs.some((x) => x.pty === 3 && x.pop >= 60)) k = 'snow';
         else if (hs.some((x) => x.wav != null && x.wav >= 2)) k = 'wave';
         else if (hs.some((x) => x.wsd != null && x.wsd >= 9)) k = 'wind';
-        else if (hs.length && Math.min(...hs.map((x) => x.tmp)) <= 3) k = 'cold';  // 사장님 10-27: 너무 극단 말고 — 3도 이하·30도 이상
-        else if (hs.length && Math.max(...hs.map((x) => x.tmp)) >= 30) k = 'heat';
+        else if (hs.length && Math.min(...hs.map((x) => x.tmp)) <= -5) k = 'cold';  // 사장님 10-27 밤: 3도는 매일 와서 귀찮음 → 영하 5도 이하·31도 이상
+        else if (hs.length && Math.max(...hs.map((x) => x.tmp)) >= 31) k = 'heat';
       } catch (e) {}
       kindFor.set(gk, k); return k;
     };
