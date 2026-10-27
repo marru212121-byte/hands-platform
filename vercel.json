@@ -7,6 +7,10 @@
     {
       "path": "/api/w?action=wxcron",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/w?action=wrncron",
+      "schedule": "*/30 * * * *"
     }
   ],
   "headers": [

@@ -23,11 +23,11 @@ function kmaGrid(lat, lng) {
   return { nx: Math.floor(ra * Math.sin(th) + 43 + 0.5), ny: Math.floor(ro - ra * Math.cos(th) + 136 + 0.5) };
 }
 const kst = (ms) => { const d = new Date(ms + 9 * 3600000); return { ymd: d.toISOString().slice(0, 10).replace(/-/g, ''), h: d.getUTCHours(), m: d.getUTCMinutes() }; };
-async function kmaCall(op, q) {
-  let key = String(process.env.KMA_SERVICE_KEY || '').trim();
+async function kmaCall(op, q, svc = 'VilageFcstInfoService_2.0', keyOverride) {
+  let key = String(keyOverride || process.env.KMA_SERVICE_KEY || '').trim();
   if (/%[0-9A-Fa-f]{2}/.test(key)) { try { key = decodeURIComponent(key); } catch (e) {} }  // 포털의 Encoding·Decoding 어느 쪽을 넣어도 됨
   if (!key) throw new HttpError(503, 'weather_unavailable');
-  const u = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/${op}?serviceKey=${encodeURIComponent(key)}&pageNo=1&numOfRows=1000&dataType=JSON&${new URLSearchParams(q)}`;
+  const u = `https://apis.data.go.kr/1360000/${svc}/${op}?serviceKey=${encodeURIComponent(key)}&pageNo=1&numOfRows=1000&dataType=JSON&${new URLSearchParams(q)}`;
   const r = await fetch(u);
   const txt = await r.text();
   let j = null; try { j = JSON.parse(txt); } catch (e) {}
@@ -48,6 +48,105 @@ const trHits = new Map();
 // 11시 날씨 대비 알림 (사장님 10-27): 궂은 날만, 생활 안내 말투, 근로자 말 + 아래 한국어. 업무 지시 없음
 const WX_MSG = {"rain": {"ko": ["오늘 비 소식이 있습니다", "우산을 챙기세요."], "en": ["Rain expected today", "Take an umbrella."], "vi": ["Hôm nay có mưa", "Hãy mang theo ô."], "id": ["Hari ini akan hujan", "Bawalah payung."], "th": ["วันนี้มีฝนตก", "พกร่มไปด้วยนะ"], "tl": ["Uulan ngayong araw", "Magdala ng payong."], "ne": ["आज पानी पर्ने सम्भावना छ", "छाता बोक्नुहोस्।"], "km": ["ថ្ងៃនេះមានភ្លៀង", "សូមយកឆ័ត្រទៅជាមួយ។"], "my": ["ယနေ့ မိုးရွာမည်", "ထီး ယူသွားပါ။"], "si": ["අද වැසි ඇති වේ", "කුඩයක් රැගෙන යන්න."], "bn": ["আজ বৃষ্টি হতে পারে", "ছাতা সাথে নিন।"]}, "snow": {"ko": ["오늘 눈 소식이 있습니다", "미끄러운 길 조심하세요."], "en": ["Snow expected today", "Watch out for slippery roads."], "vi": ["Hôm nay có tuyết", "Cẩn thận đường trơn."], "id": ["Hari ini akan turun salju", "Hati-hati jalan licin."], "th": ["วันนี้มีหิมะตก", "ระวังถนนลื่น"], "tl": ["May niyebe ngayong araw", "Mag-ingat sa madulas na daan."], "ne": ["आज हिउँ पर्ने सम्भावना छ", "चिप्लो बाटोमा होस गर्नुहोस्।"], "km": ["ថ្ងៃនេះមានព្រិលធ្លាក់", "សូមប្រយ័ត្នផ្លូវរអិល។"], "my": ["ယနေ့ နှင်းကျမည်", "လမ်းချော်နိုင်၍ သတိထားပါ။"], "si": ["අද හිම වැටේ", "ලිස්සන මාර්ග ගැන සැලකිලිමත් වන්න."], "bn": ["আজ তুষারপাত হতে পারে", "পিচ্ছিল রাস্তায় সাবধান।"]}, "wave": {"ko": ["오늘 물결이 높습니다", "바다에 나갈 때 대비하세요."], "en": ["High waves today", "Be prepared at sea."], "vi": ["Hôm nay sóng cao", "Hãy chuẩn bị khi ra biển."], "id": ["Ombak tinggi hari ini", "Bersiaplah saat ke laut."], "th": ["วันนี้คลื่นสูง", "เตรียมตัวให้พร้อมเมื่อออกทะเล"], "tl": ["Malalaki ang alon ngayon", "Maghanda kapag nasa dagat."], "ne": ["आज समुद्रमा छाल अग्लो छ", "समुद्रमा जाँदा तयारी गर्नुहोस्।"], "km": ["ថ្ងៃនេះរលកខ្ពស់", "សូមត្រៀមខ្លួននៅពេលចេញសមុទ្រ។"], "my": ["ယနေ့ လှိုင်းကြီးမည်", "ပင်လယ်ထွက်လျှင် ကြိုတင်ပြင်ဆင်ပါ။"], "si": ["අද රළ උසයි", "මුහුදට යන විට සූදානම් වන්න."], "bn": ["আজ সমুদ্রে বড় ঢেউ", "সমুদ্রে গেলে প্রস্তুত থাকুন।"]}, "wind": {"ko": ["오늘 바람이 강합니다", "대비하세요."], "en": ["Strong wind today", "Please be prepared."], "vi": ["Hôm nay gió mạnh", "Hãy chuẩn bị nhé."], "id": ["Angin kencang hari ini", "Bersiaplah."], "th": ["วันนี้ลมแรง", "เตรียมตัวให้พร้อม"], "tl": ["Malakas ang hangin ngayon", "Maghanda."], "ne": ["आज हावा बलियो छ", "तयारी गर्नुहोस्।"], "km": ["ថ្ងៃនេះខ្យល់បក់ខ្លាំង", "សូមត្រៀមខ្លួន។"], "my": ["ယနေ့ လေပြင်းတိုက်မည်", "ကြိုတင်ပြင်ဆင်ပါ။"], "si": ["අද තද සුළං", "සූදානම් වන්න."], "bn": ["আজ জোরে বাতাস", "প্রস্তুত থাকুন।"]}, "cold": {"ko": ["오늘 많이 춥습니다", "따뜻하게 입으세요."], "en": ["Very cold today", "Dress warmly."], "vi": ["Hôm nay rất lạnh", "Hãy mặc ấm."], "id": ["Hari ini sangat dingin", "Pakailah baju hangat."], "th": ["วันนี้อากาศหนาวมาก", "แต่งตัวให้อบอุ่น"], "tl": ["Napakalamig ngayon", "Magsuot ng makapal na damit."], "ne": ["आज धेरै जाडो छ", "न्यानो लुगा लगाउनुहोस्।"], "km": ["ថ្ងៃនេះត្រជាក់ខ្លាំង", "សូមស្លៀកពាក់ឱ្យកក់ក្តៅ។"], "my": ["ယနေ့ အလွန်အေးမည်", "နွေးထွေးစွာ ဝတ်ဆင်ပါ။"], "si": ["අද ඉතා සීතලයි", "උණුසුම් ඇඳුම් අඳින්න."], "bn": ["আজ খুব ঠান্ডা", "গরম কাপড় পরুন।"]}, "heat": {"ko": ["오늘 매우 덥습니다", "물을 자주 마시세요."], "en": ["Very hot today", "Drink water often."], "vi": ["Hôm nay rất nóng", "Hãy uống nước thường xuyên."], "id": ["Hari ini sangat panas", "Sering-seringlah minum air."], "th": ["วันนี้อากาศร้อนมาก", "ดื่มน้ำบ่อย ๆ"], "tl": ["Napakainit ngayon", "Uminom ng tubig nang madalas."], "ne": ["आज धेरै गर्मी छ", "बारम्बार पानी पिउनुहोस्।"], "km": ["ថ្ងៃនេះក្តៅខ្លាំង", "សូមផឹកទឹកឱ្យបានញឹកញាប់។"], "my": ["ယနေ့ အလွန်ပူမည်", "ရေ မကြာခဏ သောက်ပါ။"], "si": ["අද ඉතා උණුසුම්", "නිතර වතුර බොන්න."], "bn": ["আজ খুব গরম", "ঘন ঘন পানি পান করুন।"]}};
 const WX_TAIL = {"ko": "앱에서 자세히 확인하세요.", "en": "See details in the app.", "vi": "Xem chi tiết trong ứng dụng.", "id": "Lihat detail di aplikasi.", "th": "ดูรายละเอียดในแอป", "tl": "Tingnan ang detalye sa app.", "ne": "विवरण एपमा हेर्नुहोस्।", "km": "មើលព័ត៌មានលម្អិតក្នុងកម្មវិធី។", "my": "အသေးစိတ်ကို အက်ပ်တွင် ကြည့်ပါ။", "si": "විස්තර යෙදුමෙන් බලන්න.", "bn": "বিস্তারিত অ্যাপে দেখুন।"};
+// 기상특보 알림 (사장님 10-27 밤): 기상청 특보현황(getPwnStatus)을 30분마다 보고, 새로 내려진 특보(풍랑·호우·태풍·한파·폭염·강풍·대설)를
+// 그 지역 근로자(마지막 위치의 시·도·시군)에게. 말투 = 생활 안내 「○○에 ○○주의보가 내려졌습니다. 대비하세요. 앱에서 날씨를 확인하세요.」 업무 지시·느낌표 없음
+const WRN_KINDS = ['태풍', '풍랑', '호우', '대설', '강풍', '한파', '폭염'];  // 앞쪽이 먼저(한 사람에게 한 번에 하나만)
+const WRN_NAME = {
+  en: { 태풍: 'Typhoon', 풍랑: 'High seas', 호우: 'Heavy rain', 대설: 'Heavy snow', 강풍: 'Strong wind', 한파: 'Cold wave', 폭염: 'Heat wave' },
+  vi: { 태풍: 'bão', 풍랑: 'sóng lớn', 호우: 'mưa lớn', 대설: 'tuyết rơi dày', 강풍: 'gió mạnh', 한파: 'rét đậm', 폭염: 'nắng nóng' },
+  id: { 태풍: 'topan', 풍랑: 'gelombang tinggi', 호우: 'hujan lebat', 대설: 'salju lebat', 강풍: 'angin kencang', 한파: 'gelombang dingin', 폭염: 'gelombang panas' },
+  th: { 태풍: 'พายุไต้ฝุ่น', 풍랑: 'คลื่นลมแรง', 호우: 'ฝนตกหนัก', 대설: 'หิมะตกหนัก', 강풍: 'ลมแรง', 한파: 'อากาศหนาวจัด', 폭염: 'อากาศร้อนจัด' },
+  tl: { 태풍: 'bagyo', 풍랑: 'malalaking alon', 호우: 'malakas na ulan', 대설: 'makapal na niyebe', 강풍: 'malakas na hangin', 한파: 'matinding lamig', 폭염: 'matinding init' },
+  ne: { 태풍: 'टाइफुन', 풍랑: 'अग्लो समुद्री छाल', 호우: 'भारी वर्षा', 대설: 'भारी हिमपात', 강풍: 'तेज हावा', 한파: 'शीतलहर', 폭염: 'तातो लहर' },
+  km: { 태풍: 'ព្យុះទីហ្វុង', 풍랑: 'រលកខ្ពស់', 호우: 'ភ្លៀងធ្លាក់ខ្លាំង', 대설: 'ព្រិលធ្លាក់ខ្លាំង', 강풍: 'ខ្យល់ខ្លាំង', 한파: 'រលកត្រជាក់', 폭염: 'រលកកំដៅ' },
+  my: { 태풍: 'တိုင်ဖွန်းမုန်တိုင်း', 풍랑: 'လှိုင်းကြီး', 호우: 'မိုးသည်းထန်', 대설: 'နှင်းထူထူကျ', 강풍: 'လေပြင်း', 한파: 'အအေးလှိုင်း', 폭염: 'အပူလှိုင်း' },
+  si: { 태풍: 'සුළි කුණාටු', 풍랑: 'උස් රළ', 호우: 'අධික වැසි', 대설: 'අධික හිම', 강풍: 'තද සුළං', 한파: 'සීත රැල්ල', 폭염: 'තාප රැල්ල' },
+  bn: { 태풍: 'টাইফুন', 풍랑: 'উঁচু ঢেউ', 호우: 'ভারী বৃষ্টি', 대설: 'ভারী তুষারপাত', 강풍: 'ঝোড়ো হাওয়া', 한파: 'শৈত্যপ্রবাহ', 폭염: 'তাপপ্রবাহ' },
+};
+// 이름 + 단계(주의보 a / 경보 w) → 그 나라 말 특보 이름
+const WRN_TITLE = {
+  en: (k, w) => `${WRN_NAME.en[k]} ${w ? 'warning' : 'advisory'}`,
+  vi: (k, w) => `${w ? 'Cảnh báo' : 'Chú ý'} ${WRN_NAME.vi[k]}`,
+  id: (k, w) => `${w ? 'Peringatan' : 'Waspada'} ${WRN_NAME.id[k]}`,
+  th: (k, w) => `ประกาศ${w ? 'เตือนภัย' : 'เฝ้าระวัง'}${WRN_NAME.th[k]}`,
+  tl: (k, w) => `${w ? 'Babala' : 'Abiso'} sa ${WRN_NAME.tl[k]}`,
+  ne: (k, w) => `${WRN_NAME.ne[k]} ${w ? 'चेतावनी' : 'सतर्कता'}`,
+  km: (k, w) => `${w ? 'ការព្រមាន' : 'ការប្រុងប្រយ័ត្ន'}${WRN_NAME.km[k]}`,
+  my: (k, w) => `${WRN_NAME.my[k]} ${w ? 'သတိပေးချက်' : 'သတိထားရန်'}`,
+  si: (k, w) => `${WRN_NAME.si[k]} ${w ? 'අනතුරු ඇඟවීම' : 'අවධානය'}`,
+  bn: (k, w) => `${WRN_NAME.bn[k]} ${w ? 'বিপদ সংকেত' : 'সতর্কতা'}`,
+};
+const WRN_BODY = {
+  en: (t) => `${t} has been issued for your area. Please be prepared. Check the weather in the app.`,
+  vi: (t) => `${t} đã được ban hành tại khu vực của bạn. Hãy chuẩn bị. Xem thời tiết trong ứng dụng.`,
+  id: (t) => `${t} telah dikeluarkan untuk wilayah Anda. Bersiaplah. Cek cuaca di aplikasi.`,
+  th: (t) => `มี${t}ในพื้นที่ของคุณ เตรียมตัวให้พร้อม ดูสภาพอากาศในแอป`,
+  tl: (t) => `May ${t} sa inyong lugar. Maghanda. Tingnan ang panahon sa app.`,
+  ne: (t) => `तपाईंको क्षेत्रमा ${t} जारी गरिएको छ। तयारी गर्नुहोस्। एपमा मौसम हेर्नुहोस्।`,
+  km: (t) => `មាន${t}នៅតំបន់របស់អ្នក។ សូមត្រៀមខ្លួន។ មើលអាកាសធាតុក្នុងកម្មវិធី។`,
+  my: (t) => `သင့်နေရာတွင် ${t} ထုတ်ပြန်ထားသည်။ ကြိုတင်ပြင်ဆင်ပါ။ အက်ပ်တွင် ရာသီဥတုကို ကြည့်ပါ။`,
+  si: (t) => `ඔබේ ප්‍රදේශයට ${t} නිකුත් කර ඇත. සූදානම් වන්න. යෙදුමේ කාලගුණය බලන්න.`,
+  bn: (t) => `আপনার এলাকায় ${t} জারি করা হয়েছে। প্রস্তুত থাকুন। অ্যাপে আবহাওয়া দেখুন।`,
+};
+// 시·도 이름(정식·줄임·옛 이름) → 줄인 이름 하나로
+const PROV = [['서울', '서울'], ['부산', '부산'], ['대구', '대구'], ['인천', '인천'], ['광주', '광주'], ['대전', '대전'], ['울산', '울산'], ['세종', '세종'], ['경기', '경기'], ['강원', '강원'],
+  ['충청북', '충북'], ['충북', '충북'], ['충청남', '충남'], ['충남', '충남'], ['전라북', '전북'], ['전북', '전북'], ['전라남', '전남'], ['전남', '전남'],
+  ['경상북', '경북'], ['경북', '경북'], ['경상남', '경남'], ['경남', '경남'], ['제주', '제주']];
+const provOf = (s) => { s = String(s || '').replace(/\s/g, ''); for (const [p, k] of PROV) if (s.startsWith(p)) return k; return null; };
+// 바다 구역 이름 → 맞닿은 시·도 (구역 이름 안의 시·도·도시 이름을 먼저 보고, 없으면 큰 해역으로)
+const SEA_CITY = [['거제', '경남'], ['통영', '경남'], ['남해군', '경남'], ['울릉', '경북'], ['독도', '경북'], ['포항', '경북'], ['여수', '전남'], ['완도', '전남'], ['목포', '전남'], ['흑산', '전남'], ['군산', '전북'], ['부안', '전북'], ['태안', '충남'], ['보령', '충남'], ['서산', '충남']];
+const SEA_BIG = [['서해중부', ['인천', '경기', '충남']], ['서해남부', ['전북', '전남']], ['남해서부', ['전남']], ['남해동부', ['부산', '경남']], ['동해남부', ['부산', '울산', '경북']], ['동해중부', ['강원', '경북']], ['동해북부', ['강원']], ['제주', ['제주']]];
+function seaProvs(zone) {
+  const z = zone.replace(/\s/g, ''), out = new Set();
+  for (const [p, k] of PROV) if (z.includes(p)) out.add(k);
+  for (const [c, k] of SEA_CITY) if (z.includes(c)) out.add(k);
+  if (!out.size) for (const [b, ks] of SEA_BIG) if (z.includes(b)) ks.forEach((k) => out.add(k));
+  return [...out];
+}
+// 특보현황 글(t6) → 낱개 [{kind, warn(경보?), key, prov:[..], sub:'거제'|null, sea:bool, area:'보여 줄 이름'}]
+// 예) "o 풍랑주의보 : 남해동부앞바다, 거제시동부앞바다\no 강풍주의보 : 경상남도(거제, 통영), 부산"
+function parseWarn(t6) {
+  const out = [];
+  for (const line of String(t6 || '').split(/\r?\n/)) {
+    const m = /^\s*o\s*(\S+?)(주의보|경보)\s*:\s*(.+)$/.exec(line); if (!m) continue;
+    const kind = m[1], warn = m[2] === '경보'; if (!WRN_KINDS.includes(kind)) continue;
+    // 괄호 안의 쉼표는 나누지 않음
+    const parts = []; let depth = 0, cur = '';
+    for (const ch of m[3]) { if (ch === '(') depth++; if (ch === ')') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; }
+    parts.push(cur);
+    for (let p of parts) {
+      p = p.trim(); if (!p) continue;
+      if (/바다/.test(p)) { out.push({ kind, warn, sea: true, prov: seaProvs(p), sub: null, area: p.replace(/(앞바다|먼바다)/, ' $1').replace(/\s+/g, ' ').trim(), key: `${kind}${m[2]}|${p}` }); continue; }
+      const pm = /^([^(]+)(?:\(([^)]*)\))?/.exec(p), prov = provOf(pm[1]); if (!prov) continue;
+      const subs = pm[2] ? pm[2].split(/[,.·]/).map((x) => x.trim()).filter(Boolean) : [];
+      if (!subs.length) out.push({ kind, warn, sea: false, prov: [prov], sub: null, area: pm[1].trim(), key: `${kind}${m[2]}|${prov}` });
+      for (const s of subs) out.push({ kind, warn, sea: false, prov: [prov], sub: s, area: s, key: `${kind}${m[2]}|${prov}|${s}` });
+    }
+  }
+  return out;
+}
+// 근로자 위치 → 시·도·시군 (오픈스트리트맵, 한국어). 0.05도(약 5km) 단위로 같은 칸이면 한 번만
+async function placeKo(lat, lng, cache) {
+  const k = lat.toFixed(2) + ',' + lng.toFixed(2);
+  if (cache[k]) return cache[k];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&zoom=10&accept-language=ko`,
+      { headers: { 'User-Agent': 'hands-platform/1.0 (https://hands-platform.vercel.app)' } });
+    const a = (await r.json()).address || {};
+    const prov = provOf(a.province || a.state || a.city);
+    cache[k] = { prov, city: String(a.city || a.county || a.town || '').replace(/(시|군|구)$/, '') };
+    await new Promise((res) => setTimeout(res, 1100));  // 오픈스트리트맵 이용 규칙: 1초에 1번
+  } catch (e) { return { prov: null, city: '' }; }
+  return cache[k];
+}
+// 특보 하나가 이 근로자 자리에 해당하나
+function warnHits(w, pl) {
+  if (!pl.prov || !w.prov.includes(pl.prov)) return false;
+  if (!w.sub) return true;
+  if (pl.city && (w.sub.startsWith(pl.city) || pl.city.startsWith(w.sub))) return true;
+  // 「강원북부산지」「부산서부」처럼 도시 이름이 아닌 권역 구분이면 시·도로 봄
+  return /(북부|남부|동부|서부|중부|산지|내륙|해안|평지)/.test(w.sub) && !/(시|군)$/.test(w.sub);
+}
 
 // 격자 하나의 날씨(20분 저장) — 날씨 화면과 11시 날씨 대비 알림이 같이 씀
 async function wxFor(nx, ny) {
@@ -547,6 +646,41 @@ module.exports = L.handler({
     }
     if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
     return { ok: true, sent, count, grids: kindFor.size };
+  },
+
+  // 30분마다(버셀 크론): 기상특보 새로 내려진 것만 그 지역 근로자에게. 처음 한 번은 지금 걸린 특보를 「본 것」으로만 저장(밤새 쌓인 특보를 한꺼번에 보내지 않음)
+  async wrncron(req) {
+    if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}` || !process.env.CRON_SECRET) throw new HttpError(401, 'no');
+    const items = await kmaCall('getPwnStatus', {}, 'WthrWrnInfoService', process.env.KMA_SEA_KEY);
+    const st = items[0] || {}, all = parseWarn(st.t6);
+    const prev = await db('app_settings?select=value&key=eq.wx_warn_seen');
+    const seen = new Set((prev[0] && prev[0].value && prev[0].value.keys) || []);
+    const fresh = prev.length ? all.filter((w) => !seen.has(w.key)) : [];
+    await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'wx_warn_seen', value: { keys: all.map((w) => w.key), tmFc: st.tmFc || null }, updated_at: nowIso() } });
+    if (!fresh.length) return { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: 0, sent: 0 };
+    const subs = await db('push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,language,is_active)&member.is_active=eq.true');
+    if (!subs.length) return { ok: true, fresh: fresh.length, sent: 0 };
+    const ids = [...new Set(subs.map((x) => x.member.id))];
+    const locs = await db(`locations?select=member_id,lat,lng&member_id=in.(${ids.join(',')})`);
+    const locBy = Object.fromEntries(locs.map((l) => [l.member_id, l]));
+    const gc = await db('app_settings?select=value&key=eq.geo_ko_cache'), cache = (gc[0] && gc[0].value) || {}, n0 = Object.keys(cache).length;
+    const order = (w) => (w.warn ? 0 : 10) + WRN_KINDS.indexOf(w.kind);  // 경보 먼저, 그다음 태풍·풍랑 … 순
+    const wp = L.webpush(); let sent = 0; const gone = [], count = {}, done = new Set();
+    for (const s of subs) {
+      const loc = locBy[s.member.id]; if (!loc || loc.lat == null) continue;
+      const pl = await placeKo(+loc.lat, +loc.lng, cache);
+      const w = fresh.filter((x) => warnHits(x, pl)).sort((a, b) => order(a) - order(b))[0]; if (!w) continue;
+      const kname = w.kind + (w.warn ? '경보' : '주의보'), ko = `${w.area}에 ${kname}가 내려졌습니다. 대비하세요. 앱에서 날씨를 확인하세요.`;
+      const lang = WRN_TITLE[s.member.language] ? s.member.language : (s.member.language === 'ko' ? 'ko' : 'en');
+      const title = lang === 'ko' ? kname : WRN_TITLE[lang](w.kind, w.warn);
+      const body = lang === 'ko' ? ko : WRN_BODY[lang](title) + '\n\n[한국어] ' + ko;
+      try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title, body, url: '/?wx=1' }), { TTL: 21600 }); sent++; count[w.key] = (count[w.key] || 0) + 1; done.add(s.member.id); }
+      catch (e) { if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
+    }
+    if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
+    if (Object.keys(cache).length !== n0) await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'geo_ko_cache', value: cache, updated_at: nowIso() } }).catch(() => {});
+    console.log('wrncron', st.tmFc, 'fresh', fresh.map((w) => w.key).join(' / '), 'sent', sent, 'people', done.size);
+    return { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: fresh.length, sent, count };
   },
 
   async posts(req) {
