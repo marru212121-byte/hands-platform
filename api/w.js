@@ -474,10 +474,12 @@ module.exports = L.handler({
     const msg = await client.messages.create({
       model: 'claude-haiku-5-5', max_tokens: 2048,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'], additionalProperties: false } } },
-      messages: [{ role: 'user', content: `You are an interpreter for a foreign worker in Korea. Translate the text below into ${TR_LANGS[to]}. Keep numbers, names, places and phone numbers exactly. Natural spoken words. Output only the translation.\n\n${text}` }],
+      messages: [{ role: 'user', content: `You are an interpreter between foreign seafarers / fishing-boat and port workers in Korea and Koreans (bosses, doctors, shop staff). The text may come from speech recognition or quick typing: misspellings, sound-alike words, missing accents, slang and abbreviations are common. Work out what the speaker most likely meant in that work-and-daily-life context (e.g. "sheep" on a boat is "ship"), then translate it into ${TR_LANGS[to]}. Never add facts that are not in the text. Keep numbers, names, places, times and phone numbers exactly. Natural spoken words. Put only the translation in the text field.\n\nTEXT:\n${text}` }],
     });
     const r = JSON.parse((msg.content.find((c) => c.type === 'text') || {}).text || '{}');
-    return { ok: true, text: String(r.text || '').slice(0, 3000), to };
+    let out = String(r.text || '').trim();
+    if (out.startsWith('{')) { try { const inner = JSON.parse(out); if (inner && inner.text) out = String(inner.text); } catch (e) {} }  // 겹쳐 온 모양 풀기
+    return { ok: true, text: out.slice(0, 3000), to };
   },
 
   // 월급날 (사장님 10-27): 근로자가 날짜를 정함, 0 = 끔. 그날 아침 9시 알림(관리자 서버 크론)
