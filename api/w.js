@@ -531,8 +531,8 @@ module.exports = L.handler({
         else if (hs.some((x) => x.pty === 3 && x.pop >= 60)) k = 'snow';
         else if (hs.some((x) => x.wav != null && x.wav >= 2)) k = 'wave';
         else if (hs.some((x) => x.wsd != null && x.wsd >= 9)) k = 'wind';
-        else if (hs.length && Math.min(...hs.map((x) => x.tmp)) <= 0) k = 'cold';
-        else if (hs.length && Math.max(...hs.map((x) => x.tmp)) >= 33) k = 'heat';
+        else if (hs.length && Math.min(...hs.map((x) => x.tmp)) <= 3) k = 'cold';  // 사장님 10-27: 너무 극단 말고 — 3도 이하·30도 이상
+        else if (hs.length && Math.max(...hs.map((x) => x.tmp)) >= 30) k = 'heat';
       } catch (e) {}
       kindFor.set(gk, k); return k;
     };
