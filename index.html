@@ -221,6 +221,7 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .fxamt{margin-left:auto;min-width:0;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere;line-height:1.2}
 .fxrow.on .fxamt{color:var(--navy)}
 .fxamt .sym{font-size:.62em;font-weight:600;color:var(--ink3);margin-right:4px;vertical-align:.12em}
+.fxamt .sym.after{margin:0 0 0 4px}
 .wxnow{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 18px;margin-top:14px}
 .wxtop{display:flex;align-items:center;gap:14px}
 .wxtop .wi{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy);flex:none}
@@ -1734,6 +1735,7 @@ function screenWeather() {
 // 환율 계산기 (사장님 10-27): 위 = 한화, 아래 = 가입 때 고른 나라 통화(바꿀 수 있음), 치는 대로 바로 변환. 하루 1번 갱신 자료라 「오늘 기준」
 const FX = [['VND', 'vn'], ['THB', 'th'], ['IDR', 'id'], ['PHP', 'ph'], ['NPR', 'np'], ['KHR', 'kh'], ['MMK', 'mm'], ['LKR', 'lk'], ['BDT', 'bd'], ['USD', 'us']];
 const FX_NODEC = ['KRW', 'VND', 'IDR', 'KHR', 'MMK'];
+const FX_SYM_AFTER = ['VND', 'KHR', 'MMK', 'BDT'];  // 그 나라 표준 표기(유니코드 CLDR)가 금액 뒤에 붙이는 통화
 const FX_SYM = { KRW: '₩', USD: '$', VND: '₫', THB: '฿', IDR: 'Rp', PHP: '₱', NPR: 'रु', KHR: '៛', MMK: 'K', LKR: 'Rs', BDT: '৳' };  // 통화 기호 (사장님 10-27)
 function fxDefault() {  // 오른쪽 위 언어의 나라 통화 → (한국어면) 가입 나라 통화 → 달러. 언어를 바꾸면 통화도 같이 바뀜 (사장님 10-27)
   const c = S.lang !== 'ko' ? FLAG[S.lang] : (S.profile || {}).country;
@@ -1770,8 +1772,9 @@ function screenFx() {
     rowK.classList.toggle('on', side === 'krw'); rowF.classList.toggle('on', side === 'fx');
     const [k, f] = vals(), typed = (x) => x.includes('.') ? fxFmt(parseFloat(x.split('.')[0]) || 0, 'KRW') + '.' + x.split('.')[1] : fxFmt(parseFloat(x) || 0, 'KRW');
     const sym = (c) => h('span', { class: 'sym', text: FX_SYM[c] || '' });
-    amtK.replaceChildren(sym('KRW'), side === 'krw' ? typed(input) : fxFmt(k, 'KRW'));
-    amtF.replaceChildren(sym(cur.code), side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…'));
+    const withSym = (c, txt) => FX_SYM_AFTER.includes(c) ? [txt, h('span', { class: 'sym after', text: FX_SYM[c] })] : [sym(c), txt];
+    amtK.replaceChildren(...withSym('KRW', side === 'krw' ? typed(input) : fxFmt(k, 'KRW')));
+    amtF.replaceChildren(...withSym(cur.code, side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…')));
     if (data) {
       const r = rate(), unit = FX_NODEC.includes(cur.code) ? 1000 : 1;
       note.replaceChildren(h('b', { text: t('fxAsOf').replace('{d}', fmtDate(new Date(data.updated).toISOString(), true)) }), h('br'), unit.toLocaleString('en-US') + ' ' + cur.code + ' = ' + fxFmt(r ? unit / r : 0, 'KRW') + ' KRW',
