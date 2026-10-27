@@ -1893,7 +1893,7 @@ function screenWeather() {
       h('button', { class: 'wxplace wxpick', onclick: openPick }, icon(city ? 'pin' : 'locate'), h('span', { text: city ? cityName(city) : (w.place || t('wxMyLoc')) }), icon('chevDown')),
       h('div', { class: 'wxnow' },
         h('div', { class: 'wxtop' }, h('span', { class: 'wi' }, icon(ci)), h('div', {}, h('div', { class: 'wxtemp', text: Math.round(w.now.tmp) + '°' }), h('div', { class: 'wxcond', text: t(ck) }))),
-        h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh + '%' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd + ' m/s' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
+        h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh != null ? w.now.reh + '%' : '-' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd != null ? w.now.wsd + ' m/s' : '-' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
       seaBox, hoursBox,
       h('div', { class: 'wxdays' }, w.days.map((d) => { const [k3, i3] = wxKind(d.sky, d.pty);
         return h('button', { class: 'wxd' + (d.date === sel ? ' on' : ''), onclick: () => { sel = d.date; show(w); } }, h('span', { class: 'dn', text: dayName(d.date) }), icon(i3), h('span', { class: 'cd' }, t(k3), d.pop ? h('span', { class: 'pp', style: 'display:block', text: t('wxPop') + ' ' + d.pop + '%' }) : null),
