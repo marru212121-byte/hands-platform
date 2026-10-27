@@ -111,7 +111,7 @@ module.exports = L.handler({
     if (!/^https:\/\/hands-platform\.vercel\.app|^http:\/\/localhost(:\d+)?/.test(from)) throw new HttpError(403, 'forbidden');
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';
     const now = Date.now(); const hits = (readHits.get(ip) || []).filter((t) => now - t < 10 * 60000);
-    if (hits.length >= 12) throw new HttpError(429, 'too_many');
+    if (hits.length >= 600) throw new HttpError(429, 'too_many');  // 공항 와이파이 하나에 수백 명 (사장님 10-27)
     hits.push(now); readHits.set(ip, hits);
     const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
     if (!m || m[2].length > 4500000) throw new HttpError(400, 'bad_image');
