@@ -153,7 +153,7 @@ const S = {
   sosFilter: 'pending', silentDays: 3, logAction: 'all',
   bigMap: null, miniMap: null, detail: null,
 };
-const IDLE_MS = 30 * 60 * 1000;
+const IDLE_MS = 3 * 60 * 60 * 1000;  // 3시간 (사장님 10-27)
 let lastActivity = Date.now();
 
 /* ───────── 토스트·모달 ───────── */
@@ -209,7 +209,7 @@ function showLogin(notice) {
 }
 function sessionEnded(reason) {
   if (!S.admin) return;
-  showLogin(reason === 'idle' ? '30분 동안 사용이 없어 자동으로 로그아웃되었습니다.' : '로그인이 만료되었습니다. 다시 로그인해 주세요.');
+  showLogin(reason === 'idle' ? '3시간 동안 사용이 없어 자동으로 로그아웃되었습니다.' : '로그인이 만료되었습니다. 다시 로그인해 주세요.');
 }
 async function logout(reason) {
   try { await api('logout', { body: {} }); } catch (_) { /* 이미 끝난 세션 */ }
@@ -252,15 +252,16 @@ function startTimers() {
 }
 function stopTimers() { S.timers.forEach(clearInterval); S.timers = []; }
 
-/* 30분 무활동 자동 로그아웃 */
+/* 3시간 무활동 자동 로그아웃 */
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach((ev) =>
   window.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true, capture: true }));
 function tickIdle() {
   const left = IDLE_MS - (Date.now() - lastActivity);
   if (left <= 0) { logout('idle'); return; }
-  const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
-  $('#idleLeft').textContent = `${pad(m)}:${pad(s)}`;
-  $('#moreIdle').textContent = `${pad(m)}:${pad(s)}`;
+  const h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000), s = Math.floor((left % 60000) / 1000);
+  const txt = h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  $('#idleLeft').textContent = txt;
+  $('#moreIdle').textContent = txt;
   if (S.detail) tickPhotoExpiry();
 }
 

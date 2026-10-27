@@ -1013,6 +1013,15 @@ function checkbox(checked, onchange, labelKids, extraCls) {
   const inp = h('input', { type: 'checkbox', checked, onchange: (e) => onchange(e.target.checked) });
   return h('label', { class: 'cbwrap' + (extraCls ? ' ' + extraCls : '') }, inp, h('span', { class: 'cb' }, icon('check')), h('span', { class: 'clabel' }, labelKids));
 }
+/* terms open inside the app (a home-screen app has no browser back button) — one tap closes it, the ticks stay */
+function openTerms(anchor) {
+  const close = () => { box.remove(); };
+  const box = h('div', { role: 'dialog', 'aria-modal': 'true', style: 'position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column' },
+    h('div', { style: 'display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;border-bottom:1px solid #E1E6ED' },
+      h('button', { class: 'btn btn-secondary', style: 'width:auto;min-height:44px;padding:0 16px', onclick: close }, icon('back'), t('back'))),
+    h('iframe', { src: '/terms.html?lang=' + S.lang + (anchor ? '#' + anchor : ''), title: 'terms', style: 'flex:1;width:100%;border:0' }));
+  document.body.appendChild(box);
+}
 function consentBlock(onChange) {
   const all = CONSENT_ITEMS.every(([k]) => S.consents[k]);
   return h('div', { class: 'consent', lang: 'ko' },
@@ -1020,7 +1029,7 @@ function consentBlock(onChange) {
     CONSENT_ITEMS.map(([k, lk, dk, req]) => h('div', { class: 'crow' },
       checkbox(S.consents[k], (v) => { S.consents[k] = v; onChange(); },
         [tk(lk), h('span', { class: 'tag' + (req ? ' req' : ''), text: req ? tk('req') : tk('opt') }), dk ? h('span', { class: 'cdesc', style: 'display:block', text: tk(dk) }) : null]),
-      h('a', { class: 'view', href: '/terms.html?lang=' + S.lang + '#' + k, target: '_blank', rel: 'noopener' }, tk('view'), icon('chevRight')))));
+      h('a', { class: 'view', href: '/terms.html?lang=' + S.lang + '#' + k, onclick: (e) => { e.preventDefault(); openTerms(k); } }, tk('view'), icon('chevRight')))));
 }
 
 /* step 1: consent (Korean, fixed) — before any photo is taken */
@@ -1685,7 +1694,7 @@ function myTab() {
     h('div', { class: 'note', style: 'margin-top:14px' }, icon('lock'), h('div', { text: t('device') })),
     h('div', { class: 'rows', style: 'margin-top:14px' },
       h('button', { class: 'irow', onclick: openLangSheet }, h('span', { class: 'k', text: t('language') }), h('span', { class: 'v' }, LANG_NAME[S.lang], icon('chevRight'))),
-      h('a', { class: 'irow', href: '/terms.html?lang=' + S.lang, target: '_blank', rel: 'noopener' }, h('span', { class: 'k', text: t('terms') }), h('span', { class: 'v' }, icon('external'))),
+      h('a', { class: 'irow', href: '/terms.html?lang=' + S.lang, onclick: (e) => { e.preventDefault(); openTerms(''); } }, h('span', { class: 'k', text: t('terms') }), h('span', { class: 'v' }, icon('external'))),
       h('div', { class: 'irow' }, h('span', { class: 'k', text: t('version') }), h('span', { class: 'v', text: VERSION }))),
     h('div', { class: 'note', style: 'margin-top:14px;background:#fff;border:1px solid var(--line)' }, icon('info'), h('div', { class: 'small', text: t('collected') })),
     h('div', { class: 'company', lang: 'ko', style: 'text-align:center;margin:22px 0 0;font-size:13px', text: COMPANY_KO }));
