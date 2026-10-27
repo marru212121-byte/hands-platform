@@ -9,6 +9,8 @@ const COUNTRY_KO = { vn: '베트남', th: '태국', id: '인도네시아', ph: '
 const nowIso = () => new Date().toISOString();
 // 로그인 = 여권 영문 이름(띄어쓰기·기호 무시) + 여권번호 (사장님 10-27)
 const normName = (x) => String(x || '').toUpperCase().replace(/[^A-Z]/g, '');
+const FX_CODES = ['USD', 'VND', 'THB', 'IDR', 'PHP', 'NPR', 'KHR', 'MMK', 'LKR', 'BDT'];
+let fxCache = null;
 const normPass = (x) => String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const loginFails = new Map();
 // 카카오맵 (관리자 지도와 같은 지도). 이름은 핀 이름표로 뜸
@@ -349,6 +351,20 @@ module.exports = L.handler({
     const rows = await db('app_settings?select=value&key=eq.contacts');
     const list = ((rows[0] && rows[0].value) || []).filter((c) => c && c.phone).map((c) => ({ name: String(c.name || ''), role: String(c.role || ''), phone: String(c.phone || '') }));
     return { ok: true, contacts: list };
+  },
+
+  // 환율: 무료 자료(open.er-api.com, 하루 1번 갱신)라 「오늘 기준」으로 보여 줌 (사장님 10-27)
+  async fx(req) {
+    await L.workerFromReq(req);
+    if (!fxCache || Date.now() - fxCache.at > 3 * 3600000) {
+      const r = await fetch('https://open.er-api.com/v6/latest/KRW');
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j || j.result !== 'success') { if (fxCache) return fxCache.out; throw new HttpError(502, 'fx_unavailable'); }
+      const rates = {};
+      for (const c of FX_CODES) if (j.rates && j.rates[c]) rates[c] = j.rates[c];
+      fxCache = { at: Date.now(), out: { ok: true, base: 'KRW', rates, updated: j.time_last_update_unix * 1000 } };
+    }
+    return fxCache.out;
   },
 
   async posts(req) {

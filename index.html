@@ -205,6 +205,27 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
 .mtile{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 16px;min-height:150px;background:#fff;border:1px solid var(--line);border-radius:18px;text-align:left;color:var(--ink);text-decoration:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .12s}
 .mtile:active{transform:scale(.985)}
+.mtile.wide{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px}
+.mtile.wide .fxflags{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--ink3)}
+.fxflags img,.fxrow .fl{width:34px;height:24px;object-fit:cover;border-radius:4px;box-shadow:0 0 0 1px rgba(20,40,75,.12);flex:none}
+.fxflags .ic{width:16px;height:16px}
+.fxbox{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:14px}
+.fxrow{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:18px 16px;background:#fff;border:0;text-align:left;color:var(--ink);font:inherit}
+.fxrow+.fxrow{border-top:1px solid var(--line)}
+.fxrow.on{background:var(--navy-bg);box-shadow:inset 4px 0 0 var(--navy)}
+.fxcur{position:relative;display:flex;align-items:center;gap:10px;flex:none}
+.fxcur b{font-size:18px;font-weight:700}
+.fxcur .ic{width:16px;height:16px;color:var(--ink3)}
+.fxcur select{position:absolute;inset:0;opacity:0;width:100%;font-size:16px}
+.fxname{display:block;font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
+.fxamt{margin-left:auto;min-width:0;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere;line-height:1.2}
+.fxrow.on .fxamt{color:var(--navy)}
+.fxkeys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.fxkeys button{height:58px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:24px;font-weight:600;color:var(--ink);font-family:inherit}
+.fxkeys button:active{background:var(--navy-bg)}
+.fxkeys .fxc{color:var(--red);font-size:20px}
+.fxnote{margin-top:12px;font-size:13px;color:var(--ink3);line-height:1.5}
+.fxnote a{color:var(--ink3)}
 .mtile .mi{position:relative;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy);flex:none}
 .mtile .mi .ic{width:26px;height:26px}
 .mtile .mt{display:block;font-size:18px;font-weight:700;line-height:1.35}
@@ -612,6 +633,19 @@ my:{"notices": "အသိပေးချက်", "noticesSub": "ကုမ္ပ�
 si:{"notices": "දැනුම්දීම්", "noticesSub": "සමාගමෙන් පුවත්", "weather": "කාලගුණය", "weatherSub": "ඔබ සිටින තැන කාලගුණය", "contacts": "කළමනාකරු අමතන්න", "contactsSub": "කළමනාකරුට ඇමතුම", "noNotices": "තවම දැනුම්දීම් නැත.", "noContacts": "තවම කළමනාකරු සම්බන්ධතා නැත.", "call": "අමතන්න", "koOriginal": "කොරියානු මුල් පිටපත"},
 bn:{"notices": "নোটিশ", "noticesSub": "কোম্পানির খবর", "weather": "আবহাওয়া", "weatherSub": "আপনি যেখানে আছেন সেখানকার আবহাওয়া", "contacts": "ম্যানেজারের সাথে যোগাযোগ", "contactsSub": "ম্যানেজারকে ফোন", "noNotices": "এখনো কোনো নোটিশ নেই।", "noContacts": "এখনো ম্যানেজারের নম্বর নেই।", "call": "ফোন", "koOriginal": "কোরিয়ান মূল"}};
 for (const l in STR_HOME4) Object.assign(STR[l], STR_HOME4[l]);
+const STR_FX = {  // 환율 계산기 (사장님 10-27)
+en:{fx:'Exchange rate',fxSub:'Convert money right away',fxAsOf:'Rate as of {d}'},
+ko:{fx:'환율',fxSub:'바로 계산',fxAsOf:'{d} 기준'},
+vi:{fx:'Tỷ giá',fxSub:'Đổi tiền ngay',fxAsOf:'Tỷ giá ngày {d}'},
+id:{fx:'Kurs',fxSub:'Hitung uang langsung',fxAsOf:'Kurs per {d}'},
+th:{fx:'อัตราแลกเปลี่ยน',fxSub:'แปลงเงินทันที',fxAsOf:'อัตรา ณ {d}'},
+tl:{fx:'Palitan ng pera',fxSub:'Kwentahin agad',fxAsOf:'Palitan noong {d}'},
+ne:{fx:'विनिमय दर',fxSub:'तुरुन्त पैसा हिसाब',fxAsOf:'{d} को दर'},
+km:{fx:'អត្រាប្តូរប្រាក់',fxSub:'គណនាប្រាក់ភ្លាមៗ',fxAsOf:'អត្រាថ្ងៃ {d}'},
+my:{fx:'ငွေလဲနှုန်း',fxSub:'ငွေကို ချက်ချင်းတွက်ရန်',fxAsOf:'{d} နှုန်း'},
+si:{fx:'විනිමය අනුපාතය',fxSub:'මුදල් වහාම ගණනය',fxAsOf:'{d} අනුපාතය'},
+bn:{fx:'বিনিময় হার',fxSub:'সাথে সাথে টাকা হিসাব',fxAsOf:'{d} তারিখের হার'}};
+for (const l in STR_FX) Object.assign(STR[l], STR_FX[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -1582,6 +1616,8 @@ function screenHome() {
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
     page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push && S.push !== 'on' && S.push !== 'unsupported' && pushSupported() ? 'margin-top:14px' : '' },
+        h('button', { class: 'mtile strong wide', onclick: () => go(screenFx) }, h('span', { class: 'mi' }, icon('transfer')), h('span', {}, h('span', { class: 'mt', text: t('fx') }), h('span', { class: 'ms', text: t('fxSub') })),
+          h('span', { class: 'fxflags', 'aria-hidden': 'true' }, h('img', { src: '/flags/kr.png', alt: '' }), icon('transfer'), h('img', { src: '/flags/' + fxDefault().flag + '.png', alt: '' }))),
         h('button', { class: 'mtile strong', onclick: () => go(screenNotices) }, h('span', { class: 'mi' }, icon('bell')), h('span', {}, h('span', { class: 'mt', text: t('notices') }), h('span', { class: 'ms', text: t('noticesSub') }))),
         h('button', { class: 'mtile strong', onclick: openWeather }, h('span', { class: 'mi' }, icon('sun')), h('span', {}, h('span', { class: 'mt', text: t('weather') }), h('span', { class: 'ms', text: t('weatherSub') }))),
         h('button', { class: 'mtile', onclick: toTab('places') }, h('span', { class: 'mi' }, icon('map')), h('span', {}, h('span', { class: 'mt', text: t('places') }), h('span', { class: 'ms', text: t('placesHint') }))),
@@ -1627,6 +1663,74 @@ function sosTile() {
 function openWeather() {  // weather.com by the last position the app already has (opened inside the tap, so no pop-up block)
   const p = S.lastPos;
   window.open(p ? `https://weather.com/weather/today/l/${p.lat.toFixed(3)},${p.lng.toFixed(3)}` : 'https://weather.com/', '_blank', 'noopener');
+}
+// 환율 계산기 (사장님 10-27): 위 = 한화, 아래 = 가입 때 고른 나라 통화(바꿀 수 있음), 치는 대로 바로 변환. 하루 1번 갱신 자료라 「오늘 기준」
+const FX = [['VND', 'vn'], ['THB', 'th'], ['IDR', 'id'], ['PHP', 'ph'], ['NPR', 'np'], ['KHR', 'kh'], ['MMK', 'mm'], ['LKR', 'lk'], ['BDT', 'bd'], ['USD', 'us']];
+const FX_NODEC = ['KRW', 'VND', 'IDR', 'KHR', 'MMK'];
+function fxDefault() {
+  const saved = lsGet('hands_fx'), c = (S.profile || {}).country;
+  const hit = FX.find((x) => x[0] === saved) || FX.find((x) => x[1] === c) || FX.find((x) => x[0] === 'USD');
+  return { code: hit[0], flag: hit[1] };
+}
+function curName(code) {
+  try { const n = new Intl.DisplayNames([LOCALE[S.lang], 'en'], { type: 'currency' }).of(code); if (n && n !== code) return n; } catch (e) {}
+  return code;
+}
+function fxFmt(v, code) {
+  if (!isFinite(v)) return '0';
+  const d = FX_NODEC.includes(code) ? 0 : 2;
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: d }).format(v);
+}
+function screenFx() {
+  let cur = fxDefault(), side = 'krw', input = '10000', data = null;
+  const amtK = h('span', { class: 'fxamt' }), amtF = h('span', { class: 'fxamt' });
+  const flagF = h('img', { class: 'fl', alt: '' }), codeF = h('b'), nameF = h('span', { class: 'fxname' });
+  const note = h('p', { class: 'fxnote' }, h('div', { class: 'spin', style: 'width:18px;height:18px' }));
+  const sel = h('select', { 'aria-label': t('fx'), onchange: (e) => { const x = FX.find((f) => f[0] === e.target.value); if (side === 'fx') { input = String(Math.round(vals()[0])); side = 'krw'; } cur = { code: x[0], flag: x[1] }; lsSet('hands_fx', x[0]); draw(); } },
+    FX.map(([c]) => h('option', { value: c, text: c + ' · ' + curName(c) })));
+  const rowK = h('button', { class: 'fxrow', onclick: () => pick('krw') },
+    h('span', { class: 'fxcur' }, h('img', { class: 'fl', src: '/flags/kr.png', alt: '' }), h('span', {}, h('b', { text: 'KRW' }), h('span', { class: 'fxname', text: curName('KRW') }))), amtK);
+  const rowF = h('div', { class: 'fxrow', role: 'button', tabindex: '0', onclick: (e) => { if (e.target !== sel) pick('fx'); } },
+    h('span', { class: 'fxcur' }, flagF, h('span', {}, h('span', { style: 'display:flex;align-items:center;gap:4px' }, codeF, icon('chevDown')), nameF), sel), amtF);
+  const rate = () => (data && data.rates[cur.code]) || 0;  // 1원 = rate 외화
+  function vals() {
+    const n = parseFloat(input) || 0, r = rate();
+    return side === 'krw' ? [n, n * r] : [r ? n / r : 0, n];
+  }
+  function draw() {
+    flagF.src = '/flags/' + cur.flag + '.png'; codeF.textContent = cur.code; nameF.textContent = curName(cur.code); sel.value = cur.code;
+    rowK.classList.toggle('on', side === 'krw'); rowF.classList.toggle('on', side === 'fx');
+    const [k, f] = vals(), typed = (x) => x.includes('.') ? fxFmt(parseFloat(x.split('.')[0]) || 0, 'KRW') + '.' + x.split('.')[1] : fxFmt(parseFloat(x) || 0, 'KRW');
+    amtK.textContent = side === 'krw' ? typed(input) : fxFmt(k, 'KRW');
+    amtF.textContent = side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…');
+    if (data) {
+      const r = rate(), unit = FX_NODEC.includes(cur.code) ? 1000 : 1;
+      note.replaceChildren(t('fxAsOf').replace('{d}', fmtDate(new Date(data.updated).toISOString())) + ' · ' + unit.toLocaleString('en-US') + ' ' + cur.code + ' = ' + fxFmt(r ? unit / r : 0, 'KRW') + ' KRW',
+        h('br'), h('a', { href: 'https://www.exchangerate-api.com', target: '_blank', rel: 'noopener', text: 'Rates By Exchange Rate API' }));
+    }
+  }
+  function pick(s) {
+    if (s === side) return;
+    const [k, f] = vals();
+    const v = s === 'krw' ? k : f;
+    input = String(Math.round(v * (FX_NODEC.includes(s === 'krw' ? 'KRW' : cur.code) ? 1 : 100)) / (FX_NODEC.includes(s === 'krw' ? 'KRW' : cur.code) ? 1 : 100));
+    side = s; draw();
+  }
+  function key(k) {
+    if (k === 'C') input = '0';
+    else if (k === 'del') input = input.length > 1 ? input.slice(0, -1) : '0';
+    else if (k === '.') { if (!input.includes('.') && !(side === 'krw' || FX_NODEC.includes(cur.code))) input += '.'; }
+    else if (input.replace('.', '').length < 12) {
+      if (input.includes('.') && input.split('.')[1].length >= 2) return;
+      input = input === '0' ? k : input + k;
+    }
+    draw();
+  }
+  const keys = h('div', { class: 'fxkeys' }, ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'C', '0', 'del'].map((k) =>
+    h('button', { class: k === 'C' ? 'fxc' : '', 'aria-label': k === 'del' ? 'Delete' : k, onclick: () => key(k) }, k === 'del' ? '⌫' : k)));
+  api('fx', { method: 'GET' }).then((j) => { data = j; draw(); }).catch((e) => note.replaceChildren(errText(e.code)));
+  draw();
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('fx') }), h('div', { class: 'fxbox' }, rowK, rowF), keys, note));
 }
 function screenNotices() {
   const list = h('div', { class: 'stack', style: 'margin-top:12px' }, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
