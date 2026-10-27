@@ -24,7 +24,8 @@ function kmaGrid(lat, lng) {
 }
 const kst = (ms) => { const d = new Date(ms + 9 * 3600000); return { ymd: d.toISOString().slice(0, 10).replace(/-/g, ''), h: d.getUTCHours(), m: d.getUTCMinutes() }; };
 async function kmaCall(op, q) {
-  const key = process.env.KMA_SERVICE_KEY;
+  let key = String(process.env.KMA_SERVICE_KEY || '').trim();
+  if (/%[0-9A-Fa-f]{2}/.test(key)) { try { key = decodeURIComponent(key); } catch (e) {} }  // 포털의 Encoding·Decoding 어느 쪽을 넣어도 됨
   if (!key) throw new HttpError(503, 'weather_unavailable');
   const u = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/${op}?serviceKey=${encodeURIComponent(key)}&pageNo=1&numOfRows=1000&dataType=JSON&${new URLSearchParams(q)}`;
   const r = await fetch(u);
