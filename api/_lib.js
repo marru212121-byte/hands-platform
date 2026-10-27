@@ -62,6 +62,14 @@ function imageFromDataUrl(s) {
   return { buf, type: m[1] };
 }
 
+// 근로자 비밀번호(관리자가 바꿔 준 경우만 저장). 대소문자·빈칸 무시 (사장님 10-27)
+const normPw = (x) => String(x || '').toUpperCase().replace(/\s+/g, '');
+function pwHash(pw) { const salt = crypto.randomBytes(16).toString('hex'); return salt + ':' + crypto.scryptSync(normPw(pw), salt, 32).toString('hex'); }
+function pwCheck(pw, stored) {
+  const [salt, h] = String(stored || '').split(':'); if (!salt || !h) return false;
+  const x = crypto.scryptSync(normPw(pw), salt, 32), y = Buffer.from(h, 'hex');
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
 // 근로자: 로그인 쿠키(홈 화면 앱에서 오래 유지) 또는 폰 저장 열쇠로 본인 확인
 const WORKER_COOKIE = 'hands_w';
 function workerTokenFromReq(req) {
@@ -96,8 +104,8 @@ function safeEq(a, b) {
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 
-function adminCookie(id) {
-  const payload = Buffer.from(JSON.stringify({ id, exp: Date.now() + ADMIN_HOURS * 3600000 })).toString('base64url');
+function adminCookie(id, role = 'admin', name = '관리자') {
+  const payload = Buffer.from(JSON.stringify({ id, role, name, exp: Date.now() + ADMIN_HOURS * 3600000 })).toString('base64url');
   return `${ADMIN_COOKIE}=${payload}.${hmac(payload)}; Path=/; Max-Age=${ADMIN_HOURS * 3600}; HttpOnly; Secure; SameSite=Strict`;
 }
 const clearAdminCookie = () => `${ADMIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
@@ -115,7 +123,19 @@ async function adminFromReq(req) {
   if (!payload || !sig || !safeEq(sig, hmac(payload))) throw new HttpError(401, 'no_session');
   let p; try { p = JSON.parse(Buffer.from(payload, 'base64url').toString()); } catch (_) { throw new HttpError(401, 'no_session'); }
   if (!p.exp || p.exp < Date.now()) throw new HttpError(401, 'expired');
+  if (p.role === 'manager') {  // 매니저는 지워졌으면 바로 끊김
+    const rows = await db('app_settings?select=value&key=eq.managers');
+    const mg = ((rows[0] && rows[0].value) || []).find((x) => x.id === p.id);
+    if (!mg) throw new HttpError(401, 'no_session');
+    return { email: p.id, name: mg.name || '매니저', company: mg.company || '', role: 'manager' };
+  }
   return { email: p.id, name: '관리자', role: 'admin' };
+}
+// 관리자만 (매니저는 위치·지도·SOS·텔레그램·열람 기록·설정 못 봄)
+async function adminOnly(req) {
+  const a = await adminFromReq(req);
+  if (a.role !== 'admin') throw new HttpError(403, 'forbidden');
+  return a;
 }
 
 async function logAccess(admin, memberId, action) {
@@ -195,5 +215,5 @@ function webpush() {
   return _wp;
 }
 
-module.exports = { workerTokenFromReq, workerCookie, webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
+module.exports = { adminOnly, pwHash, pwCheck, workerTokenFromReq, workerCookie, webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
   handler, HttpError, sha256, newToken, newCode, clean, num };

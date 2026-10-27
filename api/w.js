@@ -190,23 +190,24 @@ module.exports = L.handler({
     return { ok: true, __setCookie: 'hands_w=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax' };
   },
 
-  // 다시 로그인: 영문 이름 + 여권번호 → 같은 계정으로 이어짐 (새 열쇠, 옛 폰은 끊김)
+  // 로그인: 아이디 = 여권번호, 비밀번호 = 여권번호(관리자가 바꿔 주면 그 비밀번호). 대소문자·빈칸 무시
   async login(req, b) {
     if (req.method !== 'POST') throw new HttpError(405, 'post_only');
-    const passNo = normPass(b.passport_number), nm = normName(b.name);
-    if (passNo.length < 5 || nm.length < 2) throw new HttpError(400, 'missing_fields');
+    const passNo = normPass(b.id), pw = String(b.password || '');
+    if (passNo.length < 5 || !pw.trim()) throw new HttpError(400, 'missing_fields');
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';
     const key = ip + '|' + passNo, now = Date.now();
     const fails = (loginFails.get(key) || []).filter((t) => now - t < 30 * 60000);
     if (fails.length >= 5) throw new HttpError(429, 'login_locked');
     const rows = await db(`members?select=*&passport_number=eq.${encodeURIComponent(passNo)}&limit=1`);
     const m = rows[0];
-    if (!m || normName(m.name) !== nm) { fails.push(now); loginFails.set(key, fails); throw new HttpError(401, 'login_fail'); }
+    const ok = m && (m.login_pw_hash ? L.pwCheck(pw, m.login_pw_hash) : normPass(pw) === passNo);
+    if (!ok) { fails.push(now); loginFails.set(key, fails); throw new HttpError(401, 'login_fail'); }
     if (m.is_active === false) throw new HttpError(403, 'inactive');
     loginFails.delete(key);
     const token = L.newToken(), t = nowIso();
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { device_token_hash: L.sha256(token), last_login_at: t, last_seen_at: t } });
-    await L.telegram(tgCard('[HANDS 다시 로그인]', `${m.name} 님이 이름·여권번호로 다시 로그인했습니다`,
+    await L.telegram(tgCard('[HANDS 다시 로그인]', `${m.name} 님이 여권번호로 다시 로그인했습니다`,
       [`시각: ${kstText()}`], { id: m.id })).catch(() => {});
     return { ok: true, token, profile: publicProfile(m), __setCookie: L.workerCookie(token) };
   },
@@ -328,6 +329,26 @@ module.exports = L.handler({
     await db('push_subscriptions?on_conflict=endpoint', { method: 'POST', prefer: 'resolution=merge-duplicates',
       body: { member_id: m.id, endpoint, p256dh: clean(keys.p256dh, 200), auth: clean(keys.auth, 100) } });
     return { ok: true };
+  },
+
+  // 공지사항: 관리자·매니저가 보낸 알림 = 공지. 근로자 말로 번역된 것 + 한국어 원문 (사장님 10-27)
+  async notices(req) {
+    const m = await L.workerFromReq(req);
+    const or = `(target.eq.all,target.eq.country:${m.country},target.eq.member:${m.id})`;
+    const rows = await db(`push_messages?select=id,title,body,i18n,created_at&or=${encodeURIComponent(or)}&order=created_at.desc&limit=50`);
+    const lang = m.language || 'en';
+    return { ok: true, notices: rows.map((r) => {
+      const tr = (r.i18n && r.i18n[lang]) || null;
+      return { id: r.id, created_at: r.created_at, title: tr ? tr.title : r.title, body: tr ? tr.body : r.body, ko_title: r.title, ko_body: r.body, translated: !!tr };
+    }) };
+  },
+
+  // 담당자 연결: 관리자 설정의 담당자 이름·번호
+  async contacts(req) {
+    await L.workerFromReq(req);
+    const rows = await db('app_settings?select=value&key=eq.contacts');
+    const list = ((rows[0] && rows[0].value) || []).filter((c) => c && c.phone).map((c) => ({ name: String(c.name || ''), role: String(c.role || ''), phone: String(c.phone || '') }));
+    return { ok: true, contacts: list };
   },
 
   async posts(req) {

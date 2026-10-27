@@ -38,6 +38,7 @@ const ICONS = {
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   ban: '<circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
   checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
   pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   external: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
@@ -77,6 +78,7 @@ const CONSENT_ITEMS = [
   ['location', '위치정보 수집·이용', true], ['marketing', '소식·안내 수신', false],
 ];
 const ERR = {
+  forbidden: '권한이 없습니다.', bad_id: '아이디는 영문·숫자 3자 이상으로 넣어 주세요.', pw_needed: '새 매니저는 비밀번호가 필요합니다.', pw_short: '비밀번호는 4자 이상으로 넣어 주세요.',
   telegram_no_token: '텔레그램 봇 열쇠(TELEGRAM_BOT_TOKEN)가 설정되지 않았습니다.', telegram_error: '텔레그램 서버가 응답하지 않습니다. 잠시 후 다시 시도해 주세요.',
   too_many_chats: '받는 사람은 최대 10명까지 등록할 수 있습니다.',
   network: '서버에 연결할 수 없습니다. 네트워크 상태를 확인해 주세요.', wrong_login: '아이디 또는 비밀번호가 올바르지 않습니다.',
@@ -233,8 +235,26 @@ $('#loginForm').addEventListener('submit', async (e) => {
 });
 
 /* ───────── 앱 진입 ───────── */
+const MGR = () => !!(S.admin && S.admin.role === 'manager');
+const ADMIN_ONLY_VIEWS = ['sos', 'map', 'logs', 'telegram', 'staff'];
+function applyRole() {
+  if (MGR()) {
+    ADMIN_ONLY_VIEWS.forEach((k) => { delete VIEWS[k]; });
+    $$('#nav a, #tabbar a, #moreSheet a').forEach((a) => { const k = (a.getAttribute('href') || '').replace(/^#\/?/, '').split('/')[0]; if (ADMIN_ONLY_VIEWS.includes(k)) a.remove(); });
+    const top = $('#topSos'); if (top) top.hidden = true;
+    $$('#nav .nav-group').forEach((g) => { const nx = g.nextElementSibling; if (!nx || nx.classList.contains('nav-group')) g.remove(); });
+    const sub = $('.side-sub'); if (sub) sub.textContent = '매니저' + (S.admin.company ? ' · ' + S.admin.company : '');
+  } else if (!$('#nav a[data-view="staff"]')) {
+    const tg = $('#nav a[data-view="telegram"]');
+    if (tg) tg.insertAdjacentHTML('afterend', '<a href="#/staff" data-view="staff"><span class="ico" data-i="users"></span>매니저·담당자</a>');
+    const ms = $('#moreSheet a[href="#/telegram"]');
+    if (ms) ms.insertAdjacentHTML('afterend', '<a href="#/staff"><span class="ico" data-i="users"></span>매니저·담당자</a>');
+    if (typeof hydrateIcons === 'function') hydrateIcons();
+  }
+}
 function enterApp(admin) {
   S.admin = admin;
+  applyRole();
   $('#boot').hidden = true; $('#login').hidden = true; $('#app').hidden = false;
   $('#adminName').textContent = admin.name || '관리자';
   $('#adminEmail').textContent = admin.email || '';
@@ -246,8 +266,7 @@ function enterApp(admin) {
 function startTimers() {
   stopTimers();
   S.firstPoll = true;
-  pollSos();
-  S.timers.push(setInterval(pollSos, 30000));
+  if (!MGR()) { pollSos(); S.timers.push(setInterval(pollSos, 30000)); }
   S.timers.push(setInterval(tickIdle, 1000));
 }
 function stopTimers() { S.timers.forEach(clearInterval); S.timers = []; }
@@ -280,6 +299,7 @@ async function pollSos() {
   } catch (_) { /* 다음 주기에 다시 */ }
 }
 function updateSosBadge() {
+  if (MGR()) { document.title = 'HANDS 매니저' + (S.view && VIEWS[S.view] ? ' · ' + VIEWS[S.view].title : ''); return; }
   const n = S.sosPending;
   const b = $('#sosBadge'); b.hidden = n <= 0; b.textContent = n > 99 ? '99+' : String(n);
   $('#topSos').hidden = n <= 0; $('#topSosN').textContent = String(n);
@@ -303,6 +323,7 @@ const VIEWS = {
   silent: { title: '미접속', sub: '일정 기간 앱을 열지 않은 근로자입니다. 직접 연락해 안부를 확인하세요.', render: () => renderSilent() },
   inquiries: { title: '문의', sub: '근로자가 앱에서 보낸 문의입니다. 답변은 근로자 앱에 표시됩니다.', render: () => renderInquiries() },
   push: { title: '알림 보내기', sub: '근로자 휴대폰으로 알림을 보냅니다. 보낸 내용은 기록에 남습니다.', render: () => renderPush() },
+  staff: { title: '매니저·담당자', sub: '업체 매니저 계정과, 근로자 앱 「담당자 연결」에 나오는 연락처를 관리합니다.', render: () => renderStaff() },
   telegram: { title: '텔레그램 연결', sub: 'SOS·집중 관리·미접속 알림을 받을 텔레그램 대화방을 관리합니다.', render: () => renderTelegram() },
   logs: { title: '열람 기록', sub: '관리자의 개인정보 열람·수정 내역입니다. 기록은 수정하거나 삭제할 수 없습니다.', render: () => renderLogs() },
 };
@@ -345,12 +366,12 @@ async function renderDashboard(silent, preStats) {
   if (!silent) {
     setHTML(v, html`<section class="urgent ph-only" id="dashUrgent"></section><div class="dash-actions"><a class="btn btn-primary" href="#/push">${ico('bell', 'sm')}근로자에게 알림 보내기</a><span class="muted">전체 · 국적별 · 한 사람에게 휴대폰 알림</span></div><div class="kpis" id="kpis">${Array.from({ length: 6 }, () => html`<div class="kpi"><span class="skel" style="width:50%"></span><span class="skel" style="width:30%;height:24px"></span><span class="skel" style="width:70%"></span></div>`)}</div>
       <div class="grid-2">
-        <section class="card"><div class="card-head"><h2>최근 SOS</h2><div class="right"><a class="link" href="#/sos">전체 보기</a></div></div><div id="dashSos"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>
+        ${MGR() ? '' : html`<section class="card"><div class="card-head"><h2>최근 SOS</h2><div class="right"><a class="link" href="#/sos">전체 보기</a></div></div><div id="dashSos"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>`}
         <section class="card"><div class="card-head"><h2>3일 이상 미접속</h2><span class="count" id="dashSilentN"></span><div class="right"><a class="link" href="#/silent">전체 보기</a></div></div><div id="dashSilent"><ul class="mini-list">${Array.from({ length: 4 }, () => html`<li><span class="skel" style="width:60%"></span></li>`)}</ul></div></section>
       </div>`);
   }
   const [st, sos, sil] = await Promise.allSettled([
-    preStats ? Promise.resolve(preStats) : api('dashboard'), api('sos'), api('silent', { params: { days: 3 } }),
+    preStats ? Promise.resolve(preStats) : api('dashboard'), MGR() ? Promise.resolve({ sos: [] }) : api('sos'), api('silent', { params: { days: 3 } }),
   ]);
   if (S.view !== 'dashboard') return;
   stamp();
@@ -360,22 +381,22 @@ async function renderDashboard(silent, preStats) {
     S.sosPending = Number(s.sos_pending) || 0; setInqCount(s.inquiries_open); updateSosBadge();
     const pct = (a) => s.total ? `전체의 ${Math.round((a / s.total) * 100)}%` : '-';
     const cards = [
-      { k: 'total', label: '전체 근로자', icon: 'users', foot: `위치 공유 ${fmtNum(s.located)}명`, to: '#/members', cls: 'teal' },
+      { k: 'total', label: '전체 근로자', icon: 'users', foot: MGR() ? '등록된 근로자' : `위치 공유 ${fmtNum(s.located)}명`, to: '#/members', cls: 'teal' },
       { k: 'seen_today', label: '오늘 접속', icon: 'activity', foot: pct(s.seen_today), to: '#/members' },
-      { k: 'sos_pending', label: 'SOS 미처리', icon: 'alert', foot: s.sos_pending > 0 ? '즉시 확인이 필요합니다' : '미처리 요청 없음', to: '#/sos', cls: s.sos_pending > 0 ? 'danger' : '' },
+      MGR() ? null : { k: 'sos_pending', label: 'SOS 미처리', icon: 'alert', foot: s.sos_pending > 0 ? '즉시 확인이 필요합니다' : '미처리 요청 없음', to: '#/sos', cls: s.sos_pending > 0 ? 'danger' : '' },
       { k: 'inquiries_open', label: '미답변 문의', icon: 'inbox', foot: s.inquiries_open > 0 ? '답변을 기다리고 있습니다' : '모두 답변 완료', to: '#/inquiries', cls: s.inquiries_open > 0 ? 'teal-on' : '' },
       { k: 'silent_3d', label: '3일 이상 미접속', icon: 'clock', foot: '연락 확인 필요', to: '#/silent', cls: s.silent_3d > 0 ? 'warn' : '' },
       { k: 'new_7d', label: '최근 7일 가입', icon: 'userPlus', foot: '신규 등록', to: '#/members' },
     ];
-    setHTML(kp, html`${cards.map((c) => html`<a class="kpi ${c.cls || ''}" href="${c.to}">
+    setHTML(kp, html`${cards.filter(Boolean).map((c) => html`<a class="kpi ${c.cls || ''}" href="${c.to}">
       <div class="kpi-top"><span>${c.label}</span><span class="kpi-icon">${ico(c.icon, 'sm')}</span></div>
       <div class="kpi-value num">${fmtNum(s[c.k])}<small>${['sos_pending', 'inquiries_open'].includes(c.k) ? '건' : '명'}</small></div>
       <div class="kpi-foot">${c.foot}</div></a>`)}`);
   } else if (!silent) setHTML(kp, html`<div class="card" style="grid-column:1/-1">${errorBox(st.reason)}</div>`);
 
   const ds = $('#dashSos');
-  if (sos.status === 'fulfilled') drawUrgent(sos.value.sos || []);
-  if (sos.status === 'fulfilled') {
+  if (sos.status === 'fulfilled' && !MGR()) drawUrgent(sos.value.sos || []);
+  if (sos.status === 'fulfilled' && ds) {
     const list = sortSos(sos.value.sos || []).slice(0, 6);
     setHTML(ds, list.length ? html`<ul class="mini-list">${list.map((a) => {
       const m = a.member || {};
@@ -384,7 +405,7 @@ async function renderDashboard(silent, preStats) {
         <div class="who"><b>${m.name || '알 수 없음'}</b> <span class="muted">· ${countryName(m.country)}</span><div class="sub">${m.company || '근무처 미등록'}${m.phone ? ' · ' + m.phone : ''}</div></div>
         <div class="when">${rel(a.created_at)}<div class="num">${fmtDT(a.created_at)}</div></div></li>`;
     })}</ul>` : emptyBox('접수된 SOS가 없습니다', '긴급 요청이 들어오면 이곳과 사이드바에 표시됩니다.', 'shield'));
-  } else if (!silent) setHTML(ds, errorBox(sos.reason));
+  } else if (!silent && ds) setHTML(ds, errorBox(sos.reason));
 
   const dl = $('#dashSilent');
   if (sil.status === 'fulfilled') {
@@ -483,14 +504,14 @@ function renderMembers() {
       <label class="search">${ico('search')}<input id="mq" type="search" placeholder="이름·전화번호·여권번호·근무처 검색" value="${S.memberQuery}" autocomplete="off" aria-label="근로자 검색"></label>
       <div class="seg" id="mfilter" role="tablist">
         <button data-f="all">전체 <span class="c" data-c="all"></span></button>
-        <button data-f="loc" title="최근 ${LOC_ACTIVE_HOURS}시간 안에 위치가 잡힌 근로자">위치 활성 <span class="c" data-c="loc"></span></button>
+        ${MGR() ? '' : html`<button data-f="loc" title="최근 ${LOC_ACTIVE_HOURS}시간 안에 위치가 잡힌 근로자">위치 활성 <span class="c" data-c="loc"></span></button>`}
       </div>
       <span id="mSel"></span>
-      <button class="chip chip-watch" id="mWatch" aria-pressed="false">${ico('eye', 'xs')}집중 관리 <span class="num" id="mWatchN"></span></button>
+      ${MGR() ? '' : html`<button class="chip chip-watch" id="mWatch" aria-pressed="false">${ico('eye', 'xs')}집중 관리 <span class="num" id="mWatchN"></span></button>`}
       <div class="right"><button class="btn btn-ghost btn-sm" id="mreload">${ico('refresh', 'sm')}새로고침</button></div>
     </div>
     <div class="table-wrap"><table class="data">
-      <thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>전화</th><th>가입일</th><th>마지막 접속</th><th>위치</th></tr></thead>
+      <thead><tr><th>이름</th><th>국적</th><th>근무처</th><th>전화</th><th>가입일</th><th>마지막 접속</th>${MGR() ? html`<th>상태</th>` : html`<th>위치</th>`}</tr></thead>
       <tbody id="mbody">${loadingRows(7)}</tbody>
     </table><div id="mempty"></div></div>
     <div class="card-foot muted" id="mfoot">불러오는 중</div>
@@ -501,7 +522,7 @@ function renderMembers() {
     searchTimer = setTimeout(() => { S.memberQuery = input.value.trim(); loadMembers(); }, 300);
   });
   $$('#mfilter button').forEach((b) => b.addEventListener('click', () => { S.memberFilter = b.dataset.f; drawMembers(); }));
-  $('#mWatch').addEventListener('click', () => { S.memberWatchOnly = !S.memberWatchOnly; drawMembers(); });
+  if ($('#mWatch')) $('#mWatch').addEventListener('click', () => { S.memberWatchOnly = !S.memberWatchOnly; drawMembers(); });
   $('#mreload').addEventListener('click', () => loadMembers());
   loadMembers();
 }
@@ -523,8 +544,8 @@ function drawMembers() {
   const counts = { all: all.length, loc: all.filter((m) => locActive(m.location && m.location.updated_at)).length };
   $$('#mfilter button').forEach((b) => b.classList.toggle('on', b.dataset.f === S.memberFilter));
   $$('#mfilter [data-c]').forEach((c) => { c.textContent = fmtNum(counts[c.dataset.c]); });
-  const wb = $('#mWatch'); wb.classList.toggle('on', !!S.memberWatchOnly); wb.setAttribute('aria-pressed', String(!!S.memberWatchOnly));
-  $('#mWatchN').textContent = fmtNum(all.filter((m) => m.watch === true).length);
+  const wb = $('#mWatch');
+  if (wb) { wb.classList.toggle('on', !!S.memberWatchOnly); wb.setAttribute('aria-pressed', String(!!S.memberWatchOnly)); $('#mWatchN').textContent = fmtNum(all.filter((m) => m.watch === true).length); }
   setHTML($('#mSel'), html`${countrySelect('mCountry', all.map((m) => m.country), S.memberCountry)} ${companySelect('mCompany', all.map((m) => m.company), S.memberCompany)}`);
   $('#mCountry').addEventListener('change', (e) => { S.memberCountry = e.target.value; drawMembers(); });
   $('#mCompany').addEventListener('change', (e) => { S.memberCompany = e.target.value; drawMembers(); });
@@ -540,7 +561,7 @@ function drawMembers() {
       <td class="nowrap num" data-label="전화">${m.phone || html`<span class="muted">-</span>`}</td>
       <td class="nowrap num" data-label="가입일">${fmtDate(m.created_at)}</td>
       <td class="nowrap" data-label="마지막 접속">${rel(m.last_seen_at)}</td>
-      <td class="nowrap" data-label="위치">${sos ? html`<span class="badge danger"><span class="d"></span>SOS</span> ` : ''}${locBadge(m.location && m.location.updated_at)}${m.is_active === false ? html` <span class="badge off">관리 중지</span>` : ''}</td>
+      <td class="nowrap" data-label="${MGR() ? '상태' : '위치'}">${MGR() ? '' : html`${sos ? html`<span class="badge danger"><span class="d"></span>SOS</span> ` : ''}${locBadge(m.location && m.location.updated_at)}`}${m.is_active === false ? html` <span class="badge off">관리 중지</span>` : ''}</td>
     </tr>`;
   })}`);
   setHTML($('#mempty'), list.length ? '' : (S.memberQuery
@@ -621,7 +642,7 @@ function drawDetail() {
     <div class="panel-head">
       <button class="icon-btn back" data-close aria-label="목록으로">${ico('back')}</button>
       <div style="min-width:0;flex:1">
-        <div class="panel-name">${m.name || '-'} ${flag(m.country)} ${locBadge(lastLoc && lastLoc.recorded_at)}${active ? '' : html` <span class="badge off">관리 중지</span>`}${pendingSos ? html` <span class="badge danger"><span class="d"></span>SOS 미처리</span>` : ''}</div>
+        <div class="panel-name">${m.name || '-'} ${flag(m.country)} ${MGR() ? '' : locBadge(lastLoc && lastLoc.recorded_at)}${active ? '' : html` <span class="badge off">관리 중지</span>`}${pendingSos ? html` <span class="badge danger"><span class="d"></span>SOS 미처리</span>` : ''}</div>
         <div class="panel-meta num">${m.company || '근무처 미등록'} · ${m.phone || '전화 미등록'} · 가입 ${fmtDate(m.created_at)}</div>
       </div>
       <button class="icon-btn close" data-close aria-label="닫기">${ico('x')}</button>
@@ -631,15 +652,16 @@ function drawDetail() {
       ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
       <button class="btn btn-secondary btn-sm" data-act="push">${ico('bell', 'sm')}알림 보내기</button>
       <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
+      <button class="btn btn-secondary btn-sm" data-act="pw">${ico('lock', 'sm')}비밀번호</button>
       <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '관리 중지' : '관리 다시 시작'}</button>
     </div>
     <div class="panel-body">
-      <section class="sec watch-sec ${m.watch === true ? 'on' : ''}">
+      ${MGR() ? '' : html`<section class="sec watch-sec ${m.watch === true ? 'on' : ''}">
         <div class="watch-row">
           <div class="watch-text"><div class="watch-title">${ico('eye', 'sm')}집중 관리</div><div class="watch-desc">앱을 열고 닫을 때 텔레그램 알림</div></div>
           <button type="button" class="switch" role="switch" aria-checked="${m.watch === true ? 'true' : 'false'}" aria-label="집중 관리" data-act="watch"><span class="switch-knob"></span></button>
         </div>
-      </section>
+      </section>`}
       <section class="sec">
         <div class="sec-head"><h3>본인 확인 사진</h3><div class="right"><span id="photoLeft" class="num"></span><button class="btn btn-ghost btn-sm" data-act="reload">${ico('refresh', 'sm')}새로고침</button></div></div>
         <div class="sec-body"><div class="photos">${photo(ph.selfie, '얼굴 사진')}${photo(ph.passport, '여권 사진')}</div></div>
@@ -662,7 +684,7 @@ function drawDetail() {
         </tbody></table></div>
       </section>
 
-      <section class="sec">
+      ${MGR() ? '' : html`<section class="sec">
         <div class="sec-head"><h3>위치 기록</h3><div class="right">최근 ${fmtNum(hist.length)}건</div></div>
         <div class="sec-body">${hist.length ? html`${lastLoc ? html`<div class="mini-map" id="miniMap"></div>` : ''}
           <table class="inner"><thead><tr><th>시각</th><th>경로</th><th>좌표</th><th class="right">정확도</th></tr></thead><tbody>
@@ -672,9 +694,9 @@ function drawDetail() {
             <td class="num right nowrap">${h.accuracy != null ? `${Math.round(h.accuracy)}m` : '-'}</td></tr>`)}
           </tbody></table>${hist.length > 15 ? html`<div class="muted" style="font-size:12px;margin-top:8px">최근 15건만 표시합니다.</div>` : ''}`
           : emptyBox('위치 기록이 없습니다', '근로자가 앱에서 위치 공유를 허용하면 기록됩니다.', 'pin')}</div>
-      </section>
+      </section>`}
 
-      <section class="sec">
+      ${MGR() ? '' : html`<section class="sec">
         <div class="sec-head"><h3>SOS 이력</h3><div class="right">${fmtNum((d.sos || []).length)}건</div></div>
         <div class="sec-body">${(d.sos || []).length ? html`<table class="inner"><thead><tr><th>발생 시각</th><th>상태</th><th>위치</th><th>처리</th></tr></thead><tbody>
           ${d.sos.map((a) => html`<tr><td class="num nowrap">${fmtDT(a.created_at)}</td>
@@ -682,7 +704,7 @@ function drawDetail() {
             <td>${gmaps(a.lat, a.lng) ? html`<a class="ext" href="${gmaps(a.lat, a.lng)}" target="_blank" rel="noopener noreferrer">지도${ico('external', 'xs')}</a>` : html`<span class="muted">위치 없음</span>`}</td>
             <td class="muted">${a.status === 'pending' ? html`<a class="link" href="#/sos">SOS 화면에서 처리</a>` : html`<span class="num">${fmtDT(a.resolved_at)}</span><div>${a.resolved_by || ''}</div>`}</td></tr>`)}
           </tbody></table>` : emptyBox('SOS 이력이 없습니다', '', 'shield')}</div>
-      </section>
+      </section>`}
 
       <section class="sec">
         <div class="sec-head"><h3>계정 활동</h3></div>
@@ -696,7 +718,7 @@ function drawDetail() {
     </div>
     <div class="panel-dock ph-only">
       ${telHref(m.phone) ? html`<a class="dock-btn call" href="${telHref(m.phone)}">${ico('phone', 'lg')}전화 걸기</a>` : html`<span class="dock-btn off">${ico('phone', 'lg')}전화 미등록</span>`}
-      ${lastLoc ? html`<a class="dock-btn" href="#/map/${encodeURIComponent(m.id)}">${ico('map', 'lg')}지도에서 보기</a>` : html`<span class="dock-btn off">${ico('map', 'lg')}위치 없음</span>`}
+      ${MGR() ? '' : lastLoc ? html`<a class="dock-btn" href="#/map/${encodeURIComponent(m.id)}">${ico('map', 'lg')}지도에서 보기</a>` : html`<span class="dock-btn off">${ico('map', 'lg')}위치 없음</span>`}
     </div>`);
 
   $$('[data-close]', p).forEach((b) => b.addEventListener('click', leavePanel));
@@ -708,7 +730,18 @@ function drawDetail() {
   });
   $('[data-act="edit"]', p).addEventListener('click', () => { d.editing = true; drawInfo(); $('[data-act="edit"]', p).disabled = true; });
   $('[data-act="toggle"]', p).addEventListener('click', () => toggleActive(m));
-  $('[data-act="watch"]', p).addEventListener('click', async (e) => {
+  $('[data-act="pw"]', p).addEventListener('click', () => modal({
+    title: '근로자 앱 비밀번호', icon: 'lock',
+    body: html`<p>아이디는 여권번호(<b class="num">${m.passport_number || '-'}</b>)입니다. 비밀번호는 지금 <b>${m.custom_pw ? '따로 정한 비밀번호' : '여권번호(처음 그대로)'}</b>입니다.</p>
+      <p class="muted" style="font-size:13px">새 비밀번호를 넣으면 바뀝니다. 비워 두고 저장하면 여권번호로 되돌립니다. 대소문자는 구분하지 않습니다.</p>
+      <input class="input" id="pwNew" type="text" autocomplete="off" maxlength="40" placeholder="새 비밀번호 (4자 이상)" style="width:100%;margin-top:8px">`,
+    actions: [{ label: '취소' }, { label: '저장', cls: 'btn-primary', run: async (el) => {
+      const pw = $('#pwNew', el).value.trim();
+      await api('member_password', { body: { id: m.id, password: pw } });
+      m.custom_pw = !!pw; toast(pw ? '비밀번호를 바꿨습니다.' : '비밀번호를 여권번호로 되돌렸습니다.');
+    } }],
+  }));
+  if ($('[data-act="watch"]', p)) $('[data-act="watch"]', p).addEventListener('click', async (e) => {
     const sw = e.currentTarget; const next = m.watch !== true;
     sw.disabled = true; sw.setAttribute('aria-checked', String(next)); sw.closest('.watch-sec').classList.toggle('on', next);
     try {
@@ -723,7 +756,7 @@ function drawDetail() {
   $$('[data-zoom]', p).forEach((b) => b.addEventListener('click', () => { if (!b.classList.contains('is-expired')) lightbox(b.dataset.zoom, b.dataset.label, m.name); }));
   bindInfo();
   tickPhotoExpiry();
-  if (lastLoc) setTimeout(() => drawMiniMap(hist), 260);
+  if (lastLoc && !MGR()) setTimeout(() => drawMiniMap(hist), 260);
 }
 function infoList(m) {
   return html`<dl class="dl">
@@ -1453,6 +1486,39 @@ async function renderTelegram() {
 
 /* ───────── 7. 열람 기록 ───────── */
 let logsCache = [];
+/* ───────── 매니저·담당자 (관리자만) ───────── */
+async function renderStaff() {
+  const v = $('#view');
+  setHTML(v, html`<div class="card"><div class="card-head"><h2>불러오는 중</h2></div></div>`);
+  let d; try { d = await api('staff'); } catch (e) { setHTML(v, errorBox(e)); bindRetry(v, renderStaff); return; }
+  const mg = d.managers.map((x) => ({ ...x, password: '' })), ct = d.contacts.slice();
+  const draw = () => {
+    setHTML(v, html`<section class="card"><div class="card-head"><h2>업체 매니저 계정</h2><span class="count">${fmtNum(mg.length)}명</span></div>
+        <p class="muted" style="margin:0 0 12px">매니저는 근로자 목록·사진·공지·알림만 봅니다. 위치·지도·SOS·텔레그램은 보이지 않습니다. 비밀번호 칸은 바꿀 때만 넣으세요.</p>
+        <table class="inner"><thead><tr><th>아이디</th><th>이름</th><th>업체</th><th>비밀번호</th><th></th></tr></thead><tbody>
+        ${mg.map((x, i) => html`<tr><td><input class="input" data-m="${i}" data-k="id" value="${x.id}" placeholder="영문·숫자"></td><td><input class="input" data-m="${i}" data-k="name" value="${x.name}"></td><td><input class="input" data-m="${i}" data-k="company" value="${x.company}"></td><td><input class="input" data-m="${i}" data-k="password" value="" placeholder="${x.id ? '바꿀 때만' : '새 비밀번호'}"></td><td><button class="btn btn-ghost btn-sm" data-mdel="${i}">삭제</button></td></tr>`)}
+        </tbody></table><button class="btn btn-secondary btn-sm" id="mgAdd" style="margin-top:10px">${ico('plus', 'sm')}매니저 추가</button></section>
+      <section class="card" style="margin-top:16px"><div class="card-head"><h2>담당자 연결 (근로자 앱)</h2><span class="count">${fmtNum(ct.length)}명</span></div>
+        <p class="muted" style="margin:0 0 12px">근로자가 「담당자 연결」을 누르면 이 목록이 나오고, 누르면 바로 전화가 걸립니다.</p>
+        <table class="inner"><thead><tr><th>이름</th><th>역할</th><th>전화번호</th><th></th></tr></thead><tbody>
+        ${ct.map((c, i) => html`<tr><td><input class="input" data-c="${i}" data-k="name" value="${c.name}"></td><td><input class="input" data-c="${i}" data-k="role" value="${c.role || ''}" placeholder="예: 현장 담당"></td><td><input class="input" data-c="${i}" data-k="phone" value="${c.phone}" placeholder="010-0000-0000"></td><td><button class="btn btn-ghost btn-sm" data-cdel="${i}">삭제</button></td></tr>`)}
+        </tbody></table><button class="btn btn-secondary btn-sm" id="ctAdd" style="margin-top:10px">${ico('plus', 'sm')}담당자 추가</button></section>
+      <div style="margin-top:16px"><button class="btn btn-primary" id="stSave">${ico('check', 'sm')}저장</button></div>`);
+    $$('[data-m]', v).forEach((el) => el.addEventListener('input', () => { mg[+el.dataset.m][el.dataset.k] = el.value; }));
+    $$('[data-c]', v).forEach((el) => el.addEventListener('input', () => { ct[+el.dataset.c][el.dataset.k] = el.value; }));
+    $$('[data-mdel]', v).forEach((b) => b.addEventListener('click', () => { mg.splice(+b.dataset.mdel, 1); draw(); }));
+    $$('[data-cdel]', v).forEach((b) => b.addEventListener('click', () => { ct.splice(+b.dataset.cdel, 1); draw(); }));
+    $('#mgAdd').addEventListener('click', () => { mg.push({ id: '', name: '', company: '', password: '' }); draw(); });
+    $('#ctAdd').addEventListener('click', () => { ct.push({ name: '', role: '', phone: '' }); draw(); });
+    $('#stSave').addEventListener('click', async (e) => {
+      e.currentTarget.disabled = true;
+      try { await api('staff_set', { body: { managers: mg.filter((x) => x.id), contacts: ct.filter((c) => c.name && c.phone) } }); toast('저장했습니다.'); renderStaff(); }
+      catch (er) { toast(errText(er), 'err'); e.currentTarget.disabled = false; }
+    });
+  };
+  draw();
+}
+
 async function renderLogs() {
   const v = $('#view');
   setHTML(v, html`<section class="card">

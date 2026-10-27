@@ -13,6 +13,22 @@ async function memberById(id) {
   return rows[0];
 }
 
+// 공지 번역: 하이쿠 5.5, 구조화 출력 (사장님 10-27)
+const LANG_NAMES = { en: 'English', vi: 'Vietnamese', id: 'Indonesian', th: 'Thai', tl: 'Filipino (Tagalog)', ne: 'Nepali', km: 'Khmer', my: 'Burmese', si: 'Sinhala', bn: 'Bengali' };
+async function translate(title, body, lang) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const { Anthropic } = require('@anthropic-ai/sdk');
+  const client = new Anthropic();
+  const msg = await client.messages.create({
+    model: 'claude-haiku-5-5', max_tokens: 1024,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' } }, required: ['title', 'body'], additionalProperties: false } } },
+    messages: [{ role: 'user', content: `Translate this Korean notice from a company to its foreign workers into ${LANG_NAMES[lang]}. Keep numbers, names, places, dates and phone numbers exactly. Plain, friendly words.\n\nTITLE: ${title}\n\nBODY: ${body}` }],
+  });
+  const txt = (msg.content.find((c) => c.type === 'text') || {}).text || '';
+  const r = JSON.parse(txt);
+  return { title: String(r.title || '').slice(0, 120), body: String(r.body || '').slice(0, 600) };
+}
+
 module.exports = L.handler({
   // 공용 아이디·비밀번호. 15분에 10번 넘게 틀리면 잠깐 막음(같은 IP).
   async login(req, b) {
@@ -21,14 +37,21 @@ module.exports = L.handler({
     const since = new Date(Date.now() - 15 * 60000).toISOString();
     const fails = await db(`access_logs?select=id&action=eq.login_fail&admin_email=eq.${encodeURIComponent('ip:' + ip)}&created_at=gt.${encodeURIComponent(since)}`);
     if (fails.length >= 10) throw new HttpError(429, 'too_many');
-    if (!L.checkAdminLogin(b.id, b.password)) {
+    const id = String(b.id || '').trim().toLowerCase();
+    let who = null;
+    if (L.checkAdminLogin(b.id, b.password)) who = { email: id, name: '관리자', role: 'admin' };
+    else {
+      const rows = await db('app_settings?select=value&key=eq.managers');
+      const mg = ((rows[0] && rows[0].value) || []).find((x) => x.id === id);
+      if (mg && mg.pw_hash && L.pwCheck(String(b.password || ''), mg.pw_hash)) who = { email: id, name: mg.name || '매니저', company: mg.company || '', role: 'manager' };
+    }
+    if (!who) {
       await db('access_logs', { method: 'POST', body: { admin_email: 'ip:' + ip, action: 'login_fail' } }).catch(() => {});
       await new Promise(r => setTimeout(r, 400));
       throw new HttpError(401, 'wrong_login');
     }
-    const id = String(b.id).trim().toLowerCase();
     await db('access_logs', { method: 'POST', body: { admin_email: id, action: 'login' } }).catch(() => {});
-    return { ok: true, admin: { email: id, name: '관리자' }, __setCookie: L.adminCookie(id) };
+    return { ok: true, admin: who, __setCookie: L.adminCookie(id, who.role, who.name) };
   },
 
   async logout() {
@@ -41,7 +64,7 @@ module.exports = L.handler({
   },
 
   async dashboard(req) {
-    await L.adminFromReq(req);
+    const me = await L.adminFromReq(req);
     const [members, sos, locs, inq] = await Promise.all([
       db(`members?select=id,last_seen_at,last_checkin_at,is_active,created_at`),
       db(`sos_alerts?select=id,status&status=eq.pending`),
@@ -58,14 +81,14 @@ module.exports = L.handler({
       sos_pending: sos.length,
       silent_3d: silent3,
       new_7d: active.filter(m => m.created_at >= daysAgo(7)).length,
-      located: locs.length,
+      located: me.role === 'admin' ? locs.length : null,
       inquiries_open: inq.length,
     } };
   },
 
   // 목록 + 검색(이름·전화·여권번호·근무처)
   async members(req) {
-    await L.adminFromReq(req);
+    const me = await L.adminFromReq(req);
     const q = clean(req.query.q, 60);
     let filter = '';
     if (q) {
@@ -86,21 +109,59 @@ module.exports = L.handler({
     return { ok: true, members: rows.map(m => ({ ...m,
       dup: keys(m).some((k) => keyCount[k] > 1),
       passport_number: m.passport_number ? '•••' + String(m.passport_number).slice(-4) : null,
-      location: byId[m.id] || null })) };
+      ...(me.role === 'admin' ? { location: byId[m.id] || null } : { location: null, watch: null }) })) };
   },
 
   // 상세: 사진은 10분짜리 서명 주소, 열람은 기록
   async member(req) {
     const a = await L.adminFromReq(req);
     const m = await memberById(req.query.id);
+    const isAdmin = a.role === 'admin';
     const [history, sos, selfie, passport] = await Promise.all([
-      db(`location_history?select=lat,lng,accuracy,source,recorded_at&member_id=eq.${m.id}&order=recorded_at.desc&limit=50`),
-      db(`sos_alerts?select=id,lat,lng,status,created_at,resolved_at,resolved_by,notified_at,note&member_id=eq.${m.id}&order=created_at.desc&limit=20`),
+      !isAdmin ? [] : db(`location_history?select=lat,lng,accuracy,source,recorded_at&member_id=eq.${m.id}&order=recorded_at.desc&limit=50`),
+      !isAdmin ? [] : db(`sos_alerts?select=id,lat,lng,status,created_at,resolved_at,resolved_by,notified_at,note&member_id=eq.${m.id}&order=created_at.desc&limit=20`),
       L.signedUrl(m.selfie_photo_path), L.signedUrl(m.passport_photo_path),
     ]);
     await L.logAccess(a, m.id, 'view_member');
-    const { selfie_photo_path, passport_photo_path, ...rest } = m;
-    return { ok: true, member: rest, photos: { selfie, passport }, history, sos };
+    const { selfie_photo_path, passport_photo_path, login_pw_hash, ...rest } = m;
+    if (!isAdmin) rest.watch = null;
+    return { ok: true, member: { ...rest, custom_pw: !!login_pw_hash }, photos: { selfie, passport }, history, sos };
+  },
+
+  // 근로자 비밀번호 바꾸기(잊어버렸을 때). 빈칸이면 처음처럼 여권번호로 되돌림
+  async member_password(req, b) {
+    const a = await L.adminFromReq(req);
+    const m = await memberById(b.id);
+    const pw = String(b.password || '').trim();
+    if (pw && pw.length < 4) throw new HttpError(400, 'pw_short');
+    await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { login_pw_hash: pw ? L.pwHash(pw) : null, updated_at: nowIso() } });
+    await L.logAccess(a, m.id, pw ? 'member_pw_set' : 'member_pw_reset');
+    return { ok: true };
+  },
+
+  // 매니저 계정·담당자 연락처 (관리자만)
+  async staff(req) {
+    await L.adminOnly(req);
+    const [mg, ct] = await Promise.all([db('app_settings?select=value&key=eq.managers'), db('app_settings?select=value&key=eq.contacts')]);
+    return { ok: true, managers: ((mg[0] && mg[0].value) || []).map((x) => ({ id: x.id, name: x.name || '', company: x.company || '' })), contacts: (ct[0] && ct[0].value) || [] };
+  },
+  async staff_set(req, b) {
+    const a = await L.adminOnly(req);
+    const old = await db('app_settings?select=value&key=eq.managers');
+    const oldById = Object.fromEntries(((old[0] && old[0].value) || []).map((x) => [x.id, x]));
+    const managers = (Array.isArray(b.managers) ? b.managers : []).slice(0, 100).map((x) => {
+      const id = clean(String(x.id || '').toLowerCase(), 40);
+      if (!/^[a-z0-9._-]{3,40}$/.test(id) || id === String(process.env.HANDS_ADMIN_ID || '').trim().toLowerCase()) throw new HttpError(400, 'bad_id');
+      const pw = String(x.password || '').trim();
+      const pw_hash = pw ? L.pwHash(pw) : (oldById[id] && oldById[id].pw_hash);
+      if (!pw_hash) throw new HttpError(400, 'pw_needed');
+      return { id, name: clean(x.name, 40), company: clean(x.company, 60), pw_hash };
+    });
+    const contacts = (Array.isArray(b.contacts) ? b.contacts : []).slice(0, 30).map((c) => ({ name: clean(c.name, 40), role: clean(c.role, 40), phone: clean(c.phone, 30) })).filter((c) => c.name && c.phone);
+    const t = nowIso();
+    await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: [{ key: 'managers', value: managers, updated_at: t }, { key: 'contacts', value: contacts, updated_at: t }] });
+    await L.logAccess(a, null, 'staff_set');
+    return { ok: true };
   },
 
   async update(req, b) {
@@ -110,8 +171,9 @@ module.exports = L.handler({
     for (const k of ['name', 'phone', 'company', 'emergency_contact', 'passport_number', 'birth_date', 'gender']) {
       if (k in b) patch[k] = clean(b[k], 120);
     }
+    if ('passport_number' in patch) patch.passport_number = String(patch.passport_number || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if ('is_active' in b) patch.is_active = !!b.is_active;
-    if ('watch' in b) patch.watch = !!b.watch;
+    if ('watch' in b && a.role === 'admin') patch.watch = !!b.watch;
     patch.updated_at = nowIso();
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: patch });
     await L.logAccess(a, m.id, 'update_member');
@@ -119,13 +181,13 @@ module.exports = L.handler({
   },
 
   async sos(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const rows = await db(`sos_alerts?select=id,lat,lng,status,created_at,resolved_at,resolved_by,notified_at,note,member:members(id,name,phone,country,company)&order=created_at.desc&limit=100`);
     return { ok: true, sos: rows };
   },
 
   async sos_resolve(req, b) {
-    const a = await L.adminFromReq(req);
+    const a = await L.adminOnly(req);
     if (!/^[0-9a-f-]{36}$/i.test(String(b.id || ''))) throw new HttpError(400, 'bad_id');
     const rows = await db(`sos_alerts?id=eq.${b.id}`, { method: 'PATCH', prefer: 'return=representation', body: {
       status: 'resolved', resolved_at: nowIso(), resolved_by: a.email, note: clean(b.note, 500) } });
@@ -146,7 +208,7 @@ module.exports = L.handler({
   },
 
   async map(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const [rows, mem] = await Promise.all([
       db(`locations?select=member_id,lat,lng,accuracy,updated_at,sos_active,member_name,member_country`),
       db(`members?select=id,company,watch`),
@@ -156,7 +218,7 @@ module.exports = L.handler({
   },
 
   async logs(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const rows = await db(`access_logs?select=id,admin_email,action,created_at,member:members(name)&action=neq.login_fail&order=created_at.desc&limit=200`);
     return { ok: true, logs: rows };
   },
@@ -179,6 +241,7 @@ module.exports = L.handler({
   },
 
   // 근로자에게 푸시: 전체 / 국적 / 한 사람
+  // 알림 = 공지. 받는 근로자마다 그 사람 언어로 자동 번역 + 한국어 원문, 누르면 그 공지가 열림 (사장님 10-27)
   async push_send(req, b) {
     const a = await L.adminFromReq(req);
     const title = clean(b.title, 80), body = clean(b.body, 300);
@@ -191,19 +254,29 @@ module.exports = L.handler({
       const c = clean(b.country, 10); if (!c) throw new HttpError(400, 'missing_fields');
       filter = `&member.country=eq.${encodeURIComponent(c)}`;
     }
-    const subs = await db(`push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,country,is_active)&member.is_active=eq.true${filter}`);
+    const target = b.target === 'member' ? 'member:' + b.member_id : b.target === 'country' ? 'country:' + b.country : 'all';
+    const subs = await db(`push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,country,language,is_active)&member.is_active=eq.true${filter}`);
+    const rows = await db('push_messages', { method: 'POST', prefer: 'return=representation', body: { admin_email: a.email, target, title, body, sent: 0, failed: 0 } });
+    const msgId = rows[0].id;
+    // 받는 사람들의 언어만 번역 (한국어는 원문 그대로)
+    const langs = [...new Set(subs.map((s) => s.member.language || 'en'))].filter((l) => l !== 'ko' && LANG_NAMES[l]);
+    const i18n = {};
+    await Promise.all(langs.map(async (l) => { const tr = await translate(title, body, l).catch(() => null); if (tr) i18n[l] = tr; }));
+    if (Object.keys(i18n).length) await db(`push_messages?id=eq.${msgId}`, { method: 'PATCH', body: { i18n } }).catch(() => {});
     const wp = L.webpush();
-    const payload = JSON.stringify({ title, body, url: '/?src=push' });
     let sent = 0, failed = 0; const gone = [];
     await Promise.all(subs.map(async (s) => {
+      const tr = i18n[s.member.language];
+      const payload = JSON.stringify(tr
+        ? { title: tr.title, body: tr.body + '\n\n[한국어] ' + body, url: '/?notice=' + msgId }
+        : { title, body, url: '/?notice=' + msgId });
       try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 86400 }); sent++; }
       catch (e) { failed++; if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
     }));
     if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
-    const target = b.target === 'member' ? 'member:' + b.member_id : b.target === 'country' ? 'country:' + b.country : 'all';
-    await db('push_messages', { method: 'POST', body: { admin_email: a.email, target, title, body, sent, failed } }).catch(() => {});
+    await db(`push_messages?id=eq.${msgId}`, { method: 'PATCH', body: { sent, failed } }).catch(() => {});
     await L.logAccess(a, b.target === 'member' ? b.member_id : null, 'push_send');
-    return { ok: true, sent, failed, subscribers: subs.length };
+    return { ok: true, sent, failed, subscribers: subs.length, translated: Object.keys(i18n) };
   },
 
   async push_history(req) {
@@ -217,7 +290,7 @@ module.exports = L.handler({
 
   // 텔레그램 연결: 봇 확인 · 말 건 사람 찾기 · 받는 사람 저장 · 시험 보내기
   async telegram_status(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const rows = await db('app_settings?select=value&key=eq.telegram_chats');
     const chats = (rows[0] && rows[0].value) || [];
     if (!process.env.TELEGRAM_BOT_TOKEN) return { ok: true, connected: false, bot: null, chats };
@@ -228,7 +301,7 @@ module.exports = L.handler({
   },
 
   async telegram_scan(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const ups = await L.telegramApi('getUpdates', { limit: 100, allowed_updates: ['message'] });
     const seen = {};
     for (const u of ups) {
@@ -239,7 +312,7 @@ module.exports = L.handler({
   },
 
   async telegram_set(req, b) {
-    const a = await L.adminFromReq(req);
+    const a = await L.adminOnly(req);
     const chats = (Array.isArray(b.chats) ? b.chats : []).slice(0, 10)
       .filter(c => /^-?\d{3,20}$/.test(String(c.id)))
       .map(c => ({ id: String(c.id), name: clean(c.name, 60) || String(c.id) }));
@@ -250,7 +323,7 @@ module.exports = L.handler({
   },
 
   async telegram_test(req) {
-    await L.adminFromReq(req);
+    await L.adminOnly(req);
     const sent = await L.telegram('[HANDS] 텔레그램 연결 시험입니다. 이 메시지가 보이면 SOS·문의 알림이 이 방으로 옵니다.');
     return { ok: true, sent };
   },
