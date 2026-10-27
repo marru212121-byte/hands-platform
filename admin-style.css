@@ -656,7 +656,7 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
 .phone-date { font-size: 14px; opacity: .85; margin: 6px 0 24px; }
 .notif { text-align: left; background: rgba(255, 255, 255, .9); color: var(--text); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 16px rgba(0, 0, 0, .15); }
 .notif-top { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); }
-.notif-ico { width: 20px; height: 20px; border-radius: 5px; }
+.notif-ico { width: 20px; height: 20px; border-radius: 50%; }
 .notif-ico::before { background-size: 12px 12px; }
 .notif-app { font-weight: 600; letter-spacing: .04em; }
 .notif-when { margin-left: auto; }

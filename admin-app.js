@@ -1281,7 +1281,7 @@ async function renderPush() {
     <aside class="push-preview-wrap">
       <div class="push-preview-label">휴대폰 미리보기</div>
       <div class="phone-mock"><div class="phone-time num" id="pvClock"></div><div class="phone-date" id="pvDate"></div>
-        <div class="notif"><div class="notif-top"><span class="brand-mark notif-ico" aria-hidden="true"></span><span class="notif-app">HANDS</span><span class="notif-when">지금</span></div>
+        <div class="notif"><div class="notif-top"><img class="brand-logo notif-ico" src="/lic-logo.jpeg" alt=""><span class="notif-app">위해</span><span class="notif-when">지금</span></div>
           <div class="notif-title" id="pvTitle"></div><div class="notif-body" id="pvBody"></div></div>
       </div>
     </aside>
