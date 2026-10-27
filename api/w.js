@@ -441,7 +441,8 @@ module.exports = L.handler({
       for (const it of fc) {
         const k = it.fcstDate + it.fcstTime;
         (hours[k] = hours[k] || { date: it.fcstDate, time: it.fcstTime })[it.category] = it.fcstValue;
-        const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], pty: [], pop: 0 });
+        const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], pty: [], pop: 0, wav: null });
+        if (it.category === 'WAV' && +it.fcstValue >= 0 && +it.fcstValue < 50) d.wav = Math.max(d.wav || 0, +it.fcstValue);  // 물결 높이(m) — 바다·해안 격자만 (사장님 10-27 바다 날씨)
         if (it.category === 'TMP') d.tmps.push(+it.fcstValue);
         if (it.category === 'TMN') d.tmn = +it.fcstValue;
         if (it.category === 'TMX') d.tmx = +it.fcstValue;
@@ -451,10 +452,10 @@ module.exports = L.handler({
       }
       const hl = Object.keys(hours).sort().map((k) => hours[k]);
       const nowKey = kst(now).ymd + String(kst(now).h).padStart(2, '0') + '00';
-      const next = hl.filter((x) => x.date + x.time >= nowKey).filter((x) => x.TMP != null).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP, pcp: x.PCP }));  // 글피까지 시간별 전부 (사장님 10-27: 내일·모레 눌러 시간별)
+      const next = hl.filter((x) => x.date + x.time >= nowKey).filter((x) => x.TMP != null).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP, pcp: x.PCP, wav: x.WAV != null && +x.WAV >= 0 && +x.WAV < 50 ? +x.WAV : null, wsd: x.WSD != null ? +x.WSD : null }));  // 글피까지 시간별 전부 (사장님 10-27: 내일·모레 눌러 시간별)
       const mode = (a) => a.length ? +Object.entries(a.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {})).sort((p, q) => q[1] - p[1])[0][0] : 1;
       const dl = Object.keys(days).sort().slice(0, 3).map((k) => { const d = days[k];
-        return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop }; });
+        return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop, wav: d.wav }; });
       wx = { at: now, out: {
         now: { tmp: +cur.T1H, reh: +cur.REH, wsd: +cur.WSD, rn1: cur.RN1, pty: +cur.PTY || 0, sky: next[0] ? next[0].sky : 1 },
         hours: next, days: dl, base: now } };

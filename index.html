@@ -245,6 +245,10 @@ button.wxpick{font:inherit;font-size:15px;font-weight:600;color:var(--ink2);curs
 .wxhours{display:flex;gap:8px;overflow-x:auto;margin-top:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .wxh{flex:none;width:64px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
 .wxh .tm{font-size:12px;color:var(--ink3)} .wxh .ic{width:24px;height:24px;margin:6px auto;color:var(--navy)} .wxh b{display:block;font-size:16px} .wxh .pp{font-size:11px;color:#2563EB;margin-top:2px}
+.wv{font-size:11px;font-weight:700;color:#0E7490;margin-top:2px}.wxd .wv{font-size:12px;margin:0 4px}
+.wxsea{display:flex;align-items:center;gap:12px;margin-top:14px;padding:14px 16px;background:#ECFEFF;border:1px solid #A5F3FC;border-radius:18px;color:#155E75;font-size:14px}
+.wxsea b{display:block;font-size:16px;color:#0E7490}
+.wxsea .si{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#CFFAFE;color:#0E7490;flex:none}.wxsea .si .ic{width:24px;height:24px}
 .wxdays{background:#fff;border:1px solid var(--line);border-radius:18px;margin-top:14px;overflow:hidden}
 .wxd{display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;background:#fff;border:0;text-align:left;font:inherit;color:var(--ink)}
 .wxd.on{background:var(--navy-bg);box-shadow:inset 4px 0 0 var(--navy)} .wxd+.wxd{border-top:1px solid var(--line)}
@@ -727,6 +731,8 @@ my:{"tr": "စကားပြန်", "trSub": "စကားမပေါက်�
 si:{"tr": "පරිවර්තක", "trSub": "කතාව නොතේරෙන විට", "trPh": "මෙහි ලියන්න හෝ කතා කරන්න", "trGo": "පරිවර්තනය", "trBig": "විශාලව පෙන්වන්න", "pay": "වැටුප් දිනය", "paySub": "වැටුප් දිනයේ මතක් කරමු", "payPick": "වැටුප් දිනය තෝරන්න", "payOff": "අක්‍රිය කරන්න", "payNext": "ඊළඟ වැටුප් දිනය: {d}", "payToday": "අද වැටුප් දිනයයි", "payNote": "වැටුප් දිනයේ උදේ 9ට මතක් කරමු. මාසයේ එම දිනය නැතිනම් අවසාන දිනයේ."},
 bn:{"tr": "দোভাষী", "trSub": "কথা না বুঝলে", "trPh": "এখানে লিখুন বা বলুন", "trGo": "অনুবাদ", "trBig": "বড় করে দেখান", "pay": "বেতনের দিন", "paySub": "বেতনের দিনে মনে করিয়ে দেব", "payPick": "বেতনের দিন বেছে নিন", "payOff": "বন্ধ করুন", "payNext": "পরের বেতনের দিন: {d}", "payToday": "আজ বেতনের দিন", "payNote": "বেতনের দিন সকাল ৯টায় মনে করিয়ে দেব। মাসে সেই তারিখ না থাকলে শেষ দিনে।"}};
 for (const l in STR_TRPAY) Object.assign(STR[l], STR_TRPAY[l]);
+const STR_SEA = {"en": {"wxSea": "Sea", "wxWave": "Waves"}, "ko": {"wxSea": "바다", "wxWave": "물결"}, "vi": {"wxSea": "Biển", "wxWave": "Sóng"}, "id": {"wxSea": "Laut", "wxWave": "Ombak"}, "th": {"wxSea": "ทะเล", "wxWave": "คลื่น"}, "tl": {"wxSea": "Dagat", "wxWave": "Alon"}, "ne": {"wxSea": "समुद्र", "wxWave": "छाल"}, "km": {"wxSea": "សមុទ្រ", "wxWave": "រលក"}, "my": {"wxSea": "ပင်လယ်", "wxWave": "လှိုင်း"}, "si": {"wxSea": "මුහුද", "wxWave": "රළ"}, "bn": {"wxSea": "সমুদ্র", "wxWave": "ঢেউ"}};  // 바다 날씨 (사장님 10-27)
+for (const l in STR_SEA) Object.assign(STR[l], STR_SEA[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -796,6 +802,7 @@ const P = {
   cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   swap:'<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
   mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  wave:'<path d="M2 8c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 13c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 18c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/>',
   locate:'<path d="M3 11l19-9-9 19-2-8-8-2z"/>',
   cloud:'<path d="M7 18h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 18z"/>',
   cloudSun:'<path d="M8 3.5v1.3M3.6 5.6l.9.9M2 10h1.3M13.4 5.6l-.9.9"/><path d="M5.4 12.2A3.5 3.5 0 1 1 11.6 9"/><path d="M9 20h9a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.7 1.3A2.9 2.9 0 0 0 9 20z"/>',
@@ -1799,22 +1806,10 @@ function screenTranslate() {
     } catch (e) { out.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); }
     go_.disabled = false;
   } }, t('trGo'));
-  // 말하기 단추: 폰 자판 언어와 상관없이 앱이 고른 언어로 받아씀 (브라우저가 지원할 때만 보임)
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const mic = SR ? h('button', { class: 'btn btn-secondary trmic', onclick: () => {
-    try {
-      const r = new SR(); r.lang = LOCALE[S.trDir.from] || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
-      mic.classList.add('on');
-      r.onresult = (e) => { ta.value = Array.from(e.results).map((x) => x[0].transcript).join(' '); S.trText = ta.value; };
-      let said = false; r.onresult = ((orig) => (e) => { said = true; orig(e); })(r.onresult);
-      r.onend = () => { mic.classList.remove('on'); if (said && ta.value.trim()) go_.click(); };  // 말이 끝나면 바로 번역 (사장님 10-27)
-      r.onerror = () => mic.classList.remove('on');
-      r.start();
-    } catch (e) { mic.classList.remove('on'); }
-  } }, icon('mic'), h('span', { text: LANG_NAME[S.trDir.from] })) : null;
+  // 음성 단추는 뺌 (사장님 10-27: 폰 자판의 받아쓰기로 충분)
   const swap = h('button', { class: 'iconbtn trswap', 'aria-label': 'swap', onclick: () => { S.trDir = { from: S.trDir.to, to: S.trDir.from }; S.trText = ''; rerender(); } }, icon('swap'));
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('tr') }),
-    h('div', { class: 'trbar' }, chip(S.trDir.from), swap, chip(S.trDir.to)), ta, h('div', { class: 'trbtns' }, mic, go_), out));
+    h('div', { class: 'trbar' }, chip(S.trDir.from), swap, chip(S.trDir.to)), ta, h('div', { class: 'trbtns' }, go_), out));
 }
 function showBig(text, lang) {  // 상대에게 보여 주기: 화면 가득 큰 글씨, 누르면 닫힘
   const el = h('div', { class: 'trbig', role: 'dialog', onclick: () => el.remove() }, h('p', { lang: lang === 'tl' ? 'fil' : lang, text }));
@@ -1875,7 +1870,12 @@ function screenWeather() {
     const pcp = (v) => !v || v === '강수없음' ? '' : v === '1mm 미만' ? '<1mm' : String(v).replace(/\s/g, '').replace('이상', '+');
     const hoursBox = h('div', { class: 'wxhours' }, w.hours.filter((x) => x.date === sel).map((x) => { const [k2, i2] = wxKind(x.sky, x.pty);
       return h('div', { class: 'wxh', 'aria-label': t(k2) }, h('div', { class: 'tm', text: kstDate(x.date, x.time).toLocaleTimeString(loc, { hour: 'numeric', timeZone: 'Asia/Seoul' }) }), icon(i2), h('b', { text: Math.round(x.tmp) + '°' }),
-        h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' }), pcp(x.pcp) ? h('div', { class: 'pp', style: 'font-weight:700', text: pcp(x.pcp) }) : null); }));
+        h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' }), pcp(x.pcp) ? h('div', { class: 'pp', style: 'font-weight:700', text: pcp(x.pcp) }) : null,
+        x.wav != null ? h('div', { class: 'wv', text: x.wav + 'm' }) : null); }));
+    // 바다(물결): 기상청 단기예보가 바다·해안 격자에만 주는 물결 높이 — 있을 때만 보임
+    const seaH = w.hours.filter((x) => x.date === sel && x.wav != null);
+    const seaBox = seaH.length ? h('div', { class: 'wxsea' }, h('span', { class: 'si' }, icon('wave')), h('div', {},
+      h('b', { text: t('wxSea') }), h('div', { text: t('wxWave') + ' ' + Math.min(...seaH.map((x) => x.wav)) + '–' + Math.max(...seaH.map((x) => x.wav)) + 'm · ' + t('wxWind') + ' ' + Math.max(...seaH.map((x) => x.wsd || 0)) + 'm/s' }))) : null;
     const cur = lsGet('hands_wx_city') || '';
     const city = WX_CITIES.find((x) => x[1] === cur);
     // 위치 고르기 창: 맨 위 「내 위치」(지도 앱 화살표 아이콘), 아래 시·도(선 핀) (사장님 10-27)
@@ -1894,10 +1894,10 @@ function screenWeather() {
       h('div', { class: 'wxnow' },
         h('div', { class: 'wxtop' }, h('span', { class: 'wi' }, icon(ci)), h('div', {}, h('div', { class: 'wxtemp', text: Math.round(w.now.tmp) + '°' }), h('div', { class: 'wxcond', text: t(ck) }))),
         h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh + '%' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd + ' m/s' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
-      hoursBox,
+      seaBox, hoursBox,
       h('div', { class: 'wxdays' }, w.days.map((d) => { const [k3, i3] = wxKind(d.sky, d.pty);
         return h('button', { class: 'wxd' + (d.date === sel ? ' on' : ''), onclick: () => { sel = d.date; show(w); } }, h('span', { class: 'dn', text: dayName(d.date) }), icon(i3), h('span', { class: 'cd' }, t(k3), d.pop ? h('span', { class: 'pp', style: 'display:block', text: t('wxPop') + ' ' + d.pop + '%' }) : null),
-          h('span', { class: 'mm' }, h('span', { text: Math.round(d.min) + '° / ' }), Math.round(d.max) + '°')); })),
+          d.wav != null ? h('span', { class: 'wv', text: d.wav + 'm' }) : null, h('span', { class: 'mm' }, h('span', { text: Math.round(d.min) + '° / ' }), Math.round(d.max) + '°')); })),
       h('p', { class: 'fxnote' }, h('b', { text: t('wxSource').replace('{t}', fmtDate(new Date(w.base).toISOString(), true)) }), h('br'), h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener', text: '© OpenStreetMap' }))].filter(Boolean));
   };
   const load = async () => {
