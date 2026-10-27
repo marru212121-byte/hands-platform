@@ -117,11 +117,18 @@ function parseWarn(t6) {
     parts.push(cur);
     for (let p of parts) {
       p = p.trim(); if (!p) continue;
-      if (/바다/.test(p)) { out.push({ kind, warn, sea: true, prov: seaProvs(p), sub: null, area: p.replace(/(앞바다|먼바다)/, ' $1').replace(/\s+/g, ' ').trim(), key: `${kind}${m[2]}|${p}` }); continue; }
-      const pm = /^([^(]+)(?:\(([^)]*)\))?/.exec(p), prov = provOf(pm[1]); if (!prov) continue;
-      const subs = pm[2] ? pm[2].split(/[,.·]/).map((x) => x.trim()).filter(Boolean) : [];
+      if (/바다/.test(p)) { out.push({ kind, warn, sea: true, prov: seaProvs(p), sub: null, area: p.replace(/\(.*$/, '').replace(/(앞바다|먼바다)/, ' $1').replace(/\s+/g, ' ').trim(), key: `${kind}${m[2]}|${p}` }); continue; }
+      // 괄호 안에 괄호가 또 있음 — 「전라남도(보성, 신안(흑산면제외), 영광(낙월면 제외), 여수)」 (10-27 23시 실제 자료에서 확인)
+      const i0 = p.indexOf('('), head = i0 < 0 ? p : p.slice(0, i0), prov = provOf(head); if (!prov) continue;
+      const inner = i0 < 0 ? '' : p.slice(i0 + 1, p.lastIndexOf(')') > i0 ? p.lastIndexOf(')') : p.length);
+      const subs = []; let dd = 0, cc = '';
+      for (const ch of inner) { if (ch === '(') dd++; if (ch === ')') dd--; if ((ch === ',' || ch === '.' || ch === '·') && !dd) { subs.push(cc); cc = ''; } else cc += ch; }
+      subs.push(cc);
+      for (let i = 0; i < subs.length; i++) subs[i] = subs[i].replace(/\([^)]*\)?/g, '').trim();
+      subs.splice(0, subs.length, ...subs.filter(Boolean));
+      const pm = [null, head];
       if (!subs.length) out.push({ kind, warn, sea: false, prov: [prov], sub: null, area: pm[1].trim(), key: `${kind}${m[2]}|${prov}` });
-      for (const s of subs) out.push({ kind, warn, sea: false, prov: [prov], sub: s, area: s, key: `${kind}${m[2]}|${prov}|${s}` });
+      for (const s of subs) out.push({ kind, warn, sea: false, prov: [prov], sub: s, area: /제외$/.test(s) ? head.trim() : s, key: `${kind}${m[2]}|${prov}|${s}` });
     }
   }
   return out;
@@ -143,7 +150,7 @@ async function placeKo(lat, lng, cache) {
 // 특보 하나가 이 근로자 자리에 해당하나
 function warnHits(w, pl) {
   if (!pl.prov || !w.prov.includes(pl.prov)) return false;
-  if (!w.sub) return true;
+  if (!w.sub || /제외$/.test(w.sub)) return true;  // 「서귀포시중산간 제외」 = 그 시·도 나머지 전부
   if (pl.city && (w.sub.startsWith(pl.city) || pl.city.startsWith(w.sub))) return true;
   // 「강원북부산지」「부산서부」처럼 도시 이름이 아닌 권역 구분이면 시·도로 봄
   return /(북부|남부|동부|서부|중부|산지|내륙|해안|평지)/.test(w.sub) && !/(시|군)$/.test(w.sub);
@@ -656,8 +663,9 @@ module.exports = L.handler({
     const st = items[0] || {}, all = parseWarn(st.t6);
     const prev = await db('app_settings?select=value&key=eq.wx_warn_seen');
     const seen = new Set((prev[0] && prev[0].value && prev[0].value.keys) || []);
-    const fresh = prev.length ? all.filter((w) => !seen.has(w.key)) : [];
-    await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'wx_warn_seen', value: { keys: all.map((w) => w.key), tmFc: st.tmFc || null }, updated_at: nowIso() } });
+    const ok = prev.length && prev[0].value && prev[0].value.v === 2;  // 저장 모양이 바뀌면(v) 그 회차는 저장만 — 이름 바뀐 특보를 새 특보로 보내지 않게
+    const fresh = ok ? all.filter((w) => !seen.has(w.key)) : [];
+    await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'wx_warn_seen', value: { v: 2, keys: all.map((w) => w.key), tmFc: st.tmFc || null, t6: st.t6 || '' }, updated_at: nowIso() } });
     if (!fresh.length) return { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: 0, sent: 0 };
     const subs = await db('push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,language,is_active)&member.is_active=eq.true');
     if (!subs.length) return { ok: true, fresh: fresh.length, sent: 0 };
