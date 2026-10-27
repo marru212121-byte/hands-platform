@@ -220,6 +220,24 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .fxname{display:block;font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
 .fxamt{margin-left:auto;min-width:0;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere;line-height:1.2}
 .fxrow.on .fxamt{color:var(--navy)}
+.fxamt .sym{font-size:.62em;font-weight:600;color:var(--ink3);margin-right:4px;vertical-align:.12em}
+.wxnow{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 18px;margin-top:14px}
+.wxtop{display:flex;align-items:center;gap:14px}
+.wxtop .wi{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy);flex:none}
+.wxtop .wi .ic{width:38px;height:38px}
+.wxtemp{font-size:46px;font-weight:750;line-height:1;font-variant-numeric:tabular-nums}
+.wxcond{font-size:17px;font-weight:650;margin-top:4px}
+.wxmeta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.wxmeta div{font-size:12px;color:var(--ink3)} .wxmeta b{display:block;font-size:16px;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
+.wxplace{display:flex;align-items:center;gap:6px;color:var(--ink2);font-size:15px;font-weight:600;margin-top:6px}
+.wxplace .ic{width:18px;height:18px;color:var(--navy)}
+.wxhours{display:flex;gap:8px;overflow-x:auto;margin-top:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.wxh{flex:none;width:64px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
+.wxh .tm{font-size:12px;color:var(--ink3)} .wxh .ic{width:24px;height:24px;margin:6px auto;color:var(--navy)} .wxh b{display:block;font-size:16px} .wxh .pp{font-size:11px;color:#2563EB;margin-top:2px}
+.wxdays{background:#fff;border:1px solid var(--line);border-radius:18px;margin-top:14px;overflow:hidden}
+.wxd{display:flex;align-items:center;gap:12px;padding:14px 16px} .wxd+.wxd{border-top:1px solid var(--line)}
+.wxd .dn{font-weight:650;min-width:72px} .wxd .ic{width:24px;height:24px;color:var(--navy)} .wxd .cd{flex:1;color:var(--ink2);font-size:14px} .wxd .pp{font-size:12px;color:#2563EB} .wxd .mm{font-weight:700;font-variant-numeric:tabular-nums}
+.wxd .mm span{color:var(--ink3);font-weight:500}
 .fxkeys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
 .fxkeys button{height:58px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:24px;font-weight:600;color:var(--ink);font-family:inherit}
 .fxkeys button:active{background:var(--navy-bg)}
@@ -648,6 +666,19 @@ my:{fx:'ငွေလဲနှုန်း',fxSub:'ငွေကို ချက�
 si:{fx:'විනිමය අනුපාතය',fxSub:'මුදල් වහාම ගණනය',fxAsOf:'{d} අනුපාතය'},
 bn:{fx:'বিনিময় হার',fxSub:'সাথে সাথে টাকা হিসাব',fxAsOf:'{d} তারিখের হার'}};
 for (const l in STR_FX) Object.assign(STR[l], STR_FX[l]);
+const STR_WX = {  // 앱 안 날씨 (사장님 10-27)
+en:{"wxClear": "Clear", "wxPartly": "Partly cloudy", "wxCloudy": "Cloudy", "wxRain": "Rain", "wxRainSnow": "Rain and snow", "wxSnow": "Snow", "wxShower": "Showers", "wxHumidity": "Humidity", "wxWind": "Wind", "wxRain1h": "Rain (1h)", "wxPop": "Chance of rain", "wxToday": "Today", "wxTomorrow": "Tomorrow", "wxDayAfter": "Day after tomorrow", "wxSource": "As of {t} · Source: Korea Meteorological Administration", "wxNeedLoc": "Turn on location to see the weather where you are."},
+ko:{"wxClear": "맑음", "wxPartly": "구름 많음", "wxCloudy": "흐림", "wxRain": "비", "wxRainSnow": "비/눈", "wxSnow": "눈", "wxShower": "소나기", "wxHumidity": "습도", "wxWind": "바람", "wxRain1h": "1시간 강수량", "wxPop": "강수 확률", "wxToday": "오늘", "wxTomorrow": "내일", "wxDayAfter": "모레", "wxSource": "{t} 기준 · 출처: 기상청", "wxNeedLoc": "위치를 켜면 지금 있는 곳 날씨를 볼 수 있어요."},
+vi:{"wxClear": "Trời quang", "wxPartly": "Có mây", "wxCloudy": "Nhiều mây", "wxRain": "Mưa", "wxRainSnow": "Mưa và tuyết", "wxSnow": "Tuyết", "wxShower": "Mưa rào", "wxHumidity": "Độ ẩm", "wxWind": "Gió", "wxRain1h": "Lượng mưa (1 giờ)", "wxPop": "Khả năng mưa", "wxToday": "Hôm nay", "wxTomorrow": "Ngày mai", "wxDayAfter": "Ngày kia", "wxSource": "Cập nhật {t} · Nguồn: Cục Khí tượng Hàn Quốc", "wxNeedLoc": "Hãy bật vị trí để xem thời tiết nơi bạn ở."},
+id:{"wxClear": "Cerah", "wxPartly": "Berawan sebagian", "wxCloudy": "Berawan", "wxRain": "Hujan", "wxRainSnow": "Hujan dan salju", "wxSnow": "Salju", "wxShower": "Hujan lokal", "wxHumidity": "Kelembapan", "wxWind": "Angin", "wxRain1h": "Curah hujan (1 jam)", "wxPop": "Peluang hujan", "wxToday": "Hari ini", "wxTomorrow": "Besok", "wxDayAfter": "Lusa", "wxSource": "Per {t} · Sumber: Badan Meteorologi Korea", "wxNeedLoc": "Nyalakan lokasi untuk melihat cuaca di tempat Anda."},
+th:{"wxClear": "ท้องฟ้าแจ่มใส", "wxPartly": "มีเมฆบางส่วน", "wxCloudy": "มีเมฆมาก", "wxRain": "ฝนตก", "wxRainSnow": "ฝนและหิมะ", "wxSnow": "หิมะ", "wxShower": "ฝนตกเป็นช่วง", "wxHumidity": "ความชื้น", "wxWind": "ลม", "wxRain1h": "ปริมาณฝน (1 ชม.)", "wxPop": "โอกาสฝนตก", "wxToday": "วันนี้", "wxTomorrow": "พรุ่งนี้", "wxDayAfter": "มะรืนนี้", "wxSource": "ณ {t} · ที่มา: กรมอุตุนิยมวิทยาเกาหลี", "wxNeedLoc": "เปิดตำแหน่งเพื่อดูสภาพอากาศที่คุณอยู่"},
+tl:{"wxClear": "Maaliwalas", "wxPartly": "Bahagyang maulap", "wxCloudy": "Maulap", "wxRain": "Ulan", "wxRainSnow": "Ulan at niyebe", "wxSnow": "Niyebe", "wxShower": "Pag-ulan", "wxHumidity": "Halumigmig", "wxWind": "Hangin", "wxRain1h": "Ulan (1 oras)", "wxPop": "Tsansa ng ulan", "wxToday": "Ngayon", "wxTomorrow": "Bukas", "wxDayAfter": "Sa makalawa", "wxSource": "Noong {t} · Pinagmulan: Korea Meteorological Administration", "wxNeedLoc": "I-on ang lokasyon para makita ang panahon kung nasaan ka."},
+ne:{"wxClear": "सफा", "wxPartly": "आंशिक बादल", "wxCloudy": "बादल", "wxRain": "वर्षा", "wxRainSnow": "वर्षा र हिउँ", "wxSnow": "हिउँ", "wxShower": "झरी", "wxHumidity": "आर्द्रता", "wxWind": "हावा", "wxRain1h": "वर्षा (१ घण्टा)", "wxPop": "वर्षाको सम्भावना", "wxToday": "आज", "wxTomorrow": "भोलि", "wxDayAfter": "पर्सि", "wxSource": "{t} सम्म · स्रोत: कोरिया मौसम विज्ञान प्रशासन", "wxNeedLoc": "तपाईं भएको ठाउँको मौसम हेर्न स्थान खोल्नुहोस्।"},
+km:{"wxClear": "មេឃស្រឡះ", "wxPartly": "មានពពកខ្លះ", "wxCloudy": "មានពពកច្រើន", "wxRain": "ភ្លៀង", "wxRainSnow": "ភ្លៀង និងព្រិល", "wxSnow": "ព្រិល", "wxShower": "ភ្លៀងមួយភ្លែត", "wxHumidity": "សំណើម", "wxWind": "ខ្យល់", "wxRain1h": "បរិមាណភ្លៀង (១ម៉ោង)", "wxPop": "ឱកាសភ្លៀង", "wxToday": "ថ្ងៃនេះ", "wxTomorrow": "ថ្ងៃស្អែក", "wxDayAfter": "ខានស្អែក", "wxSource": "គិតត្រឹម {t} · ប្រភព៖ រដ្ឋបាលឧតុនិយមកូរ៉េ", "wxNeedLoc": "សូមបើកទីតាំង ដើម្បីមើលអាកាសធាតុកន្លែងអ្នកនៅ។"},
+my:{"wxClear": "ကြည်လင်", "wxPartly": "တိမ်အနည်းငယ်", "wxCloudy": "တိမ်ထူ", "wxRain": "မိုးရွာ", "wxRainSnow": "မိုးနှင့်နှင်း", "wxSnow": "နှင်းကျ", "wxShower": "မိုးဖွဲဖွဲ", "wxHumidity": "စိုထိုင်းဆ", "wxWind": "လေ", "wxRain1h": "မိုးရေချိန် (၁ နာရီ)", "wxPop": "မိုးရွာနိုင်ခြေ", "wxToday": "ယနေ့", "wxTomorrow": "မနက်ဖြန်", "wxDayAfter": "သဘက်ခါ", "wxSource": "{t} အချိန် · ရင်းမြစ်: ကိုရီးယား မိုးလေဝသဌာန", "wxNeedLoc": "သင်ရှိရာ ရာသီဥတုကြည့်ရန် တည်နေရာကို ဖွင့်ပါ။"},
+si:{"wxClear": "පැහැදිලි", "wxPartly": "අර්ධ වශයෙන් වලාකුළු", "wxCloudy": "වලාකුළු සහිත", "wxRain": "වැසි", "wxRainSnow": "වැසි සහ හිම", "wxSnow": "හිම", "wxShower": "ඉඳහිට වැසි", "wxHumidity": "ආර්ද්‍රතාව", "wxWind": "සුළඟ", "wxRain1h": "වර්ෂාපතනය (පැය 1)", "wxPop": "වැසි සම්භාවිතාව", "wxToday": "අද", "wxTomorrow": "හෙට", "wxDayAfter": "අනිද්දා", "wxSource": "{t} වන විට · මූලාශ්‍රය: කොරියානු කාලගුණ විද්‍යා පරිපාලනය", "wxNeedLoc": "ඔබ සිටින තැන කාලගුණය බැලීමට ස්ථානය සක්‍රිය කරන්න."},
+bn:{"wxClear": "পরিষ্কার", "wxPartly": "আংশিক মেঘলা", "wxCloudy": "মেঘলা", "wxRain": "বৃষ্টি", "wxRainSnow": "বৃষ্টি ও তুষার", "wxSnow": "তুষার", "wxShower": "ঝাপটা বৃষ্টি", "wxHumidity": "আর্দ্রতা", "wxWind": "বাতাস", "wxRain1h": "বৃষ্টিপাত (১ ঘণ্টা)", "wxPop": "বৃষ্টির সম্ভাবনা", "wxToday": "আজ", "wxTomorrow": "আগামীকাল", "wxDayAfter": "পরশু", "wxSource": "{t} অনুযায়ী · উৎস: কোরিয়া আবহাওয়া প্রশাসন", "wxNeedLoc": "আপনি যেখানে আছেন সেখানকার আবহাওয়া দেখতে লোকেশন চালু করুন।"}};
+for (const l in STR_WX) Object.assign(STR[l], STR_WX[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -714,6 +745,10 @@ const P = {
   briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3 12.5h18"/>',
   ship:'<path d="M3 16.5l2.2 4h13.6l2.2-4L12 13.5z"/><path d="M6 15.2V9h12v6.2M12 9V4M9.5 6h5"/>',
   bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  cloud:'<path d="M7 18h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 18z"/>',
+  cloudSun:'<path d="M8 3.5v1.3M3.6 5.6l.9.9M2 10h1.3M13.4 5.6l-.9.9"/><path d="M5.4 12.2A3.5 3.5 0 1 1 11.6 9"/><path d="M9 20h9a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.7 1.3A2.9 2.9 0 0 0 9 20z"/>',
+  rain:'<path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>',
+  snow:'<path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 15z"/><path d="M8 19v.01M12 18.5v.01M16 19v.01M10 21.5v.01M14 21.5v.01"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   menu:'<circle cx="12" cy="5.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="18.5" r="1.3"/>'
 };
@@ -1661,13 +1696,45 @@ function sosTile() {
   return btn;
 }
 /* ---------- notices · weather · manager contacts (사장님 10-27) ---------- */
-function openWeather() {  // weather.com by the last position the app already has (opened inside the tap, so no pop-up block)
-  const p = S.lastPos;
-  window.open(p ? `https://weather.com/weather/today/l/${p.lat.toFixed(3)},${p.lng.toFixed(3)}` : 'https://weather.com/', '_blank', 'noopener');
+function openWeather() { go(screenWeather); }
+// 앱 안 날씨 (사장님 10-27): 기상청 단기예보, 지금 있는 동네, 근로자 말로
+function wxKind(sky, pty) { pty = { 5: 1, 6: 2, 7: 3 }[pty] || pty;
+  if (pty === 1 || pty === 4) return [pty === 4 ? 'wxShower' : 'wxRain', 'rain'];
+  if (pty === 2) return ['wxRainSnow', 'snow']; if (pty === 3) return ['wxSnow', 'snow'];
+  return sky >= 4 ? ['wxCloudy', 'cloud'] : sky === 3 ? ['wxPartly', 'cloudSun'] : ['wxClear', 'sun']; }
+function kstDate(date, time) { return new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8), +(time || '0000').slice(0, 2) - 9)); }
+function screenWeather() {
+  const box = h('div', {}, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
+  let loc = 'en-US'; try { if (Intl.DateTimeFormat.supportedLocalesOf([LOCALE[S.lang]]).length) loc = LOCALE[S.lang]; } catch (e) {}
+  const show = (w) => {
+    const [ck, ci] = wxKind(w.now.sky, w.now.pty);
+    const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10).replace(/-/g, '');
+    const dayName = (d) => { const diff = Math.round((kstDate(d) - kstDate(today)) / 86400000); return t(['wxToday', 'wxTomorrow', 'wxDayAfter'][diff] || 'wxToday'); };
+    const rn = w.now.rn1 && w.now.rn1 !== '강수없음' ? String(w.now.rn1).replace('mm', '') + ' mm' : '0 mm';
+    box.replaceChildren(...[
+      w.place ? h('div', { class: 'wxplace' }, icon('pin'), w.place) : null,
+      h('div', { class: 'wxnow' },
+        h('div', { class: 'wxtop' }, h('span', { class: 'wi' }, icon(ci)), h('div', {}, h('div', { class: 'wxtemp', text: Math.round(w.now.tmp) + '°' }), h('div', { class: 'wxcond', text: t(ck) }))),
+        h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh + '%' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd + ' m/s' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
+      h('div', { class: 'wxhours' }, w.hours.map((x) => { const [k2, i2] = wxKind(x.sky, x.pty);
+        return h('div', { class: 'wxh', 'aria-label': t(k2) }, h('div', { class: 'tm', text: kstDate(x.date, x.time).toLocaleTimeString(loc, { hour: 'numeric', timeZone: 'Asia/Seoul' }) }), icon(i2), h('b', { text: Math.round(x.tmp) + '°' }), h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' })); })),
+      h('div', { class: 'wxdays' }, w.days.map((d) => { const [k3, i3] = wxKind(d.sky, d.pty);
+        return h('div', { class: 'wxd' }, h('span', { class: 'dn', text: dayName(d.date) }), icon(i3), h('span', { class: 'cd' }, t(k3), d.pop ? h('span', { class: 'pp', style: 'display:block', text: t('wxPop') + ' ' + d.pop + '%' }) : null),
+          h('span', { class: 'mm' }, h('span', { text: Math.round(d.min) + '° / ' }), Math.round(d.max) + '°')); })),
+      h('p', { class: 'fxnote' }, h('b', { text: t('wxSource').replace('{t}', fmtDate(new Date(w.base).toISOString(), true)) }), h('br'), h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener', text: '© OpenStreetMap' }))].filter(Boolean));
+  };
+  (async () => {
+    const p = S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null) || await getPos(10000, false);
+    if (!p) return box.replaceChildren(h('p', { class: 'lead', text: t('wxNeedLoc') }));
+    try { show(await api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } })); }
+    catch (e) { box.replaceChildren(h('p', { class: 'lead', text: e.code === 'bad_location' ? t('wxNeedLoc') : errText(e.code) })); }
+  })();
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('weather') }), box));
 }
 // 환율 계산기 (사장님 10-27): 위 = 한화, 아래 = 가입 때 고른 나라 통화(바꿀 수 있음), 치는 대로 바로 변환. 하루 1번 갱신 자료라 「오늘 기준」
 const FX = [['VND', 'vn'], ['THB', 'th'], ['IDR', 'id'], ['PHP', 'ph'], ['NPR', 'np'], ['KHR', 'kh'], ['MMK', 'mm'], ['LKR', 'lk'], ['BDT', 'bd'], ['USD', 'us']];
 const FX_NODEC = ['KRW', 'VND', 'IDR', 'KHR', 'MMK'];
+const FX_SYM = { KRW: '₩', USD: '$', VND: '₫', THB: '฿', IDR: 'Rp', PHP: '₱', NPR: 'रु', KHR: '៛', MMK: 'K', LKR: 'Rs', BDT: '৳' };  // 통화 기호 (사장님 10-27)
 function fxDefault() {  // 오른쪽 위 언어의 나라 통화 → (한국어면) 가입 나라 통화 → 달러. 언어를 바꾸면 통화도 같이 바뀜 (사장님 10-27)
   const c = S.lang !== 'ko' ? FLAG[S.lang] : (S.profile || {}).country;
   const hit = FX.find((x) => x[1] === c) || FX.find((x) => x[1] === (S.profile || {}).country) || FX.find((x) => x[0] === 'USD');
@@ -1702,8 +1769,9 @@ function screenFx() {
     flagF.src = '/flags/' + cur.flag + '.png'; codeF.textContent = cur.code; nameF.textContent = curName(cur.code); sel.value = cur.code;
     rowK.classList.toggle('on', side === 'krw'); rowF.classList.toggle('on', side === 'fx');
     const [k, f] = vals(), typed = (x) => x.includes('.') ? fxFmt(parseFloat(x.split('.')[0]) || 0, 'KRW') + '.' + x.split('.')[1] : fxFmt(parseFloat(x) || 0, 'KRW');
-    amtK.textContent = side === 'krw' ? typed(input) : fxFmt(k, 'KRW');
-    amtF.textContent = side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…');
+    const sym = (c) => h('span', { class: 'sym', text: FX_SYM[c] || '' });
+    amtK.replaceChildren(sym('KRW'), side === 'krw' ? typed(input) : fxFmt(k, 'KRW'));
+    amtF.replaceChildren(sym(cur.code), side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…'));
     if (data) {
       const r = rate(), unit = FX_NODEC.includes(cur.code) ? 1000 : 1;
       note.replaceChildren(h('b', { text: t('fxAsOf').replace('{d}', fmtDate(new Date(data.updated).toISOString(), true)) }), h('br'), unit.toLocaleString('en-US') + ' ' + cur.code + ' = ' + fxFmt(r ? unit / r : 0, 'KRW') + ' KRW',

@@ -11,6 +11,29 @@ const nowIso = () => new Date().toISOString();
 const normName = (x) => String(x || '').toUpperCase().replace(/[^A-Z]/g, '');
 const FX_CODES = ['USD', 'VND', 'THB', 'IDR', 'PHP', 'NPR', 'KHR', 'MMK', 'LKR', 'BDT'];
 let fxCache = null;
+
+// 기상청 단기예보 격자(DFS 람베르트) — 기상청 활용가이드 공식
+function kmaGrid(lat, lng) {
+  const RE = 6371.00877 / 5.0, D = Math.PI / 180, s1 = 30 * D, s2 = 60 * D, olon = 126 * D, olat = 38 * D;
+  let sn = Math.log(Math.cos(s1) / Math.cos(s2)) / Math.log(Math.tan(Math.PI * 0.25 + s2 * 0.5) / Math.tan(Math.PI * 0.25 + s1 * 0.5));
+  const sf = Math.pow(Math.tan(Math.PI * 0.25 + s1 * 0.5), sn) * Math.cos(s1) / sn;
+  const ro = RE * sf / Math.pow(Math.tan(Math.PI * 0.25 + olat * 0.5), sn);
+  const ra = RE * sf / Math.pow(Math.tan(Math.PI * 0.25 + lat * D * 0.5), sn);
+  let th = lng * D - olon; if (th > Math.PI) th -= 2 * Math.PI; if (th < -Math.PI) th += 2 * Math.PI; th *= sn;
+  return { nx: Math.floor(ra * Math.sin(th) + 43 + 0.5), ny: Math.floor(ro - ra * Math.cos(th) + 136 + 0.5) };
+}
+const kst = (ms) => { const d = new Date(ms + 9 * 3600000); return { ymd: d.toISOString().slice(0, 10).replace(/-/g, ''), h: d.getUTCHours(), m: d.getUTCMinutes() }; };
+async function kmaCall(op, q) {
+  const key = process.env.KMA_SERVICE_KEY;
+  if (!key) throw new HttpError(503, 'weather_unavailable');
+  const u = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/${op}?serviceKey=${encodeURIComponent(key)}&pageNo=1&numOfRows=1000&dataType=JSON&${new URLSearchParams(q)}`;
+  const r = await fetch(u);
+  const j = await r.json().catch(() => null);
+  const items = j && j.response && j.response.body && j.response.body.items && j.response.body.items.item;
+  if (!items) throw new HttpError(502, 'weather_unavailable');
+  return items;
+}
+const wxCache = new Map(), placeCache = new Map();
 const normPass = (x) => String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const loginFails = new Map();
 // 카카오맵 (관리자 지도와 같은 지도). 이름은 핀 이름표로 뜸
@@ -365,6 +388,61 @@ module.exports = L.handler({
       fxCache = { at: Date.now(), out: { ok: true, base: 'KRW', rates, updated: j.time_last_update_unix * 1000 } };
     }
     return fxCache.out;
+  },
+
+  // 날씨: 기상청 단기예보(공공데이터, 출처 표시) + 지역 이름(오픈스트리트맵, 출처 표시). 격자별 20분 저장 (사장님 10-27)
+  async weather(req, b) {
+    await L.workerFromReq(req);
+    const lat = num(b.lat), lng = num(b.lng);
+    if (lat == null || lng == null || lat < 32 || lat > 39.5 || lng < 124 || lng > 132) throw new HttpError(400, 'bad_location');
+    const { nx, ny } = kmaGrid(lat, lng), gk = nx + ',' + ny, now = Date.now();
+    let wx = wxCache.get(gk);
+    if (!wx || now - wx.at > 20 * 60000) {
+      // 실황: 매시 정각 자료가 40분쯤 나옴
+      const n = kst(now - 40 * 60000);
+      const ncst = await kmaCall('getUltraSrtNcst', { base_date: n.ymd, base_time: String(n.h).padStart(2, '0') + '00', nx, ny });
+      // 단기예보: 02·05·08·11·14·17·20·23시 발표, 10분쯤 뒤에 나옴
+      const f = kst(now - 15 * 60000), bh = [23, 20, 17, 14, 11, 8, 5, 2].find((x) => x <= f.h);
+      const fb = bh == null ? { ...kst(now - 15 * 60000 - 24 * 3600000), bh: 23 } : { ...f, bh };
+      const fc = await kmaCall('getVilageFcst', { base_date: fb.ymd, base_time: String(fb.bh).padStart(2, '0') + '00', nx, ny });
+      const cur = {}; for (const it of ncst) cur[it.category] = it.obsrValue;
+      const hours = {}, days = {};
+      for (const it of fc) {
+        const k = it.fcstDate + it.fcstTime;
+        (hours[k] = hours[k] || { date: it.fcstDate, time: it.fcstTime })[it.category] = it.fcstValue;
+        const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], pty: [], pop: 0 });
+        if (it.category === 'TMP') d.tmps.push(+it.fcstValue);
+        if (it.category === 'TMN') d.tmn = +it.fcstValue;
+        if (it.category === 'TMX') d.tmx = +it.fcstValue;
+        if (it.category === 'POP') d.pop = Math.max(d.pop, +it.fcstValue);
+        if (it.category === 'SKY' && it.fcstTime >= '0900' && it.fcstTime <= '1800') d.sky.push(+it.fcstValue);
+        if (it.category === 'PTY' && +it.fcstValue > 0) d.pty.push(+it.fcstValue);
+      }
+      const hl = Object.keys(hours).sort().map((k) => hours[k]);
+      const nowKey = kst(now).ymd + String(kst(now).h).padStart(2, '0') + '00';
+      const next = hl.filter((x) => x.date + x.time >= nowKey).slice(0, 24).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP }));
+      const mode = (a) => a.length ? +Object.entries(a.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {})).sort((p, q) => q[1] - p[1])[0][0] : 1;
+      const dl = Object.keys(days).sort().slice(0, 3).map((k) => { const d = days[k];
+        return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop }; });
+      wx = { at: now, out: {
+        now: { tmp: +cur.T1H, reh: +cur.REH, wsd: +cur.WSD, rn1: cur.RN1, pty: +cur.PTY || 0, sky: next[0] ? next[0].sky : 1 },
+        hours: next, days: dl, base: now } };
+      wxCache.set(gk, wx);
+    }
+    // 지역 이름: 1km 단위로 저장, 근로자 말로 (구·동은 한국어로 옴)
+    const lang = clean(b.lang, 10) || 'en', pk = lat.toFixed(2) + ',' + lng.toFixed(2) + ',' + lang;
+    let place = placeCache.get(pk);
+    if (place === undefined) {
+      place = null;
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&zoom=14&accept-language=${encodeURIComponent(lang)}`,
+          { headers: { 'User-Agent': 'hands-platform/1.0 (https://hands-platform.vercel.app)' } });
+        const a = (await r.json()).address || {};
+        place = [a.city || a.province || a.state, a.borough || a.county || a.town, a.suburb || a.village || a.quarter].filter(Boolean).filter((v, i, x) => x.indexOf(v) === i).join(' · ') || null;
+      } catch (e) {}
+      placeCache.set(pk, place);
+    }
+    return { ok: true, place, ...wx.out };
   },
 
   async posts(req) {
