@@ -254,7 +254,7 @@ module.exports = L.handler({
     const title = clean(b.title, 120) || (category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의');
     await db('inquiries', { method: 'POST', body: { member_id: m.id, category, title, body, body_lang: m.language, status: 'open' } });
     const label = category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의';
-    await L.telegram([`[HANDS ${label}]`, `${m.name} (${COUNTRY_KO[m.country] || m.country || '-'}) ${m.phone || ''}`, body.slice(0, 300)].join('\n')).catch(() => {});
+    await L.telegram([`[HANDS ${label}]`, `${m.name} (${COUNTRY_KO[m.country] || m.country || '-'}) ${m.phone || ''}`, body.slice(0, 300), `관리자에서 보기: ${adminLink(m.id)}`].join('\n')).catch(() => {});
     return { ok: true };
   },
 
