@@ -45,7 +45,8 @@ async function paydayPush() {
   if (!subs.length) return { sent: 0 };
   const wp = L.webpush(); let sent = 0; const gone = [];
   await Promise.all(subs.map(async (s) => {
-    const [title, body] = PAY_MSG[s.member.language] || PAY_MSG.en;
+    const lang = s.member.language || 'en', [title, body0] = PAY_MSG[lang] || PAY_MSG.en;
+    const body = lang === 'ko' ? body0 : body0 + '\n\n[한국어] ' + PAY_MSG.ko[0] + '. ' + PAY_MSG.ko[1];  // 근로자 말 + 아래 한국어 (사장님 10-27, 공지와 같은 모양)
     try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title, body, url: '/?fx=1' }), { TTL: 43200 }); sent++; }
     catch (e) { if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
   }));
