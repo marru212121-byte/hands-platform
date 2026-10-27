@@ -39,6 +39,22 @@ async function saveLocation(m, { lat, lng, accuracy, source }) {
   return { lat, lng, acc, t };
 }
 
+// 텔레그램 알림 모양 (사장님 10-27: 핵심만 한 줄씩, 링크는 이름 아래 줄에, 칸 사이 한 줄 띄움)
+function kstText(d = new Date()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })
+    .formatToParts(d).map(x => [x.type, x.value]));
+  return `${p.year}년 ${p.month}월 ${p.day}일 ${p.dayPeriod} ${p.hour}시 ${p.minute}분 ${p.second}초`;
+}
+function tgCard(title, head, rows, { lat, lng, name, id } = {}) {
+  const out = [title, head, ''];
+  rows.filter(Boolean).forEach(r => out.push(r));
+  out.push('');
+  if (lat != null && lng != null) out.push('위치 보기 (카카오맵)', mapLink(lat, lng, name), '');
+  else out.push('위치: 받지 못함', '');
+  if (id) out.push('관리자에서 보기', adminLink(id));
+  return out.join('\n');
+}
+
 // 「집중 관리」 근로자는 앱을 열고 닫을 때 텔레그램 (같은 종류 1분 안 중복은 건너뜀)
 async function watchAlert(m, b, kind) {
   if (!m.watch) return;
@@ -46,10 +62,8 @@ async function watchAlert(m, b, kind) {
   const recent = await db(`location_history?select=id&member_id=eq.${m.id}&source=eq.${kind}&recorded_at=gt.${encodeURIComponent(since)}&limit=1`).catch(() => []);
   if (recent.length) return;
   const lat = num(b.lat), lng = num(b.lng);
-  const kst = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-  await L.telegram([`[HANDS 집중 관리] ${m.name} 앱 ${kind === 'app_open' ? '열림' : '닫힘'}`, `시각: ${kst}`,
-    lat != null && lng != null ? `위치(카카오맵): ${mapLink(lat, lng, m.name)}` : '위치: 받지 못함',
-    `관리자에서 보기: ${adminLink(m.id)}`].join('\n')).catch(() => {});
+  await L.telegram(tgCard('[HANDS 집중 관리]', `${m.name} 님 앱이 ${kind === 'app_open' ? '열렸습니다' : '닫혔습니다'}`,
+    [`시각: ${kstText()}`], { lat, lng, name: m.name, id: m.id })).catch(() => {});
 }
 
 // ── 여권 읽기: 하이쿠 비전 (사장님 10-27). 가입 전이라 근로자 열쇠가 없음 → 주소·크기·횟수로 막음
@@ -231,16 +245,12 @@ module.exports = L.handler({
       accuracy: num(b.accuracy) == null ? null : Math.round(num(b.accuracy)), status: 'pending' } });
     if (hasLoc) await saveLocation(m, { lat, lng, accuracy: b.accuracy, source: 'sos' }).catch(() => {});
     await db(`locations?member_id=eq.${m.id}`, { method: 'PATCH', body: { sos_active: true } }).catch(() => {});
-    const kst = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-    const notified = await L.telegram([
-      '[HANDS 긴급 SOS]',
-      `${m.name} (${COUNTRY_KO[m.country] || m.country || '-'})`,
+    const notified = await L.telegram(tgCard('[HANDS 긴급 SOS]', `${m.name} 님이 SOS를 눌렀습니다`, [
+      `국적: ${COUNTRY_KO[m.country] || m.country || '-'}`,
       `전화: ${m.phone || '-'}`,
       m.company ? `근무처: ${m.company}` : null,
-      `시각: ${kst}`,
-      hasLoc ? `위치(카카오맵): ${mapLink(lat, lng, m.name)}` : '위치: 받지 못함',
-      `관리자에서 보기: ${adminLink(m.id)}`,
-    ].filter(Boolean).join('\n'));
+      `시각: ${kstText()}`,
+    ], hasLoc ? { lat, lng, name: m.name, id: m.id } : { id: m.id }));
     if (notified) await db(`sos_alerts?id=eq.${rows[0].id}`, { method: 'PATCH', body: { notified_at: nowIso() } }).catch(() => {});
     return { ok: true, id: rows[0].id, notified };
   },
@@ -254,7 +264,14 @@ module.exports = L.handler({
     const title = clean(b.title, 120) || (category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의');
     await db('inquiries', { method: 'POST', body: { member_id: m.id, category, title, body, body_lang: m.language, status: 'open' } });
     const label = category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의';
-    await L.telegram([`[HANDS ${label}]`, `${m.name} (${COUNTRY_KO[m.country] || m.country || '-'}) ${m.phone || ''}`, body.slice(0, 300), `관리자에서 보기: ${adminLink(m.id)}`].join('\n')).catch(() => {});
+    const last = (await db(`locations?select=lat,lng&member_id=eq.${m.id}&limit=1`).catch(() => []))[0] || {};
+    await L.telegram(tgCard(`[HANDS ${label}]`, `${m.name} 님이 ${label} 글을 보냈습니다`, [
+      `국적: ${COUNTRY_KO[m.country] || m.country || '-'}`,
+      m.phone ? `전화: ${m.phone}` : null,
+      `시각: ${kstText()}`,
+      '',
+      body.slice(0, 300),
+    ], { lat: num(last.lat), lng: num(last.lng), name: m.name, id: m.id })).catch(() => {});
     return { ok: true };
   },
 
