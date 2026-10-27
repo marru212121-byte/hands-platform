@@ -572,6 +572,19 @@ my:{"loginBtn": "စာရင်းသွင်းပြီးပါပြီ ·
 si:{"loginBtn": "මම දැනටමත් ලියාපදිංචියි · ඇතුළු වන්න", "loginTitle": "ඇතුළු වන්න", "loginSub": "ගමන් බලපත්‍රයේ ඇති ආකාරයටම ඉංග්‍රීසි නම සහ ගමන් බලපත්‍ර අංකය ඇතුළත් කරන්න.", "fLoginName": "ඉංග්‍රීසි නම (ගමන් බලපත්‍රයේ ලෙස)", "fLoginPass": "ගමන් බලපත්‍ර අංකය", "loginGo": "ඇතුළු වන්න", "errLoginFail": "නම හෝ ගමන් බලපත්‍ර අංකය නොගැළපේ.", "errLoginLocked": "බොහෝ වාර වැරදුණි. මිනිත්තු 30ක් අගුළු දමා ඇත. සමාගම් කළමනාකරු අමතන්න.", "errPassExists": "මෙම ගමන් බලපත්‍රය දැනටමත් ලියාපදිංචියි. ඇතුළු වන්න.", "lostLogin": "නැවත ඇතුළු වන්න.", "passIsPw": "ගමන් බලපත්‍ර අංකය ඇතුළු වීමේ මුරපදය ද වේ.", "doneLogin": "ඊළඟ වතාවේ: ID = ගමන් බලපත්‍රයේ ඉංග්‍රීසි නම, මුරපදය = ගමන් බලපත්‍ර අංකය."},
 bn:{"loginBtn": "আমি আগেই নিবন্ধন করেছি · লগইন", "loginTitle": "লগইন", "loginSub": "পাসপোর্টে যেমন আছে তেমন ইংরেজি নাম ও পাসপোর্ট নম্বর লিখুন।", "fLoginName": "ইংরেজি নাম (পাসপোর্টের মতো)", "fLoginPass": "পাসপোর্ট নম্বর", "loginGo": "লগইন", "errLoginFail": "নাম বা পাসপোর্ট নম্বর মেলেনি।", "errLoginLocked": "অনেকবার ভুল হয়েছে। ৩০ মিনিট বন্ধ। কোম্পানির ম্যানেজারের সাথে যোগাযোগ করুন।", "errPassExists": "এই পাসপোর্ট আগেই নিবন্ধিত। লগইন করুন।", "lostLogin": "আবার লগইন করুন।", "passIsPw": "পাসপোর্ট নম্বরই লগইনের পাসওয়ার্ড।", "doneLogin": "পরের বার লগইন: আইডি = পাসপোর্টের ইংরেজি নাম, পাসওয়ার্ড = পাসপোর্ট নম্বর।"}};
 for (const l in STR_LOGIN) Object.assign(STR[l], STR_LOGIN[l]);
+const STR_LOGOUT = {
+en:{"logout": "Log out", "logoutQ": "Log out? To come back you need your English name and passport number."},
+ko:{"logout": "로그아웃", "logoutQ": "로그아웃할까요? 다시 들어올 때 여권 영문 이름과 여권번호가 필요합니다."},
+vi:{"logout": "Đăng xuất", "logoutQ": "Đăng xuất? Khi vào lại cần tên tiếng Anh và số hộ chiếu."},
+id:{"logout": "Keluar", "logoutQ": "Keluar? Untuk masuk lagi perlu nama Inggris dan nomor paspor."},
+th:{"logout": "ออกจากระบบ", "logoutQ": "ออกจากระบบไหม? เข้าใหม่ต้องใช้ชื่อภาษาอังกฤษและเลขหนังสือเดินทาง"},
+tl:{"logout": "Mag-log out", "logoutQ": "Mag-log out? Para bumalik, kailangan ang English na pangalan at numero ng pasaporte."},
+ne:{"logout": "लगआउट", "logoutQ": "लगआउट गर्ने? फेरि आउन अंग्रेजी नाम र राहदानी नम्बर चाहिन्छ।"},
+km:{"logout": "ចាកចេញ", "logoutQ": "ចាកចេញ? ដើម្បីចូលវិញ ត្រូវការឈ្មោះអង់គ្លេស និងលេខលិខិតឆ្លងដែន។"},
+my:{"logout": "ထွက်ရန်", "logoutQ": "ထွက်မလား? ပြန်ဝင်ရန် အင်္ဂလိပ်အမည်နှင့် နိုင်ငံကူးလက်မှတ်နံပါတ် လိုသည်။"},
+si:{"logout": "ඉවත් වන්න", "logoutQ": "ඉවත් වෙනවාද? නැවත ඇතුළු වීමට ඉංග්‍රීසි නම සහ ගමන් බලපත්‍ර අංකය අවශ්‍යයි."},
+bn:{"logout": "লগআউট", "logoutQ": "লগআউট করবেন? আবার ঢুকতে ইংরেজি নাম ও পাসপোর্ট নম্বর লাগবে।"}};
+for (const l in STR_LOGOUT) Object.assign(STR[l], STR_LOGOUT[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -1697,7 +1710,13 @@ function myTab() {
       h('a', { class: 'irow', href: '/terms.html?lang=' + S.lang, onclick: (e) => { e.preventDefault(); openTerms(''); } }, h('span', { class: 'k', text: t('terms') }), h('span', { class: 'v' }, icon('external'))),
       h('div', { class: 'irow' }, h('span', { class: 'k', text: t('version') }), h('span', { class: 'v', text: VERSION }))),
     h('div', { class: 'note', style: 'margin-top:14px;background:#fff;border:1px solid var(--line)' }, icon('info'), h('div', { class: 'small', text: t('collected') })),
-    h('div', { class: 'company', lang: 'ko', style: 'text-align:center;margin:22px 0 0;font-size:13px', text: COMPANY_KO }));
+    h('div', { class: 'company', lang: 'ko', style: 'text-align:center;margin:22px 0 0;font-size:13px', text: COMPANY_KO }),
+    // small on purpose: workers should stay logged in (사장님 10-27)
+    h('div', { style: 'text-align:center;margin:18px 0 8px' }, h('button', { style: 'background:none;border:0;color:var(--ink3);font-size:13px;text-decoration:underline;padding:8px', onclick: async () => {
+      if (!confirm(t('logoutQ'))) return;
+      try { await api('logout'); } catch (e) {}
+      await clearToken(); S.lostNote = false; go(screenLogin);
+    } }, t('logout'))));
 }
 
 /* ---------- boot ---------- */

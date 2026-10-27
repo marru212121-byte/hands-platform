@@ -185,6 +185,11 @@ module.exports = L.handler({
     return { ok: true, token, profile: publicProfile({ ...m, selfie_photo_path: sp }), __setCookie: L.workerCookie(token) };
   },
 
+  // 로그아웃: 로그인 쿠키 지움 (내 정보 맨 아래 작은 글씨)
+  async logout() {
+    return { ok: true, __setCookie: 'hands_w=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax' };
+  },
+
   // 다시 로그인: 영문 이름 + 여권번호 → 같은 계정으로 이어짐 (새 열쇠, 옛 폰은 끊김)
   async login(req, b) {
     if (req.method !== 'POST') throw new HttpError(405, 'post_only');
