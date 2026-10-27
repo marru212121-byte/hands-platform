@@ -236,7 +236,12 @@ button.fxcur{background:none;border:0;padding:0;font:inherit;color:inherit;text-
 .wxplace .ic{width:18px;height:18px;color:var(--navy)}
 .wxpick{position:relative;display:inline-flex;padding:8px 12px;margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:999px}
 .wxpick .ic:last-of-type{width:14px;height:14px;color:var(--ink3)}
-.wxpick select{position:absolute;inset:0;opacity:0;width:100%;font-size:16px}
+button.wxpick{font:inherit;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer}
+.wxrow{min-height:56px}
+.wxrow .wi2{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy);flex:none}
+.wxrow .wi2 .ic{width:20px;height:20px}
+.wxrow .n{font-size:17px}
+.wxrow .e{flex:1;text-align:right}
 .wxhours{display:flex;gap:8px;overflow-x:auto;margin-top:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .wxh{flex:none;width:64px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
 .wxh .tm{font-size:12px;color:var(--ink3)} .wxh .ic{width:24px;height:24px;margin:6px auto;color:var(--navy)} .wxh b{display:block;font-size:16px} .wxh .pp{font-size:11px;color:#2563EB;margin-top:2px}
@@ -758,6 +763,7 @@ const P = {
   briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3 12.5h18"/>',
   ship:'<path d="M3 16.5l2.2 4h13.6l2.2-4L12 13.5z"/><path d="M6 15.2V9h12v6.2M12 9V4M9.5 6h5"/>',
   bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  locate:'<path d="M3 11l19-9-9 19-2-8-8-2z"/>',
   cloud:'<path d="M7 18h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 18z"/>',
   cloudSun:'<path d="M8 3.5v1.3M3.6 5.6l.9.9M2 10h1.3M13.4 5.6l-.9.9"/><path d="M5.4 12.2A3.5 3.5 0 1 1 11.6 9"/><path d="M9 20h9a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.7 1.3A2.9 2.9 0 0 0 9 20z"/>',
   rain:'<path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 15z"/><path d="M8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5"/>',
@@ -1758,12 +1764,20 @@ function screenWeather() {
       return h('div', { class: 'wxh', 'aria-label': t(k2) }, h('div', { class: 'tm', text: kstDate(x.date, x.time).toLocaleTimeString(loc, { hour: 'numeric', timeZone: 'Asia/Seoul' }) }), icon(i2), h('b', { text: Math.round(x.tmp) + '°' }),
         h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' }), pcp(x.pcp) ? h('div', { class: 'pp', style: 'font-weight:700', text: pcp(x.pcp) }) : null); }));
     const cur = lsGet('hands_wx_city') || '';
-    const pick = h('select', { 'aria-label': t('weather'), onchange: (e) => { lsSet('hands_wx_city', e.target.value); S.wxCache = null; box.replaceChildren(h('div', { class: 'loading' }, h('div', { class: 'spin' }))); load(); } },
-      h('option', { value: '', text: t('wxMyLoc') }), WX_CITIES.map((c) => h('option', { value: c[1], text: cityName(c) })));
-    pick.value = cur;
     const city = WX_CITIES.find((x) => x[1] === cur);
+    // 위치 고르기 창: 맨 위 「내 위치」(지도 앱 화살표 아이콘), 아래 시·도(선 핀) (사장님 10-27)
+    const choose = (v) => { lsSet('hands_wx_city', v); S.wxCache = null; box.replaceChildren(h('div', { class: 'loading' }, h('div', { class: 'spin' }))); load(); };
+    const openPick = () => {
+      const close = () => scrim.remove();
+      const row = (v, ic, label, sub) => h('button', { class: 'langrow wxrow' + (v === cur ? ' on' : ''), onclick: () => { close(); choose(v); } },
+        h('span', { class: 'wi2' }, icon(ic)), h('span', { class: 'n', text: label }), sub ? h('span', { class: 'e', text: sub }) : null, v === cur ? icon('check') : null);
+      const scrim = h('div', { class: 'scrim', onclick: (e) => { if (e.target === scrim) close(); } },
+        h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('weather') }, h('div', { class: 'grab' }), h('h2', { text: t('weather') }),
+          h('div', { class: 'langlist', role: 'list' }, row('', 'locate', t('wxMyLoc'), !cur && w.place ? w.place : ''), WX_CITIES.map((c) => row(c[1], 'pin', cityName(c))))));
+      document.body.append(scrim);
+    };
     box.replaceChildren(...[
-      h('label', { class: 'wxplace wxpick' }, icon('pin'), h('span', { text: city ? cityName(city) : (w.place || t('wxMyLoc')) }), icon('chevDown'), pick),
+      h('button', { class: 'wxplace wxpick', onclick: openPick }, icon(city ? 'pin' : 'locate'), h('span', { text: city ? cityName(city) : (w.place || t('wxMyLoc')) }), icon('chevDown')),
       h('div', { class: 'wxnow' },
         h('div', { class: 'wxtop' }, h('span', { class: 'wi' }, icon(ci)), h('div', {}, h('div', { class: 'wxtemp', text: Math.round(w.now.tmp) + '°' }), h('div', { class: 'wxcond', text: t(ck) }))),
         h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh + '%' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd + ' m/s' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
