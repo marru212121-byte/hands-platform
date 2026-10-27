@@ -224,7 +224,9 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .fxkeys button{height:58px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:24px;font-weight:600;color:var(--ink);font-family:inherit}
 .fxkeys button:active{background:var(--navy-bg)}
 .fxkeys .fxc{color:var(--red);font-size:20px}
-.fxnote{margin-top:12px;font-size:13px;color:var(--ink3);line-height:1.5}
+.fxnote{margin-top:16px;font-size:15px;color:var(--ink2);line-height:1.6}
+.fxnote b{font-weight:650;color:var(--ink)}
+.fxnote a{font-size:12px}
 .fxnote a{color:var(--ink3)}
 .mtile .mi{position:relative;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--navy-bg);color:var(--navy);flex:none}
 .mtile .mi .ic{width:26px;height:26px}
@@ -1616,8 +1618,7 @@ function screenHome() {
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
     page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push && S.push !== 'on' && S.push !== 'unsupported' && pushSupported() ? 'margin-top:14px' : '' },
-        h('button', { class: 'mtile strong wide', onclick: () => go(screenFx) }, h('span', { class: 'mi' }, icon('transfer')), h('span', {}, h('span', { class: 'mt', text: t('fx') }), h('span', { class: 'ms', text: t('fxSub') })),
-          h('span', { class: 'fxflags', 'aria-hidden': 'true' }, h('img', { src: '/flags/kr.png', alt: '' }), icon('transfer'), h('img', { src: '/flags/' + fxDefault().flag + '.png', alt: '' }))),
+        h('button', { class: 'mtile strong wide', onclick: () => go(screenFx) }, h('span', { class: 'mi' }, icon('transfer')), h('span', {}, h('span', { class: 'mt', text: t('fx') }), h('span', { class: 'ms', text: t('fxSub') }))),
         h('button', { class: 'mtile strong', onclick: () => go(screenNotices) }, h('span', { class: 'mi' }, icon('bell')), h('span', {}, h('span', { class: 'mt', text: t('notices') }), h('span', { class: 'ms', text: t('noticesSub') }))),
         h('button', { class: 'mtile strong', onclick: openWeather }, h('span', { class: 'mi' }, icon('sun')), h('span', {}, h('span', { class: 'mt', text: t('weather') }), h('span', { class: 'ms', text: t('weatherSub') }))),
         h('button', { class: 'mtile', onclick: toTab('places') }, h('span', { class: 'mi' }, icon('map')), h('span', {}, h('span', { class: 'mt', text: t('places') }), h('span', { class: 'ms', text: t('placesHint') }))),
@@ -1667,9 +1668,9 @@ function openWeather() {  // weather.com by the last position the app already ha
 // 환율 계산기 (사장님 10-27): 위 = 한화, 아래 = 가입 때 고른 나라 통화(바꿀 수 있음), 치는 대로 바로 변환. 하루 1번 갱신 자료라 「오늘 기준」
 const FX = [['VND', 'vn'], ['THB', 'th'], ['IDR', 'id'], ['PHP', 'ph'], ['NPR', 'np'], ['KHR', 'kh'], ['MMK', 'mm'], ['LKR', 'lk'], ['BDT', 'bd'], ['USD', 'us']];
 const FX_NODEC = ['KRW', 'VND', 'IDR', 'KHR', 'MMK'];
-function fxDefault() {
-  const saved = lsGet('hands_fx'), c = (S.profile || {}).country;
-  const hit = FX.find((x) => x[0] === saved) || FX.find((x) => x[1] === c) || FX.find((x) => x[0] === 'USD');
+function fxDefault() {  // 오른쪽 위 언어의 나라 통화 → (한국어면) 가입 나라 통화 → 달러. 언어를 바꾸면 통화도 같이 바뀜 (사장님 10-27)
+  const c = S.lang !== 'ko' ? FLAG[S.lang] : (S.profile || {}).country;
+  const hit = FX.find((x) => x[1] === c) || FX.find((x) => x[1] === (S.profile || {}).country) || FX.find((x) => x[0] === 'USD');
   return { code: hit[0], flag: hit[1] };
 }
 function curName(code) {
@@ -1686,7 +1687,7 @@ function screenFx() {
   const amtK = h('span', { class: 'fxamt' }), amtF = h('span', { class: 'fxamt' });
   const flagF = h('img', { class: 'fl', alt: '' }), codeF = h('b'), nameF = h('span', { class: 'fxname' });
   const note = h('p', { class: 'fxnote' }, h('div', { class: 'spin', style: 'width:18px;height:18px' }));
-  const sel = h('select', { 'aria-label': t('fx'), onchange: (e) => { const x = FX.find((f) => f[0] === e.target.value); if (side === 'fx') { input = String(Math.round(vals()[0])); side = 'krw'; } cur = { code: x[0], flag: x[1] }; lsSet('hands_fx', x[0]); draw(); } },
+  const sel = h('select', { 'aria-label': t('fx'), onchange: (e) => { const x = FX.find((f) => f[0] === e.target.value); if (side === 'fx') { input = String(Math.round(vals()[0])); side = 'krw'; } cur = { code: x[0], flag: x[1] }; draw(); } },
     FX.map(([c]) => h('option', { value: c, text: c + ' · ' + curName(c) })));
   const rowK = h('button', { class: 'fxrow', onclick: () => pick('krw') },
     h('span', { class: 'fxcur' }, h('img', { class: 'fl', src: '/flags/kr.png', alt: '' }), h('span', {}, h('b', { text: 'KRW' }), h('span', { class: 'fxname', text: curName('KRW') }))), amtK);
@@ -1705,7 +1706,7 @@ function screenFx() {
     amtF.textContent = side === 'fx' ? typed(input) : (data ? fxFmt(f, cur.code) : '…');
     if (data) {
       const r = rate(), unit = FX_NODEC.includes(cur.code) ? 1000 : 1;
-      note.replaceChildren(t('fxAsOf').replace('{d}', fmtDate(new Date(data.updated).toISOString())) + ' · ' + unit.toLocaleString('en-US') + ' ' + cur.code + ' = ' + fxFmt(r ? unit / r : 0, 'KRW') + ' KRW',
+      note.replaceChildren(h('b', { text: t('fxAsOf').replace('{d}', fmtDate(new Date(data.updated).toISOString(), true)) }), h('br'), unit.toLocaleString('en-US') + ' ' + cur.code + ' = ' + fxFmt(r ? unit / r : 0, 'KRW') + ' KRW',
         h('br'), h('a', { href: 'https://www.exchangerate-api.com', target: '_blank', rel: 'noopener', text: 'Rates By Exchange Rate API' }));
     }
   }
