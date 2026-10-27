@@ -965,7 +965,9 @@ function screenInstall(from) {
 /* consent block (shared by signup and re-consent) */
 const CONSENT_ITEMS = [
   ['terms', 'cTerms', null, true], ['privacy', 'cPrivacy', null, true], ['sensitive', 'cSensitive', 'cSensitiveD', true],
-  ['location', 'cLocation', 'cLocationD', true], ['marketing', 'cMarketing', null, false]];
+  ['location', 'cLocation', 'cLocationD', true], ['push', 'cPush', 'cPushD', true], ['marketing', 'cMarketing', null, false]];
+Object.assign(STR.ko, { cPush: '앱 알림 받기 (안전·긴급 안내)', cPushD: '다음을 누르면 휴대폰 알림 허용 창이 뜹니다. 「허용」을 눌러 주세요.' });
+Object.assign(STR.en, { cPush: 'App notifications (safety and emergency)', cPushD: 'After Next, your phone asks to allow notifications. Please tap Allow.' });
 function requiredOk() { return CONSENT_ITEMS.every(([k, , , r]) => !r || S.consents[k]); }
 function checkbox(checked, onchange, labelKids, extraCls) {
   const inp = h('input', { type: 'checkbox', checked, onchange: (e) => onchange(e.target.checked) });
@@ -983,7 +985,12 @@ function consentBlock(onChange) {
 
 /* step 1: consent (Korean, fixed) — before any photo is taken */
 function screenSignup() {
-  const nextBtn = h('button', { class: 'btn btn-primary', disabled: !requiredOk(), onclick: () => { if (requiredOk()) go(screenPerm); } }, t('next'), icon('chevRight'));
+  // notifications are agreed here together with the terms: the tap on Next opens the phone's own allow prompt (iPhone needs a tap)
+  const nextBtn = h('button', { class: 'btn btn-primary', disabled: !requiredOk(), onclick: async () => {
+    if (!requiredOk()) return;
+    try { if (pushSupported() && Notification.permission === 'default') await Promise.race([Notification.requestPermission(), new Promise(r => setTimeout(r, 10000))]); } catch (e) {}
+    go(screenPerm);
+  } }, t('next'), icon('chevRight'));
   const consentHost = h('div');
   const renderConsent = () => { consentHost.replaceChildren(consentBlock(renderConsent)); nextBtn.disabled = !requiredOk(); };
   renderConsent();
@@ -1365,8 +1372,8 @@ function screenDone() {
       h('h1', { text: t('doneTitle') }),
       h('p', { class: 'lead', text: t('doneSub') }),
       (S.perm && S.perm.loc === 'no') ? h('div', { class: 'note warn', style: 'margin-top:22px;text-align:left' }, icon('alert'), h('div', { lang: 'ko', text: tk('locDenied') })) : null,
-      h('div', { style: 'width:100%;text-align:left;margin-top:18px' }, pushCard())),
-    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => { S.perm = null; goHome('home'); } }, t('start'), icon('chevRight'))));
+      null),
+    h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => { S.perm = null; pushQuiet(); goHome('home'); } }, t('start'), icon('chevRight'))));
 }
 
 function screenReconsent() {
@@ -1429,6 +1436,18 @@ async function pushEnable() {
     setPush(typeof Notification !== 'undefined' && Notification.permission === 'denied' ? 'denied' : 'needed');
     if (!e || e.status !== 401) toast(t('pushFail'));
   }
+}
+/* already allowed at the consent step → subscribe without asking again (still inside the Start tap) */
+async function pushQuiet() {
+  try {
+    if (!S.token || !pushSupported() || Notification.permission !== 'granted') return;
+    const k = await api('push_key', { method: 'GET' }); if (!k.key) return;
+    const reg = await swReady(8000);
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(k.key) });
+    await api('push_subscribe', { body: { subscription: sub.toJSON() } });
+    S.pushSynced = true; setPush('on');
+  } catch (e) { pushCheck(); }
 }
 function pushCard() {
   const st = S.push;

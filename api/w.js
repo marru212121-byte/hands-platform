@@ -144,7 +144,7 @@ module.exports = L.handler({
         company: clean(b.company, 80),
         emergency_contact: clean(b.emergency_contact, 120),
         language: clean(b.language, 10) || 'en',
-        consents: { ...Object.fromEntries(REQUIRED.map(k => [k, true])), marketing: c.marketing === true, at: t, version: CONSENT_VERSION },
+        consents: { ...Object.fromEntries(REQUIRED.map(k => [k, true])), marketing: c.marketing === true, push: c.push === true, at: t, version: CONSENT_VERSION },
         consent_version: CONSENT_VERSION, consent_at: t,
         consent_ip: clean(String(req.headers['x-forwarded-for'] || '').split(',')[0], 64),
         device_token_hash: L.sha256(token), is_active: true, last_login_at: t, last_seen_at: t,
@@ -181,7 +181,7 @@ module.exports = L.handler({
     if (!REQUIRED.every(k => c[k] === true)) throw new HttpError(400, 'consent_required');
     const t = nowIso();
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: {
-      consents: { ...Object.fromEntries(REQUIRED.map(k => [k, true])), marketing: c.marketing === true, at: t, version: CONSENT_VERSION },
+      consents: { ...Object.fromEntries(REQUIRED.map(k => [k, true])), marketing: c.marketing === true, push: c.push === true, at: t, version: CONSENT_VERSION },
       consent_version: CONSENT_VERSION, consent_at: t } });
     return { ok: true };
   },
