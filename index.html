@@ -1806,7 +1806,9 @@ function screenTranslate() {
       const r = new SR(); r.lang = LOCALE[S.trDir.from] || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
       mic.classList.add('on');
       r.onresult = (e) => { ta.value = Array.from(e.results).map((x) => x[0].transcript).join(' '); S.trText = ta.value; };
-      r.onend = () => mic.classList.remove('on'); r.onerror = () => mic.classList.remove('on');
+      let said = false; r.onresult = ((orig) => (e) => { said = true; orig(e); })(r.onresult);
+      r.onend = () => { mic.classList.remove('on'); if (said && ta.value.trim()) go_.click(); };  // 말이 끝나면 바로 번역 (사장님 10-27)
+      r.onerror = () => mic.classList.remove('on');
       r.start();
     } catch (e) { mic.classList.remove('on'); }
   } }, icon('mic'), h('span', { text: LANG_NAME[S.trDir.from] })) : null;
