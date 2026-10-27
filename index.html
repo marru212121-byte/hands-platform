@@ -315,6 +315,7 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 'use strict';
 const VERSION = '2.0.0';
 const COMPANY_KO = '위해 외국인선원관리업체';
+const brandText = () => h('span', { lang: 'ko', style: 'display:flex;flex-direction:column;line-height:1.15' }, h('b', { text: '위해', style: 'letter-spacing:0' }), h('small', { text: '외국인선원관리업체', style: 'font-size:11px;font-weight:600;color:var(--ink3)' }));
 
 /* ---------- languages ---------- */
 const LANGS = [
@@ -805,7 +806,7 @@ function openLangSheet() {
 function topbar(back) {
   return h('header', { class: 'topbar' },
     back ? h('button', { class: 'iconbtn', onclick: back, 'aria-label': t('back') }, icon('back'))
-         : h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), h('b', { text: 'HANDS' })),
+         : h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), brandText()),
     h('div', { class: 'grow' }), langBtn());
 }
 function progress(n) { return h('div', { class: 'prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= n ? 'on' : '' }))); }
@@ -1000,7 +1001,7 @@ function screenLogin() {
 function screenLangPick() {
   return h('div', { class: 'screen' },
     h('div', { class: 'content' },
-      h('div', { class: 'brand', style: 'display:flex;align-items:center;gap:10px;margin:8px 0 22px' }, h('img', { src: 'lic-logo.jpeg', alt: '', style: 'width:40px;height:40px;border-radius:50%' }), h('b', { text: 'HANDS', style: 'font-size:20px;letter-spacing:1px' })),
+      h('div', { class: 'brand', style: 'display:flex;align-items:center;gap:10px;margin:8px 0 22px' }, h('img', { src: 'lic-logo.jpeg', alt: '', style: 'width:40px;height:40px;border-radius:50%' }), brandText()),
       h('h1', { text: 'Choose your language' }),
       h('p', { class: 'lead', lang: 'ko', text: '언어를 선택하세요' }),
       h('div', { style: 'margin-top:18px' }, langList((c) => { setLang(c); go(screenWelcome); }))));
@@ -1576,7 +1577,7 @@ function screenHome() {
   const tabbar = h('nav', { class: 'tabbar' }, tabs.map(([id, ic, lk]) =>
     h('button', { class: 'tab' + (S.tab === id ? ' on' : ''), 'aria-current': S.tab === id ? 'page' : null, onclick: () => { S.tab = id; rerender(); window.scrollTo(0, 0); } }, icon(ic), h('span', { text: t(lk) }))));
   const head = h('div', { class: 'homehead' },
-    h('div', { class: 'bar1' }, h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), h('b', { text: 'HANDS' })), langBtn()));
+    h('div', { class: 'bar1' }, h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), brandText()), langBtn()));
   if (S.tab === 'home') {
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };

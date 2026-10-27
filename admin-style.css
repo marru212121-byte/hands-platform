@@ -52,6 +52,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .ico.lg { width: 20px; height: 20px; }
 
 /* 브랜드 */
+.brand-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fff; flex: none; }
+.brand-logo.lg { width: 44px; height: 44px; }
 .brand-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--teal); display: inline-block; flex: none; position: relative; }
 .brand-mark::before { content: ""; position: absolute; inset: 0; background: no-repeat center/18px 18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 4v16M18 4v16M6 12h12'/%3E%3C/svg%3E"); }
 .brand-mark.lg { width: 44px; height: 44px; border-radius: 10px; }
@@ -110,7 +112,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .shell { display: flex; min-height: 100vh; }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: var(--side-w); background: var(--navy); color: #C9D3E3; display: flex; flex-direction: column; z-index: 40; }
 .side-brand { height: var(--top-h); display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
-.side-name { color: #fff; font-weight: 700; font-size: 16px; letter-spacing: .04em; }
+.side-name { color: #fff; font-weight: 800; font-size: 17px; letter-spacing: 0; }
 .side-sub { font-size: 12px; color: #8EA0BF; }
 .side-close { display: none; margin-left: auto; color: #C9D3E3; }
 .side-close:hover { background: rgba(255, 255, 255, .08); color: #fff; }
