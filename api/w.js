@@ -150,7 +150,7 @@ module.exports = L.handler({
     hits.push(now); readHits.set(ip, hits);
     const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(b.image || ''));
     if (!m || m[2].length > 4500000) throw new HttpError(400, 'bad_image');
-    const client = new Anthropic();
+    const client = new Anthropic({ timeout: 20000, maxRetries: 1 });  // 앱이 20초면 폰 판독으로 넘어감
     const msg = await client.messages.create({
       model: 'claude-haiku-5-5', max_tokens: 2048,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: PASS_SCHEMA } },
