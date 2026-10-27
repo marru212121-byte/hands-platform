@@ -654,7 +654,6 @@ function drawDetail() {
       ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
       <button class="btn btn-secondary btn-sm" data-act="push">${ico('bell', 'sm')}알림 보내기</button>
       <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
-      <button class="btn btn-secondary btn-sm" data-act="pw">${ico('lock', 'sm')}비밀번호</button>
       <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '관리 중지' : '관리 다시 시작'}</button>
     </div>
     <div class="panel-body">

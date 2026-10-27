@@ -732,6 +732,8 @@ my:{"tr": "စကားပြန်", "trSub": "စကားမပေါက်�
 si:{"tr": "පරිවර්තක", "trSub": "කතාව නොතේරෙන විට", "trPh": "මෙහි ලියන්න හෝ කතා කරන්න", "trGo": "පරිවර්තනය", "trBig": "විශාලව පෙන්වන්න", "pay": "වැටුප් දිනය", "paySub": "වැටුප් දිනයේ මතක් කරමු", "payPick": "වැටුප් දිනය තෝරන්න", "payOff": "අක්‍රිය කරන්න", "payNext": "ඊළඟ වැටුප් දිනය: {d}", "payToday": "අද වැටුප් දිනයයි", "payNote": "වැටුප් දිනයේ උදේ 9ට මතක් කරමු. මාසයේ එම දිනය නැතිනම් අවසාන දිනයේ."},
 bn:{"tr": "দোভাষী", "trSub": "কথা না বুঝলে", "trPh": "এখানে লিখুন বা বলুন", "trGo": "অনুবাদ", "trBig": "বড় করে দেখান", "pay": "বেতনের দিন", "paySub": "বেতনের দিনে মনে করিয়ে দেব", "payPick": "বেতনের দিন বেছে নিন", "payOff": "বন্ধ করুন", "payNext": "পরের বেতনের দিন: {d}", "payToday": "আজ বেতনের দিন", "payNote": "বেতনের দিন সকাল ৯টায় মনে করিয়ে দেব। মাসে সেই তারিখ না থাকলে শেষ দিনে।"}};
 for (const l in STR_TRPAY) Object.assign(STR[l], STR_TRPAY[l]);
+const STR_INQ = {"en": "New inquiry", "ko": "문의하기", "vi": "Gửi câu hỏi", "id": "Kirim pertanyaan", "th": "ส่งคำถาม", "tl": "Magtanong", "ne": "सोधपुछ पठाउनुहोस्", "km": "ផ្ញើសំណួរ", "my": "မေးမြန်းရန်", "si": "විමසීමක් යවන්න", "bn": "জিজ্ঞাসা পাঠান"};  // 내 문의 → 새 문의 단추 (사장님 10-27 밤)
+for (const l in STR_INQ) if (STR[l]) STR[l].inqNew = STR_INQ[l];
 const STR_SEA = {"en": {"wxSea": "Sea", "wxWave": "Waves"}, "ko": {"wxSea": "바다", "wxWave": "물결"}, "vi": {"wxSea": "Biển", "wxWave": "Sóng"}, "id": {"wxSea": "Laut", "wxWave": "Ombak"}, "th": {"wxSea": "ทะเล", "wxWave": "คลื่น"}, "tl": {"wxSea": "Dagat", "wxWave": "Alon"}, "ne": {"wxSea": "समुद्र", "wxWave": "छाल"}, "km": {"wxSea": "សមុទ្រ", "wxWave": "រលក"}, "my": {"wxSea": "ပင်လယ်", "wxWave": "လှိုင်း"}, "si": {"wxSea": "මුහුද", "wxWave": "රළ"}, "bn": {"wxSea": "সমুদ্র", "wxWave": "ঢেউ"}};  // 바다 날씨 (사장님 10-27)
 for (const l in STR_SEA) Object.assign(STR[l], STR_SEA[l]);
 
@@ -2062,7 +2064,7 @@ function screenInquiry(cat) {
     try { await api('inquiry', { body: { category: cat, body } }); S.drafts[key] = ''; S.inqs = null; go(screenInquiryDone, cat); sendInquiryLocation(); }
     catch (e) { btn.disabled = false; if (e.status !== 401) toast(errText(e.code)); }
   }
-  return h('div', { class: 'screen' }, topbar(() => goHome('home')),
+  return h('div', { class: 'screen' }, topbar(() => cat === 'other' ? go(screenMyInquiries) : goHome('home')),
     h('div', { class: 'content' },
       h('h1', { text: t(cat) }), h('p', { class: 'lead', text: t(cat + 'Sub') }),
       h('div', { class: 'field' }, h('label', { class: 'label', for: 'inq_body', text: t('inqQ') }), ta),
@@ -2097,14 +2099,16 @@ function screenMyInquiries() {
   else S.inqs.forEach(q => {
     const answered = q.status === 'answered' || !!q.reply;
     list.append(h('article', { class: 'inq' },
-      h('div', { class: 'top' }, h('span', { class: 'chip', text: q.category === 'job' ? t('job') : q.category === 'ship' ? t('ship') : t('myInq') }),
+      h('div', { class: 'top' }, h('span', { class: 'chip', text: q.category === 'job' ? t('job') : q.category === 'ship' ? t('ship') : t('other') }),
         h('span', { class: 'st' + (answered ? ' answered' : ''), text: answered ? t('inqAnswered') : t('inqOpen') })),
       h('div', { class: 'q', text: q.body || '' }),
       h('div', { class: 'd', text: fmtDate(q.created_at, true) }),
       q.reply ? h('div', { class: 'rp' }, h('b', { text: t('reply') + (q.replied_at ? ' · ' + fmtDate(q.replied_at, true) : '') }), h('p', { text: q.reply })) : null));
   });
   return h('div', { class: 'screen' }, topbar(() => goHome('home')),
-    h('div', { class: 'content' }, h('h1', { text: t('myInq') }), list));
+    h('div', { class: 'content' }, h('h1', { text: t('myInq') }),
+      // 새 문의 쓰기 (사장님 10-27 밤): 담당 매니저에게 가고 운영사도 봄 — 문의 쓰기 화면이 어디서도 안 열리던 것
+      h('button', { class: 'btn btn-primary', style: 'margin-top:14px', onclick: () => go(screenInquiry, 'other') }, t('inqNew')), list));
 }
 
 /* ---------- SOS ---------- */

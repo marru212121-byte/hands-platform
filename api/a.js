@@ -164,7 +164,8 @@ module.exports = L.handler({
   },
 
   // 근로자 비밀번호 바꾸기(잊어버렸을 때). 빈칸이면 처음처럼 여권번호로 되돌림
-  async member_password(req, b) {
+  async member_password(req, b) {  // 사장님 10-27 밤: 근로자 비밀번호는 여권번호 그대로 — 매니저·관리자 누구도 바꾸지 않음 (매니저가 바꾸면 그 근로자로 로그인 가능했음)
+    throw new HttpError(403, 'forbidden');
     const a = await L.adminFromReq(req);
     const m = await memberById(b.id);
     const pw = String(b.password || '').trim();
