@@ -250,6 +250,23 @@ button.wxpick{font:inherit;font-size:15px;font-weight:600;color:var(--ink2);curs
 .wxd.on{background:var(--navy-bg);box-shadow:inset 4px 0 0 var(--navy)} .wxd+.wxd{border-top:1px solid var(--line)}
 .wxd .dn{font-weight:650;min-width:72px} .wxd .ic{width:24px;height:24px;color:var(--navy)} .wxd .cd{flex:1;color:var(--ink2);font-size:14px} .wxd .pp{font-size:12px;color:#2563EB} .wxd .mm{font-weight:700;font-variant-numeric:tabular-nums}
 .wxd .mm span{color:var(--ink3);font-weight:500}
+.trbar{display:flex;align-items:center;gap:8px;margin:14px 0 12px}
+.trchip{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:14px;font-weight:650;font-size:15px;text-align:center}
+.trchip .flag{width:26px;height:18px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(20,40,75,.12)}
+.trswap{flex:none;background:var(--navy-bg);color:var(--navy);border-radius:12px}
+.trinput{min-height:120px;resize:vertical;font-size:18px;line-height:1.5}
+.trbtns{display:flex;gap:10px;margin-top:12px}.trbtns .btn{flex:1}
+.trmic{display:flex;align-items:center;justify-content:center;gap:6px}.trmic .ic{width:20px;height:20px}
+.trmic.on{background:var(--red);color:#fff;border-color:var(--red)}
+.trout{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px}
+.trres{margin:0;font-size:22px;font-weight:650;line-height:1.5;white-space:pre-wrap}
+.trbig{position:fixed;inset:0;z-index:99;background:#fff;display:flex;align-items:center;justify-content:center;padding:28px;overflow:auto}
+.trbig p{font-size:clamp(30px,9vw,56px);font-weight:750;line-height:1.35;text-align:center;white-space:pre-wrap;margin:0}
+.paynext{display:flex;align-items:center;gap:12px;margin-top:14px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:18px;font-weight:600}
+.paynext .pd{flex:none;padding:6px 12px;border-radius:999px;background:var(--navy);color:#fff;font-weight:750}
+.paygrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+.payday{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:650;color:var(--ink);font-family:inherit}
+.payday.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .fxkeys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
 .fxkeys button{height:58px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:24px;font-weight:600;color:var(--ink);font-family:inherit}
 .fxkeys button:active{background:var(--navy-bg)}
@@ -697,6 +714,19 @@ bn:{"wxClear": "পরিষ্কার", "wxPartly": "আংশিক মে�
 for (const l in STR_WX) Object.assign(STR[l], STR_WX[l]);
 const STR_WX2 = {"en": "My location", "ko": "내 위치", "vi": "Vị trí của tôi", "id": "Lokasi saya", "th": "ตำแหน่งของฉัน", "tl": "Aking lokasyon", "ne": "मेरो स्थान", "km": "ទីតាំងរបស់ខ្ញុំ", "my": "ကျွန်ုပ်၏ တည်နေရာ", "si": "මගේ ස්ථානය", "bn": "আমার অবস্থান"};
 for (const l in STR_WX2) STR[l].wxMyLoc = STR_WX2[l];
+const STR_TRPAY = {  // 통역·월급날 (사장님 10-27)
+en:{"tr": "Interpreter", "trSub": "When words don't work", "trPh": "Type or speak here", "trGo": "Translate", "trBig": "Show big", "pay": "Payday", "paySub": "Get a reminder on payday", "payPick": "Choose your payday", "payOff": "Turn off", "payNext": "Next payday: {d}", "payToday": "Today is payday", "payNote": "We'll remind you at 9 AM on payday. If the month has no such day, on the last day."},
+ko:{"tr": "통역", "trSub": "말이 안 통할 때", "trPh": "여기에 쓰거나 말하세요", "trGo": "번역하기", "trBig": "크게 보기", "pay": "월급날", "paySub": "월급날에 알려 드려요", "payPick": "월급날을 고르세요", "payOff": "알림 끄기", "payNext": "다음 월급날: {d}", "payToday": "오늘은 월급날입니다", "payNote": "월급날 아침 9시에 알려 드립니다. 그 달에 그 날짜가 없으면 마지막 날에 알려 드립니다."},
+vi:{"tr": "Phiên dịch", "trSub": "Khi không hiểu nhau", "trPh": "Viết hoặc nói ở đây", "trGo": "Dịch", "trBig": "Hiện chữ to", "pay": "Ngày lương", "paySub": "Nhắc bạn vào ngày lương", "payPick": "Chọn ngày nhận lương", "payOff": "Tắt nhắc", "payNext": "Ngày lương tới: {d}", "payToday": "Hôm nay là ngày nhận lương", "payNote": "Chúng tôi sẽ nhắc lúc 9 giờ sáng ngày lương. Nếu tháng không có ngày đó, sẽ nhắc vào ngày cuối tháng."},
+id:{"tr": "Penerjemah", "trSub": "Saat tidak saling mengerti", "trPh": "Ketik atau bicara di sini", "trGo": "Terjemahkan", "trBig": "Tampilkan besar", "pay": "Hari gajian", "paySub": "Pengingat di hari gajian", "payPick": "Pilih hari gajian", "payOff": "Matikan", "payNext": "Gajian berikutnya: {d}", "payToday": "Hari ini hari gajian", "payNote": "Kami ingatkan pukul 9 pagi di hari gajian. Jika bulan itu tidak ada tanggal tersebut, di hari terakhir."},
+th:{"tr": "ล่าม", "trSub": "เมื่อพูดกันไม่เข้าใจ", "trPh": "พิมพ์หรือพูดที่นี่", "trGo": "แปล", "trBig": "แสดงตัวใหญ่", "pay": "วันเงินเดือน", "paySub": "แจ้งเตือนในวันเงินเดือนออก", "payPick": "เลือกวันเงินเดือนออก", "payOff": "ปิดการแจ้งเตือน", "payNext": "วันเงินเดือนถัดไป: {d}", "payToday": "วันนี้เป็นวันเงินเดือนออก", "payNote": "เราจะแจ้งเตือนเวลา 9 โมงเช้าของวันเงินเดือนออก หากเดือนนั้นไม่มีวันดังกล่าว จะแจ้งในวันสุดท้ายของเดือน"},
+tl:{"tr": "Tagasalin", "trSub": "Kapag hindi magkaintindihan", "trPh": "Mag-type o magsalita dito", "trGo": "Isalin", "trBig": "Ipakita nang malaki", "pay": "Araw ng sahod", "paySub": "Paalala sa araw ng sahod", "payPick": "Piliin ang araw ng sahod", "payOff": "I-off", "payNext": "Susunod na sahod: {d}", "payToday": "Araw ng sahod ngayon", "payNote": "Magpapaalala kami nang 9 AM sa araw ng sahod. Kung walang ganoong petsa sa buwan, sa huling araw."},
+ne:{"tr": "दोभाषे", "trSub": "कुरा नबुझिँदा", "trPh": "यहाँ लेख्नुहोस् वा बोल्नुहोस्", "trGo": "अनुवाद", "trBig": "ठूलो देखाउनुहोस्", "pay": "तलब दिन", "paySub": "तलब दिनमा सम्झाउँछौं", "payPick": "तलब आउने दिन छान्नुहोस्", "payOff": "बन्द गर्नुहोस्", "payNext": "अर्को तलब दिन: {d}", "payToday": "आज तलब आउने दिन हो", "payNote": "तलब दिनको बिहान ९ बजे सम्झाउँछौं। महिनामा त्यो मिति नभए अन्तिम दिनमा।"},
+km:{"tr": "អ្នកបកប្រែ", "trSub": "ពេលនិយាយមិនយល់គ្នា", "trPh": "សរសេរ ឬនិយាយនៅទីនេះ", "trGo": "បកប្រែ", "trBig": "បង្ហាញអក្សរធំ", "pay": "ថ្ងៃបើកប្រាក់ខែ", "paySub": "រំលឹកនៅថ្ងៃបើកប្រាក់ខែ", "payPick": "ជ្រើសរើសថ្ងៃបើកប្រាក់ខែ", "payOff": "បិទការរំលឹក", "payNext": "ថ្ងៃបើកប្រាក់ខែបន្ទាប់៖ {d}", "payToday": "ថ្ងៃនេះជាថ្ងៃបើកប្រាក់ខែ", "payNote": "យើងនឹងរំលឹកនៅម៉ោង ៩ ព្រឹកថ្ងៃបើកប្រាក់ខែ។ បើខែនោះគ្មានថ្ងៃនោះ នឹងរំលឹកនៅថ្ងៃចុងក្រោយ។"},
+my:{"tr": "စကားပြန်", "trSub": "စကားမပေါက်သည့်အခါ", "trPh": "ဤနေရာတွင် ရေးပါ သို့မဟုတ် ပြောပါ", "trGo": "ဘာသာပြန်ရန်", "trBig": "စာလုံးကြီး ပြရန်", "pay": "လစာထုတ်ရက်", "paySub": "လစာထုတ်ရက်တွင် သတိပေးမည်", "payPick": "လစာထုတ်ရက်ကို ရွေးပါ", "payOff": "ပိတ်ရန်", "payNext": "နောက်လစာထုတ်ရက်: {d}", "payToday": "ယနေ့ လစာထုတ်ရက်ဖြစ်သည်", "payNote": "လစာထုတ်ရက် နံနက် ၉ နာရီတွင် သတိပေးပါမည်။ ထိုလတွင် ထိုရက်မရှိပါက နောက်ဆုံးရက်တွင် ပေးပါမည်။"},
+si:{"tr": "පරිවර්තක", "trSub": "කතාව නොතේරෙන විට", "trPh": "මෙහි ලියන්න හෝ කතා කරන්න", "trGo": "පරිවර්තනය", "trBig": "විශාලව පෙන්වන්න", "pay": "වැටුප් දිනය", "paySub": "වැටුප් දිනයේ මතක් කරමු", "payPick": "වැටුප් දිනය තෝරන්න", "payOff": "අක්‍රිය කරන්න", "payNext": "ඊළඟ වැටුප් දිනය: {d}", "payToday": "අද වැටුප් දිනයයි", "payNote": "වැටුප් දිනයේ උදේ 9ට මතක් කරමු. මාසයේ එම දිනය නැතිනම් අවසාන දිනයේ."},
+bn:{"tr": "দোভাষী", "trSub": "কথা না বুঝলে", "trPh": "এখানে লিখুন বা বলুন", "trGo": "অনুবাদ", "trBig": "বড় করে দেখান", "pay": "বেতনের দিন", "paySub": "বেতনের দিনে মনে করিয়ে দেব", "payPick": "বেতনের দিন বেছে নিন", "payOff": "বন্ধ করুন", "payNext": "পরের বেতনের দিন: {d}", "payToday": "আজ বেতনের দিন", "payNote": "বেতনের দিন সকাল ৯টায় মনে করিয়ে দেব। মাসে সেই তারিখ না থাকলে শেষ দিনে।"}};
+for (const l in STR_TRPAY) Object.assign(STR[l], STR_TRPAY[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -763,6 +793,9 @@ const P = {
   briefcase:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3 12.5h18"/>',
   ship:'<path d="M3 16.5l2.2 4h13.6l2.2-4L12 13.5z"/><path d="M6 15.2V9h12v6.2M12 9V4M9.5 6h5"/>',
   bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  swap:'<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
   locate:'<path d="M3 11l19-9-9 19-2-8-8-2z"/>',
   cloud:'<path d="M7 18h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7 18z"/>',
   cloudSun:'<path d="M8 3.5v1.3M3.6 5.6l.9.9M2 10h1.3M13.4 5.6l-.9.9"/><path d="M5.4 12.2A3.5 3.5 0 1 1 11.6 9"/><path d="M9 20h9a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.7 1.3A2.9 2.9 0 0 0 9 20z"/>',
@@ -1688,6 +1721,8 @@ function screenHome() {
         h('button', { class: 'mtile strong wide', onclick: () => go(screenFx) }, h('span', { class: 'mi' }, icon('transfer')), h('span', {}, h('span', { class: 'mt', text: t('fx') }), h('span', { class: 'ms', text: t('fxSub') }))),
         h('button', { class: 'mtile strong', onclick: () => go(screenNotices) }, h('span', { class: 'mi' }, icon('bell')), h('span', {}, h('span', { class: 'mt', text: t('notices') }), h('span', { class: 'ms', text: t('noticesSub') }))),
         h('button', { class: 'mtile strong', onclick: openWeather }, h('span', { class: 'mi' }, icon('sun')), h('span', {}, h('span', { class: 'mt', text: t('weather') }), h('span', { class: 'ms', text: t('weatherSub') }))),
+        h('button', { class: 'mtile', onclick: () => go(screenTranslate) }, h('span', { class: 'mi' }, icon('chat')), h('span', {}, h('span', { class: 'mt', text: t('tr') }), h('span', { class: 'ms', text: t('trSub') }))),
+        h('button', { class: 'mtile', onclick: () => go(screenPayday) }, h('span', { class: 'mi' }, icon('cal')), h('span', {}, h('span', { class: 'mt', text: t('pay') }), h('span', { class: 'ms', text: payLine() || t('paySub') }))),
         h('button', { class: 'mtile', onclick: toTab('places') }, h('span', { class: 'mi' }, icon('map')), h('span', {}, h('span', { class: 'mt', text: t('places') }), h('span', { class: 'ms', text: t('placesHint') }))),
         h('button', { class: 'mtile', onclick: () => go(screenContacts) }, h('span', { class: 'mi' }, icon('phone')), h('span', {}, h('span', { class: 'mt', text: t('contacts') }), h('span', { class: 'ms', text: t('contactsSub') })))),
       h('div', { class: 'rows', style: 'margin-top:14px' },
@@ -1742,6 +1777,82 @@ async function wxPos() {  // 고른 시·도가 있으면 그곳, 없으면 내 
   return S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null);
 }
 function openWeather() { go(screenWeather); }
+/* ---------- 통역 (사장님 10-27): 근로자 말 ↔ 한국어, 하이쿠 ---------- */
+function screenTranslate() {
+  const p = S.profile || {};
+  const mine = S.lang !== 'ko' ? S.lang : (p.language && p.language !== 'ko' ? p.language : (COUNTRY_LANG[p.country] || 'en'));
+  if (!S.trDir) S.trDir = { from: mine, to: 'ko' };
+  if (S.trDir.from !== 'ko' && S.trDir.from !== mine) S.trDir = { from: mine, to: 'ko' };
+  if (S.trDir.to !== 'ko' && S.trDir.to !== mine) S.trDir = { from: 'ko', to: mine };
+  const chip = (l) => h('span', { class: 'trchip' }, h('img', { class: 'flag', src: '/flags/' + FLAG[l] + '.png', alt: '' }), LANG_NAME[l]);
+  const ta = h('textarea', { class: 'input trinput', rows: '4', maxlength: '1000', placeholder: t('trPh'), lang: S.trDir.from === 'tl' ? 'fil' : S.trDir.from });
+  ta.value = S.trText || '';
+  ta.addEventListener('input', () => { S.trText = ta.value; });
+  const out = h('div', { class: 'trout', hidden: true });
+  const go_ = h('button', { class: 'btn btn-primary', onclick: async () => {
+    const text = ta.value.trim(); if (!text) { ta.focus(); return; }
+    go_.disabled = true; out.hidden = false; out.replaceChildren(h('div', { class: 'spin', style: 'width:22px;height:22px' }));
+    try {
+      const j = await api('translate', { body: { text, to: S.trDir.to } });
+      out.replaceChildren(h('p', { class: 'trres', lang: S.trDir.to === 'tl' ? 'fil' : S.trDir.to, text: j.text }),
+        h('button', { class: 'btn btn-secondary', style: 'margin-top:12px', onclick: () => showBig(j.text, S.trDir.to) }, t('trBig')));
+    } catch (e) { out.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); }
+    go_.disabled = false;
+  } }, t('trGo'));
+  // 말하기 단추: 폰 자판 언어와 상관없이 앱이 고른 언어로 받아씀 (브라우저가 지원할 때만 보임)
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const mic = SR ? h('button', { class: 'btn btn-secondary trmic', onclick: () => {
+    try {
+      const r = new SR(); r.lang = LOCALE[S.trDir.from] || 'en-US'; r.interimResults = true; r.maxAlternatives = 1;
+      mic.classList.add('on');
+      r.onresult = (e) => { ta.value = Array.from(e.results).map((x) => x[0].transcript).join(' '); S.trText = ta.value; };
+      r.onend = () => mic.classList.remove('on'); r.onerror = () => mic.classList.remove('on');
+      r.start();
+    } catch (e) { mic.classList.remove('on'); }
+  } }, icon('mic'), h('span', { text: LANG_NAME[S.trDir.from] })) : null;
+  const swap = h('button', { class: 'iconbtn trswap', 'aria-label': 'swap', onclick: () => { S.trDir = { from: S.trDir.to, to: S.trDir.from }; S.trText = ''; rerender(); } }, icon('swap'));
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('tr') }),
+    h('div', { class: 'trbar' }, chip(S.trDir.from), swap, chip(S.trDir.to)), ta, h('div', { class: 'trbtns' }, mic, go_), out));
+}
+function showBig(text, lang) {  // 상대에게 보여 주기: 화면 가득 큰 글씨, 누르면 닫힘
+  const el = h('div', { class: 'trbig', role: 'dialog', onclick: () => el.remove() }, h('p', { lang: lang === 'tl' ? 'fil' : lang, text }));
+  document.body.append(el);
+}
+/* ---------- 월급날 (사장님 10-27): 근로자가 고름, 그날 아침 9시 알림 ---------- */
+function nextPayday(day) {
+  if (!day) return null;
+  const k = new Date(Date.now() + 9 * 3600000), y = k.getUTCFullYear(), mo = k.getUTCMonth(), today = k.getUTCDate();
+  const at = (yy, mm) => { const last = new Date(Date.UTC(yy, mm + 1, 0)).getUTCDate(); return new Date(Date.UTC(yy, mm, Math.min(day, last))); };
+  let d = at(y, mo); if (d.getUTCDate() < today) d = at(y, mo + 1);
+  return { date: d, days: Math.round((d - Date.UTC(y, mo, today)) / 86400000) };
+}
+function payLine() {
+  const n = nextPayday((S.profile || {}).payday);
+  if (!n) return '';
+  return n.days === 0 ? t('payToday') : 'D-' + n.days;
+}
+function screenPayday() {
+  const p = S.profile || {};
+  const info = h('div', {});
+  const grid = h('div', { class: 'paygrid' });
+  const draw = () => {
+    const n = nextPayday(p.payday);
+    let loc = 'en-US'; try { if (Intl.DateTimeFormat.supportedLocalesOf([LOCALE[S.lang]]).length) loc = LOCALE[S.lang]; } catch (e) {}
+    info.replaceChildren(...(n ? [h('div', { class: 'paynext' }, h('span', { class: 'pd', text: n.days === 0 ? t('payToday') : 'D-' + n.days }),
+      h('span', { text: t('payNext').replace('{d}', n.date.toLocaleDateString(loc, { month: 'long', day: 'numeric', weekday: 'short', timeZone: 'UTC' })) }))] : []));
+    grid.replaceChildren(...Array.from({ length: 31 }, (_, i) => i + 1).map((d) => h('button', { class: 'payday' + (p.payday === d ? ' on' : ''), onclick: () => save(d) }, String(d))));
+  };
+  const save = async (d) => {
+    const old = p.payday; p.payday = d; draw();
+    try { const j = await api('payday', { body: { day: d } }); p.payday = j.payday; cacheProfile(); } catch (e) { p.payday = old; toast(errText(e.code)); }
+    draw();
+  };
+  draw();
+  return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('pay') }), info,
+    h('p', { class: 'lead', style: 'margin-top:14px', text: t('payPick') }), grid,
+    p.payday ? h('button', { class: 'btn btn-secondary', style: 'margin-top:16px', onclick: () => save(0) }, t('payOff')) : null,
+    h('p', { class: 'fxnote', text: t('payNote') })));
+}
 // 앱 안 날씨 (사장님 10-27): 기상청 단기예보, 지금 있는 동네, 근로자 말로
 function wxKind(sky, pty) { pty = { 5: 1, 6: 2, 7: 3 }[pty] || pty;
   if (pty === 1 || pty === 4) return [pty === 4 ? 'wxShower' : 'wxRain', 'rain'];
@@ -2057,6 +2168,7 @@ const NOTICE_ID = new URLSearchParams(location.search).get('notice');  // opened
       if (S.route && S.route[0] === screenSOS) return;
       if (!j.profile.consent_current) go(screenReconsent);
       else if (NOTICE_ID) go(screenNotice, NOTICE_ID);
+      else if (new URLSearchParams(location.search).get('fx')) go(screenFx);  // 월급날 알림에서 열림
       else if (S.route && (S.route[0] === screenHome)) rerender(); else goHome();
     } catch (e) {
       if (e.status === 401) return; // api() already sent us to welcome

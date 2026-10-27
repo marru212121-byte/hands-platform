@@ -29,6 +29,30 @@ async function translate(title, body, lang) {
   return { title: String(r.title || '').slice(0, 120), body: String(r.body || '').slice(0, 600) };
 }
 
+// 월급날 알림 (사장님 10-27): 크론(아침 9시)에서 그날이 월급날인 근로자에게. 그 달에 날짜가 없으면(31일 등) 마지막 날에
+const PAY_MSG = {
+  ko: ['오늘은 월급날입니다', '오늘 환율을 확인해 보세요.'], en: ['Today is payday', 'Check today\'s exchange rate.'],
+  vi: ['Hôm nay là ngày nhận lương', 'Hãy xem tỷ giá hôm nay.'], id: ['Hari ini hari gajian', 'Lihat kurs hari ini.'],
+  th: ['วันนี้เป็นวันเงินเดือนออก', 'ดูอัตราแลกเปลี่ยนวันนี้'], tl: ['Araw ng sahod ngayon', 'Tingnan ang palitan ng pera ngayon.'],
+  ne: ['आज तलब आउने दिन हो', 'आजको विनिमय दर हेर्नुहोस्।'], km: ['ថ្ងៃនេះជាថ្ងៃបើកប្រាក់ខែ', 'សូមមើលអត្រាប្តូរប្រាក់ថ្ងៃនេះ។'],
+  my: ['ယနေ့ လစာထုတ်ရက်ဖြစ်သည်', 'ယနေ့ ငွေလဲနှုန်းကို ကြည့်ပါ။'], si: ['අද වැටුප් දිනයයි', 'අද විනිමය අනුපාතය බලන්න.'],
+  bn: ['আজ বেতনের দিন', 'আজকের বিনিময় হার দেখুন।'] };
+async function paydayPush() {
+  const k = new Date(Date.now() + 9 * 3600000), day = k.getUTCDate();
+  const last = new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth() + 1, 0)).getUTCDate();
+  const cond = day === last ? `payday=gte.${day}` : `payday=eq.${day}`;
+  const subs = await db(`push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,language,is_active,payday)&member.is_active=eq.true&member.${cond}`);
+  if (!subs.length) return { sent: 0 };
+  const wp = L.webpush(); let sent = 0; const gone = [];
+  await Promise.all(subs.map(async (s) => {
+    const [title, body] = PAY_MSG[s.member.language] || PAY_MSG.en;
+    try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title, body, url: '/?fx=1' }), { TTL: 43200 }); sent++; }
+    catch (e) { if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
+  }));
+  if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
+  return { sent };
+}
+
 module.exports = L.handler({
   // 공용 아이디·비밀번호. 15분에 10번 넘게 틀리면 잠깐 막음(같은 IP).
   async login(req, b) {
@@ -347,10 +371,11 @@ module.exports = L.handler({
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}` || !process.env.CRON_SECRET) throw new HttpError(401, 'no');
     // 위치 기록 보관 6개월(약관 위치정보 항목)
     await db(`location_history?recorded_at=lt.${encodeURIComponent(daysAgo(180))}`, { method: 'DELETE' }).catch(() => {});
+    const pay = await paydayPush().catch((e) => ({ error: String(e && e.message || e) }));
     const rows = await db(`members?select=name,phone,country,last_seen_at&is_active=eq.true&last_seen_at=lt.${encodeURIComponent(daysAgo(3))}&order=last_seen_at.asc&limit=50`);
-    if (!rows.length) return { ok: true, sent: false };
+    if (!rows.length) return { ok: true, sent: false, pay };
     const lines = rows.map(m => `- ${m.name} (${m.phone || '-'}) 마지막 접속 ${new Date(m.last_seen_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}`);
     const sent = await L.telegram([`[HANDS] 3일 넘게 앱을 열지 않은 근로자 ${rows.length}명`, ...lines].join('\n'));
-    return { ok: true, sent };
+    return { ok: true, sent, pay };
   },
 });

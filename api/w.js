@@ -40,6 +40,9 @@ async function kmaCall(op, q) {
   return items;
 }
 const wxCache = new Map(), placeCache = new Map();
+// 통역 (사장님 10-27): 하이쿠, 근로자 말 ↔ 한국어. 한 사람 1시간 120번
+const TR_LANGS = { ko: 'Korean', en: 'English', vi: 'Vietnamese', id: 'Indonesian', th: 'Thai', tl: 'Filipino (Tagalog)', ne: 'Nepali', km: 'Khmer', my: 'Burmese', si: 'Sinhala', bn: 'Bengali' };
+const trHits = new Map();
 const normPass = (x) => String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const loginFails = new Map();
 // 카카오맵 (관리자 지도와 같은 지도). 이름은 핀 이름표로 뜸
@@ -51,7 +54,7 @@ function publicProfile(m) {
     id: m.id, name: m.name, country: m.country, language: m.language, phone: m.phone,
     passport_last4: m.passport_number ? String(m.passport_number).slice(-4) : null,
     company: m.company, created_at: m.created_at, last_checkin_at: m.last_checkin_at,
-    consent_version: m.consent_version, consent_current: m.consent_version === CONSENT_VERSION,
+    consent_version: m.consent_version, consent_current: m.consent_version === CONSENT_VERSION, payday: m.payday || 0,
   };
 }
 
@@ -455,6 +458,35 @@ module.exports = L.handler({
     }
     const place = await placeP;
     return { ok: true, place, ...wx.out };
+  },
+
+  async translate(req, b) {
+    if (req.method !== 'POST') throw new HttpError(405, 'post_only');
+    const m = await L.workerFromReq(req);
+    if (!process.env.ANTHROPIC_API_KEY) throw new HttpError(503, 'vision_off');
+    const text = String(b.text || '').trim().slice(0, 1000), to = TR_LANGS[b.to] ? b.to : 'ko';
+    if (!text) throw new HttpError(400, 'missing_fields');
+    const now = Date.now(), hits = (trHits.get(m.id) || []).filter((x) => now - x < 3600000);
+    if (hits.length >= 120) throw new HttpError(429, 'too_many');
+    hits.push(now); trHits.set(m.id, hits);
+    const { Anthropic } = require('@anthropic-ai/sdk');
+    const client = new Anthropic({ timeout: 20000, maxRetries: 1 });
+    const msg = await client.messages.create({
+      model: 'claude-haiku-5-5', max_tokens: 2048,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'], additionalProperties: false } } },
+      messages: [{ role: 'user', content: `You are an interpreter for a foreign worker in Korea. Translate the text below into ${TR_LANGS[to]}. Keep numbers, names, places and phone numbers exactly. Natural spoken words. Output only the translation.\n\n${text}` }],
+    });
+    const r = JSON.parse((msg.content.find((c) => c.type === 'text') || {}).text || '{}');
+    return { ok: true, text: String(r.text || '').slice(0, 3000), to };
+  },
+
+  // 월급날 (사장님 10-27): 근로자가 날짜를 정함, 0 = 끔. 그날 아침 9시 알림(관리자 서버 크론)
+  async payday(req, b) {
+    if (req.method !== 'POST') throw new HttpError(405, 'post_only');
+    const m = await L.workerFromReq(req);
+    const day = Math.max(0, Math.min(31, Math.round(Number(b.day) || 0)));
+    await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { payday: day } });
+    return { ok: true, payday: day };
   },
 
   async posts(req) {
