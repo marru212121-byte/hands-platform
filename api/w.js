@@ -45,6 +45,53 @@ const wxCache = new Map(), placeCache = new Map();
 // 통역 (사장님 10-27): 하이쿠, 근로자 말 ↔ 한국어. 한 사람 1시간 120번
 const TR_LANGS = { ko: 'Korean', en: 'English', vi: 'Vietnamese', id: 'Indonesian', th: 'Thai', tl: 'Filipino (Tagalog)', ne: 'Nepali', km: 'Khmer', my: 'Burmese', si: 'Sinhala', bn: 'Bengali' };
 const trHits = new Map();
+// 11시 날씨 대비 알림 (사장님 10-27): 궂은 날만, 생활 안내 말투, 근로자 말 + 아래 한국어. 업무 지시 없음
+const WX_MSG = {"rain": {"ko": ["오늘 비 소식이 있습니다", "우산을 챙기세요."], "en": ["Rain expected today", "Take an umbrella."], "vi": ["Hôm nay có mưa", "Hãy mang theo ô."], "id": ["Hari ini akan hujan", "Bawalah payung."], "th": ["วันนี้มีฝนตก", "พกร่มไปด้วยนะ"], "tl": ["Uulan ngayong araw", "Magdala ng payong."], "ne": ["आज पानी पर्ने सम्भावना छ", "छाता बोक्नुहोस्।"], "km": ["ថ្ងៃនេះមានភ្លៀង", "សូមយកឆ័ត្រទៅជាមួយ។"], "my": ["ယနေ့ မိုးရွာမည်", "ထီး ယူသွားပါ။"], "si": ["අද වැසි ඇති වේ", "කුඩයක් රැගෙන යන්න."], "bn": ["আজ বৃষ্টি হতে পারে", "ছাতা সাথে নিন।"]}, "snow": {"ko": ["오늘 눈 소식이 있습니다", "미끄러운 길 조심하세요."], "en": ["Snow expected today", "Watch out for slippery roads."], "vi": ["Hôm nay có tuyết", "Cẩn thận đường trơn."], "id": ["Hari ini akan turun salju", "Hati-hati jalan licin."], "th": ["วันนี้มีหิมะตก", "ระวังถนนลื่น"], "tl": ["May niyebe ngayong araw", "Mag-ingat sa madulas na daan."], "ne": ["आज हिउँ पर्ने सम्भावना छ", "चिप्लो बाटोमा होस गर्नुहोस्।"], "km": ["ថ្ងៃនេះមានព្រិលធ្លាក់", "សូមប្រយ័ត្នផ្លូវរអិល។"], "my": ["ယနေ့ နှင်းကျမည်", "လမ်းချော်နိုင်၍ သတိထားပါ။"], "si": ["අද හිම වැටේ", "ලිස්සන මාර්ග ගැන සැලකිලිමත් වන්න."], "bn": ["আজ তুষারপাত হতে পারে", "পিচ্ছিল রাস্তায় সাবধান।"]}, "wave": {"ko": ["오늘 물결이 높습니다", "바다에 나갈 때 대비하세요."], "en": ["High waves today", "Be prepared at sea."], "vi": ["Hôm nay sóng cao", "Hãy chuẩn bị khi ra biển."], "id": ["Ombak tinggi hari ini", "Bersiaplah saat ke laut."], "th": ["วันนี้คลื่นสูง", "เตรียมตัวให้พร้อมเมื่อออกทะเล"], "tl": ["Malalaki ang alon ngayon", "Maghanda kapag nasa dagat."], "ne": ["आज समुद्रमा छाल अग्लो छ", "समुद्रमा जाँदा तयारी गर्नुहोस्।"], "km": ["ថ្ងៃនេះរលកខ្ពស់", "សូមត្រៀមខ្លួននៅពេលចេញសមុទ្រ។"], "my": ["ယနေ့ လှိုင်းကြီးမည်", "ပင်လယ်ထွက်လျှင် ကြိုတင်ပြင်ဆင်ပါ။"], "si": ["අද රළ උසයි", "මුහුදට යන විට සූදානම් වන්න."], "bn": ["আজ সমুদ্রে বড় ঢেউ", "সমুদ্রে গেলে প্রস্তুত থাকুন।"]}, "wind": {"ko": ["오늘 바람이 강합니다", "대비하세요."], "en": ["Strong wind today", "Please be prepared."], "vi": ["Hôm nay gió mạnh", "Hãy chuẩn bị nhé."], "id": ["Angin kencang hari ini", "Bersiaplah."], "th": ["วันนี้ลมแรง", "เตรียมตัวให้พร้อม"], "tl": ["Malakas ang hangin ngayon", "Maghanda."], "ne": ["आज हावा बलियो छ", "तयारी गर्नुहोस्।"], "km": ["ថ្ងៃនេះខ្យល់បក់ខ្លាំង", "សូមត្រៀមខ្លួន។"], "my": ["ယနေ့ လေပြင်းတိုက်မည်", "ကြိုတင်ပြင်ဆင်ပါ။"], "si": ["අද තද සුළං", "සූදානම් වන්න."], "bn": ["আজ জোরে বাতাস", "প্রস্তুত থাকুন।"]}, "cold": {"ko": ["오늘 많이 춥습니다", "따뜻하게 입으세요."], "en": ["Very cold today", "Dress warmly."], "vi": ["Hôm nay rất lạnh", "Hãy mặc ấm."], "id": ["Hari ini sangat dingin", "Pakailah baju hangat."], "th": ["วันนี้อากาศหนาวมาก", "แต่งตัวให้อบอุ่น"], "tl": ["Napakalamig ngayon", "Magsuot ng makapal na damit."], "ne": ["आज धेरै जाडो छ", "न्यानो लुगा लगाउनुहोस्।"], "km": ["ថ្ងៃនេះត្រជាក់ខ្លាំង", "សូមស្លៀកពាក់ឱ្យកក់ក្តៅ។"], "my": ["ယနေ့ အလွန်အေးမည်", "နွေးထွေးစွာ ဝတ်ဆင်ပါ။"], "si": ["අද ඉතා සීතලයි", "උණුසුම් ඇඳුම් අඳින්න."], "bn": ["আজ খুব ঠান্ডা", "গরম কাপড় পরুন।"]}, "heat": {"ko": ["오늘 매우 덥습니다", "물을 자주 마시세요."], "en": ["Very hot today", "Drink water often."], "vi": ["Hôm nay rất nóng", "Hãy uống nước thường xuyên."], "id": ["Hari ini sangat panas", "Sering-seringlah minum air."], "th": ["วันนี้อากาศร้อนมาก", "ดื่มน้ำบ่อย ๆ"], "tl": ["Napakainit ngayon", "Uminom ng tubig nang madalas."], "ne": ["आज धेरै गर्मी छ", "बारम्बार पानी पिउनुहोस्।"], "km": ["ថ្ងៃនេះក្តៅខ្លាំង", "សូមផឹកទឹកឱ្យបានញឹកញាប់។"], "my": ["ယနေ့ အလွန်ပူမည်", "ရေ မကြာခဏ သောက်ပါ။"], "si": ["අද ඉතා උණුසුම්", "නිතර වතුර බොන්න."], "bn": ["আজ খুব গরম", "ঘন ঘন পানি পান করুন।"]}};
+const WX_TAIL = {"ko": "앱에서 자세히 확인하세요.", "en": "See details in the app.", "vi": "Xem chi tiết trong ứng dụng.", "id": "Lihat detail di aplikasi.", "th": "ดูรายละเอียดในแอป", "tl": "Tingnan ang detalye sa app.", "ne": "विवरण एपमा हेर्नुहोस्।", "km": "មើលព័ត៌មានលម្អិតក្នុងកម្មវិធី។", "my": "အသေးစိတ်ကို အက်ပ်တွင် ကြည့်ပါ။", "si": "විස්තර යෙදුමෙන් බලන්න.", "bn": "বিস্তারিত অ্যাপে দেখুন।"};
+
+// 격자 하나의 날씨(20분 저장) — 날씨 화면과 11시 날씨 대비 알림이 같이 씀
+async function wxFor(nx, ny) {
+  const gk = nx + ',' + ny, now = Date.now();
+  let wx = wxCache.get(gk);
+  if (!wx || now - wx.at > 20 * 60000) {
+    // 실황: 매시 정각 자료가 40분쯤 나옴
+    const n = kst(now - 40 * 60000);
+    // 단기예보: 02·05·08·11·14·17·20·23시 발표, 10분쯤 뒤에 나옴 — 두 자료를 한꺼번에 물음
+    const f = kst(now - 15 * 60000), bh = [23, 20, 17, 14, 11, 8, 5, 2].find((x) => x <= f.h);
+    const fb = bh == null ? { ...kst(now - 15 * 60000 - 24 * 3600000), bh: 23 } : { ...f, bh };
+    const [ncst, fc] = await Promise.all([
+      kmaCall('getUltraSrtNcst', { base_date: n.ymd, base_time: String(n.h).padStart(2, '0') + '00', nx, ny }),
+      kmaCall('getVilageFcst', { base_date: fb.ymd, base_time: String(fb.bh).padStart(2, '0') + '00', nx, ny })]);
+    const cur = {}; for (const it of ncst) cur[it.category] = it.obsrValue;
+    const hours = {}, days = {};
+    for (const it of fc) {
+      const k = it.fcstDate + it.fcstTime;
+      (hours[k] = hours[k] || { date: it.fcstDate, time: it.fcstTime })[it.category] = it.fcstValue;
+      const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], pty: [], pop: 0, wav: null });
+      if (it.category === 'WAV' && +it.fcstValue > 0 && +it.fcstValue < 50) d.wav = Math.max(d.wav || 0, +it.fcstValue);  // 물결 높이(m) — 바다·해안 격자만 (사장님 10-27 바다 날씨)
+      if (it.category === 'TMP') d.tmps.push(+it.fcstValue);
+      if (it.category === 'TMN') d.tmn = +it.fcstValue;
+      if (it.category === 'TMX') d.tmx = +it.fcstValue;
+      if (it.category === 'POP') d.pop = Math.max(d.pop, +it.fcstValue);
+      if (it.category === 'SKY' && it.fcstTime >= '0900' && it.fcstTime <= '1800') d.sky.push(+it.fcstValue);
+      if (it.category === 'PTY' && +it.fcstValue > 0) d.pty.push(+it.fcstValue);
+    }
+    const hl = Object.keys(hours).sort().map((k) => hours[k]);
+    const nowKey = kst(now).ymd + String(kst(now).h).padStart(2, '0') + '00';
+    const next = hl.filter((x) => x.date + x.time >= nowKey).filter((x) => x.TMP != null).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP, pcp: x.PCP, wav: x.WAV != null && +x.WAV > 0 && +x.WAV < 50 ? +x.WAV : null, wsd: x.WSD != null ? +x.WSD : null }));  // 글피까지 시간별 전부 (사장님 10-27: 내일·모레 눌러 시간별)
+    const mode = (a) => a.length ? +Object.entries(a.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {})).sort((p, q) => q[1] - p[1])[0][0] : 1;
+    const dl = Object.keys(days).sort().slice(0, 3).map((k) => { const d = days[k];
+      return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop, wav: d.wav }; });
+    wx = { at: now, out: {
+      // 바다 한가운데 등 관측소가 없는 격자는 실황이 -999 → 예보 첫 시간 값으로 (10-27 시험에서 발견)
+      now: (() => { const ok = (v) => v != null && +v > -90; const h0 = next[0] || {};
+        return { tmp: ok(cur.T1H) ? +cur.T1H : h0.tmp, reh: ok(cur.REH) ? +cur.REH : null, wsd: ok(cur.WSD) ? +cur.WSD : (h0.wsd != null ? h0.wsd : null), rn1: ok(cur.RN1) ? cur.RN1 : null, pty: ok(cur.PTY) ? +cur.PTY : (h0.pty || 0), sky: h0.sky || 1 }; })(),
+      hours: next, days: dl, base: now } };
+    wxCache.set(gk, wx);
+  }
+  return wx.out;
+}
+
 const normPass = (x) => String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const loginFails = new Map();
 // 카카오맵 (관리자 지도와 같은 지도). 이름은 핀 이름표로 뜸
@@ -426,45 +473,9 @@ module.exports = L.handler({
     }
     return place;
     })();
-    let wx = wxCache.get(gk);
-    if (!wx || now - wx.at > 20 * 60000) {
-      // 실황: 매시 정각 자료가 40분쯤 나옴
-      const n = kst(now - 40 * 60000);
-      // 단기예보: 02·05·08·11·14·17·20·23시 발표, 10분쯤 뒤에 나옴 — 두 자료를 한꺼번에 물음
-      const f = kst(now - 15 * 60000), bh = [23, 20, 17, 14, 11, 8, 5, 2].find((x) => x <= f.h);
-      const fb = bh == null ? { ...kst(now - 15 * 60000 - 24 * 3600000), bh: 23 } : { ...f, bh };
-      const [ncst, fc] = await Promise.all([
-        kmaCall('getUltraSrtNcst', { base_date: n.ymd, base_time: String(n.h).padStart(2, '0') + '00', nx, ny }),
-        kmaCall('getVilageFcst', { base_date: fb.ymd, base_time: String(fb.bh).padStart(2, '0') + '00', nx, ny })]);
-      const cur = {}; for (const it of ncst) cur[it.category] = it.obsrValue;
-      const hours = {}, days = {};
-      for (const it of fc) {
-        const k = it.fcstDate + it.fcstTime;
-        (hours[k] = hours[k] || { date: it.fcstDate, time: it.fcstTime })[it.category] = it.fcstValue;
-        const d = (days[it.fcstDate] = days[it.fcstDate] || { date: it.fcstDate, tmps: [], sky: [], pty: [], pop: 0, wav: null });
-        if (it.category === 'WAV' && +it.fcstValue > 0 && +it.fcstValue < 50) d.wav = Math.max(d.wav || 0, +it.fcstValue);  // 물결 높이(m) — 바다·해안 격자만 (사장님 10-27 바다 날씨)
-        if (it.category === 'TMP') d.tmps.push(+it.fcstValue);
-        if (it.category === 'TMN') d.tmn = +it.fcstValue;
-        if (it.category === 'TMX') d.tmx = +it.fcstValue;
-        if (it.category === 'POP') d.pop = Math.max(d.pop, +it.fcstValue);
-        if (it.category === 'SKY' && it.fcstTime >= '0900' && it.fcstTime <= '1800') d.sky.push(+it.fcstValue);
-        if (it.category === 'PTY' && +it.fcstValue > 0) d.pty.push(+it.fcstValue);
-      }
-      const hl = Object.keys(hours).sort().map((k) => hours[k]);
-      const nowKey = kst(now).ymd + String(kst(now).h).padStart(2, '0') + '00';
-      const next = hl.filter((x) => x.date + x.time >= nowKey).filter((x) => x.TMP != null).map((x) => ({ date: x.date, time: x.time, tmp: +x.TMP, sky: +x.SKY, pty: +x.PTY, pop: +x.POP, pcp: x.PCP, wav: x.WAV != null && +x.WAV > 0 && +x.WAV < 50 ? +x.WAV : null, wsd: x.WSD != null ? +x.WSD : null }));  // 글피까지 시간별 전부 (사장님 10-27: 내일·모레 눌러 시간별)
-      const mode = (a) => a.length ? +Object.entries(a.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {})).sort((p, q) => q[1] - p[1])[0][0] : 1;
-      const dl = Object.keys(days).sort().slice(0, 3).map((k) => { const d = days[k];
-        return { date: d.date, min: d.tmn != null ? d.tmn : Math.min(...d.tmps), max: d.tmx != null ? d.tmx : Math.max(...d.tmps), sky: mode(d.sky), pty: d.pty.length ? mode(d.pty) : 0, pop: d.pop, wav: d.wav }; });
-      wx = { at: now, out: {
-        // 바다 한가운데 등 관측소가 없는 격자는 실황이 -999 → 예보 첫 시간 값으로 (10-27 시험에서 발견)
-        now: (() => { const ok = (v) => v != null && +v > -90; const h0 = next[0] || {};
-          return { tmp: ok(cur.T1H) ? +cur.T1H : h0.tmp, reh: ok(cur.REH) ? +cur.REH : null, wsd: ok(cur.WSD) ? +cur.WSD : (h0.wsd != null ? h0.wsd : null), rn1: ok(cur.RN1) ? cur.RN1 : null, pty: ok(cur.PTY) ? +cur.PTY : (h0.pty || 0), sky: h0.sky || 1 }; })(),
-        hours: next, days: dl, base: now } };
-      wxCache.set(gk, wx);
-    }
+    const wxOut = await wxFor(nx, ny);
     const place = await placeP;
-    return { ok: true, place, ...wx.out };
+    return { ok: true, place, ...wxOut };
   },
 
   async translate(req, b) {
@@ -498,6 +509,44 @@ module.exports = L.handler({
     const day = Math.max(0, Math.min(31, Math.round(Number(b.day) || 0)));
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { payday: day } });
     return { ok: true, payday: day };
+  },
+
+  // 매일 11시(버셀 크론): 근로자 마지막 위치의 오늘 남은 예보 → 비·눈·물결 2m↑·바람 9m/s↑·영하·33도↑ 중 먼저 걸리는 하나만
+  async wxcron(req) {
+    if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}` || !process.env.CRON_SECRET) throw new HttpError(401, 'no');
+    const subs = await db('push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,language,is_active)&member.is_active=eq.true');
+    if (!subs.length) return { ok: true, sent: 0 };
+    const ids = [...new Set(subs.map((x) => x.member.id))];
+    const locs = await db(`locations?select=member_id,lat,lng&member_id=in.(${ids.join(',')})`);
+    const locBy = Object.fromEntries(locs.map((l) => [l.member_id, l]));
+    const today = kst(Date.now()).ymd, hourNow = String(kst(Date.now()).h).padStart(2, '0') + '00';
+    const kindFor = new Map();  // 격자별 판정 한 번만
+    const judge = async (lat, lng) => {
+      const { nx, ny } = kmaGrid(lat, lng), gk = nx + ',' + ny;
+      if (kindFor.has(gk)) return kindFor.get(gk);
+      let k = null;
+      try {
+        const w = await wxFor(nx, ny), hs = w.hours.filter((x) => x.date === today && x.time >= hourNow);
+        if (hs.some((x) => (x.pty === 1 || x.pty === 2 || x.pty === 4) && x.pop >= 60)) k = 'rain';
+        else if (hs.some((x) => x.pty === 3 && x.pop >= 60)) k = 'snow';
+        else if (hs.some((x) => x.wav != null && x.wav >= 2)) k = 'wave';
+        else if (hs.some((x) => x.wsd != null && x.wsd >= 9)) k = 'wind';
+        else if (hs.length && Math.min(...hs.map((x) => x.tmp)) <= 0) k = 'cold';
+        else if (hs.length && Math.max(...hs.map((x) => x.tmp)) >= 33) k = 'heat';
+      } catch (e) {}
+      kindFor.set(gk, k); return k;
+    };
+    const wp = L.webpush(); let sent = 0; const gone = [], count = {};
+    for (const s of subs) {
+      const loc = locBy[s.member.id]; if (!loc || loc.lat == null) continue;
+      const k = await judge(loc.lat, loc.lng); if (!k) continue;
+      const lang = WX_MSG[k][s.member.language] ? s.member.language : 'en', [t, b] = WX_MSG[k][lang];
+      const body = b + ' ' + WX_TAIL[lang] + (lang === 'ko' ? '' : '\n\n[한국어] ' + WX_MSG[k].ko[0] + '. ' + WX_MSG[k].ko[1] + ' ' + WX_TAIL.ko);
+      try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title: t, body, url: '/?wx=1' }), { TTL: 21600 }); sent++; count[k] = (count[k] || 0) + 1; }
+      catch (e) { if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
+    }
+    if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
+    return { ok: true, sent, count, grids: kindFor.size };
   },
 
   async posts(req) {

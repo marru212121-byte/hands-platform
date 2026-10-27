@@ -2171,6 +2171,7 @@ const NOTICE_ID = new URLSearchParams(location.search).get('notice');  // opened
       if (!j.profile.consent_current) go(screenReconsent);
       else if (NOTICE_ID) go(screenNotice, NOTICE_ID);
       else if (new URLSearchParams(location.search).get('fx')) go(screenFx);  // 월급날 알림에서 열림
+      else if (new URLSearchParams(location.search).get('wx')) go(screenWeather);  // 날씨 대비 알림에서 열림
       else if (S.route && (S.route[0] === screenHome)) rerender(); else goHome();
     } catch (e) {
       if (e.status === 401) return; // api() already sent us to welcome
