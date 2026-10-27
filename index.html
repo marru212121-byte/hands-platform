@@ -559,6 +559,19 @@ my:'ဖုန်းကို အလျားလိုက် လှည့်ပ�
 si:'ගමන් බලපත්‍රය විශාලව හා පැහැදිලිව පෙනෙන සේ දුරකථනය තිරස්ව හරවා ගන්න.',
 bn:'ফোনটি আড়াআড়ি ঘুরিয়ে নিন, যাতে পাসপোর্ট বড় ও পরিষ্কার দেখা যায়।'};
 for (const l in STR_PASS3) STR[l].passSideways = STR_PASS3[l];
+const STR_LOGIN = {
+en:{"loginBtn": "I already signed up · Log in", "loginTitle": "Log in", "loginSub": "Enter your English name and passport number exactly as in your passport.", "fLoginName": "English name (as in passport)", "fLoginPass": "Passport number", "loginGo": "Log in", "errLoginFail": "Name or passport number does not match.", "errLoginLocked": "Too many tries. Locked for 30 minutes. Please contact your company manager.", "errPassExists": "This passport is already registered. Please log in.", "lostLogin": "Please log in again.", "passIsPw": "Your passport number is also your login password.", "doneLogin": "Next time you log in: ID = English name on your passport, password = passport number."},
+ko:{"loginBtn": "이미 가입했어요 · 로그인", "loginTitle": "로그인", "loginSub": "여권에 적힌 영문 이름과 여권번호를 그대로 넣으세요.", "fLoginName": "영문 이름 (여권과 같게)", "fLoginPass": "여권번호", "loginGo": "로그인", "errLoginFail": "이름 또는 여권번호가 맞지 않습니다.", "errLoginLocked": "여러 번 틀려 30분 동안 잠겼습니다. 회사 관리자에게 문의하세요.", "errPassExists": "이미 가입된 여권입니다. 로그인해 주세요.", "lostLogin": "다시 로그인해 주세요.", "passIsPw": "여권번호는 로그인 비밀번호로도 쓰입니다.", "doneLogin": "다음에 로그인할 때: 아이디 = 여권 영문 이름, 비밀번호 = 여권번호"},
+vi:{"loginBtn": "Tôi đã đăng ký · Đăng nhập", "loginTitle": "Đăng nhập", "loginSub": "Nhập tên tiếng Anh và số hộ chiếu đúng như trong hộ chiếu.", "fLoginName": "Tên tiếng Anh (như hộ chiếu)", "fLoginPass": "Số hộ chiếu", "loginGo": "Đăng nhập", "errLoginFail": "Tên hoặc số hộ chiếu không đúng.", "errLoginLocked": "Sai quá nhiều lần. Bị khóa 30 phút. Hãy liên hệ quản lý công ty.", "errPassExists": "Hộ chiếu này đã được đăng ký. Hãy đăng nhập.", "lostLogin": "Hãy đăng nhập lại.", "passIsPw": "Số hộ chiếu cũng là mật khẩu đăng nhập.", "doneLogin": "Lần sau đăng nhập: ID = tên tiếng Anh trên hộ chiếu, mật khẩu = số hộ chiếu."},
+id:{"loginBtn": "Saya sudah daftar · Masuk", "loginTitle": "Masuk", "loginSub": "Masukkan nama Inggris dan nomor paspor persis seperti di paspor.", "fLoginName": "Nama Inggris (sesuai paspor)", "fLoginPass": "Nomor paspor", "loginGo": "Masuk", "errLoginFail": "Nama atau nomor paspor tidak cocok.", "errLoginLocked": "Terlalu banyak percobaan. Dikunci 30 menit. Hubungi manajer perusahaan.", "errPassExists": "Paspor ini sudah terdaftar. Silakan masuk.", "lostLogin": "Silakan masuk lagi.", "passIsPw": "Nomor paspor juga menjadi kata sandi masuk.", "doneLogin": "Lain kali masuk: ID = nama Inggris di paspor, kata sandi = nomor paspor."},
+th:{"loginBtn": "สมัครแล้ว · เข้าสู่ระบบ", "loginTitle": "เข้าสู่ระบบ", "loginSub": "ใส่ชื่อภาษาอังกฤษและเลขหนังสือเดินทางให้ตรงกับหนังสือเดินทาง", "fLoginName": "ชื่อภาษาอังกฤษ (ตามหนังสือเดินทาง)", "fLoginPass": "เลขหนังสือเดินทาง", "loginGo": "เข้าสู่ระบบ", "errLoginFail": "ชื่อหรือเลขหนังสือเดินทางไม่ตรงกัน", "errLoginLocked": "ลองผิดหลายครั้ง ถูกล็อก 30 นาที กรุณาติดต่อผู้จัดการบริษัท", "errPassExists": "หนังสือเดินทางนี้ลงทะเบียนแล้ว กรุณาเข้าสู่ระบบ", "lostLogin": "กรุณาเข้าสู่ระบบอีกครั้ง", "passIsPw": "เลขหนังสือเดินทางใช้เป็นรหัสผ่านเข้าสู่ระบบด้วย", "doneLogin": "ครั้งต่อไป: ไอดี = ชื่อภาษาอังกฤษในหนังสือเดินทาง รหัสผ่าน = เลขหนังสือเดินทาง"},
+tl:{"loginBtn": "Naka-sign up na ako · Mag-log in", "loginTitle": "Mag-log in", "loginSub": "Ilagay ang English na pangalan at numero ng pasaporte gaya ng nasa pasaporte.", "fLoginName": "English na pangalan (gaya ng pasaporte)", "fLoginPass": "Numero ng pasaporte", "loginGo": "Mag-log in", "errLoginFail": "Hindi tugma ang pangalan o numero ng pasaporte.", "errLoginLocked": "Masyadong maraming mali. Naka-lock nang 30 minuto. Kontakin ang manager ng kumpanya.", "errPassExists": "Nakarehistro na ang pasaporteng ito. Mag-log in.", "lostLogin": "Mag-log in ulit.", "passIsPw": "Ang numero ng pasaporte ay password mo rin sa pag-log in.", "doneLogin": "Sa susunod na pag-log in: ID = English na pangalan sa pasaporte, password = numero ng pasaporte."},
+ne:{"loginBtn": "मैले दर्ता गरिसकेँ · लगइन", "loginTitle": "लगइन", "loginSub": "राहदानीमा भएजस्तै अंग्रेजी नाम र राहदानी नम्बर लेख्नुहोस्।", "fLoginName": "अंग्रेजी नाम (राहदानीजस्तै)", "fLoginPass": "राहदानी नम्बर", "loginGo": "लगइन", "errLoginFail": "नाम वा राहदानी नम्बर मिलेन।", "errLoginLocked": "धेरै पटक गल्ती भयो। ३० मिनेट बन्द। कम्पनी प्रबन्धकलाई सम्पर्क गर्नुहोस्।", "errPassExists": "यो राहदानी पहिल्यै दर्ता छ। लगइन गर्नुहोस्।", "lostLogin": "फेरि लगइन गर्नुहोस्।", "passIsPw": "राहदानी नम्बर लगइन पासवर्ड पनि हो।", "doneLogin": "अर्को पटक लगइन: आईडी = राहदानीको अंग्रेजी नाम, पासवर्ड = राहदानी नम्बर।"},
+km:{"loginBtn": "ខ្ញុំបានចុះឈ្មោះហើយ · ចូល", "loginTitle": "ចូល", "loginSub": "បញ្ចូលឈ្មោះជាអក្សរអង់គ្លេស និងលេខលិខិតឆ្លងដែន ដូចក្នុងលិខិតឆ្លងដែន។", "fLoginName": "ឈ្មោះអង់គ្លេស (ដូចលិខិតឆ្លងដែន)", "fLoginPass": "លេខលិខិតឆ្លងដែន", "loginGo": "ចូល", "errLoginFail": "ឈ្មោះ ឬលេខលិខិតឆ្លងដែនមិនត្រូវ។", "errLoginLocked": "ខុសច្រើនដង។ ចាក់សោ ៣០ នាទី។ សូមទាក់ទងអ្នកគ្រប់គ្រងក្រុមហ៊ុន។", "errPassExists": "លិខិតឆ្លងដែននេះបានចុះឈ្មោះរួចហើយ។ សូមចូល។", "lostLogin": "សូមចូលម្តងទៀត។", "passIsPw": "លេខលិខិតឆ្លងដែនក៏ជាពាក្យសម្ងាត់ចូលដែរ។", "doneLogin": "ពេលចូលលើកក្រោយ៖ ID = ឈ្មោះអង់គ្លេសក្នុងលិខិតឆ្លងដែន ពាក្យសម្ងាត់ = លេខលិខិតឆ្លងដែន។"},
+my:{"loginBtn": "စာရင်းသွင်းပြီးပါပြီ · ဝင်ရန်", "loginTitle": "ဝင်ရန်", "loginSub": "နိုင်ငံကူးလက်မှတ်ထဲကအတိုင်း အင်္ဂလိပ်အမည်နှင့် နိုင်ငံကူးလက်မှတ်နံပါတ် ထည့်ပါ။", "fLoginName": "အင်္ဂလိပ်အမည် (နိုင်ငံကူးလက်မှတ်အတိုင်း)", "fLoginPass": "နိုင်ငံကူးလက်မှတ်နံပါတ်", "loginGo": "ဝင်ရန်", "errLoginFail": "အမည် သို့မဟုတ် နိုင်ငံကူးလက်မှတ်နံပါတ် မကိုက်ညီပါ။", "errLoginLocked": "အကြိမ်များစွာ မှားသဖြင့် မိနစ် ၃၀ ပိတ်ထားသည်။ ကုမ္ပဏီမန်နေဂျာကို ဆက်သွယ်ပါ။", "errPassExists": "ဤနိုင်ငံကူးလက်မှတ် စာရင်းသွင်းပြီးဖြစ်သည်။ ဝင်ပါ။", "lostLogin": "ထပ်မံဝင်ပါ။", "passIsPw": "နိုင်ငံကူးလက်မှတ်နံပါတ်သည် ဝင်ရန်စကားဝှက်လည်း ဖြစ်သည်။", "doneLogin": "နောက်တစ်ကြိမ်ဝင်ရန်: ID = နိုင်ငံကူးလက်မှတ်ပါ အင်္ဂလိပ်အမည်၊ စကားဝှက် = နိုင်ငံကူးလက်မှတ်နံပါတ်။"},
+si:{"loginBtn": "මම දැනටමත් ලියාපදිංචියි · ඇතුළු වන්න", "loginTitle": "ඇතුළු වන්න", "loginSub": "ගමන් බලපත්‍රයේ ඇති ආකාරයටම ඉංග්‍රීසි නම සහ ගමන් බලපත්‍ර අංකය ඇතුළත් කරන්න.", "fLoginName": "ඉංග්‍රීසි නම (ගමන් බලපත්‍රයේ ලෙස)", "fLoginPass": "ගමන් බලපත්‍ර අංකය", "loginGo": "ඇතුළු වන්න", "errLoginFail": "නම හෝ ගමන් බලපත්‍ර අංකය නොගැළපේ.", "errLoginLocked": "බොහෝ වාර වැරදුණි. මිනිත්තු 30ක් අගුළු දමා ඇත. සමාගම් කළමනාකරු අමතන්න.", "errPassExists": "මෙම ගමන් බලපත්‍රය දැනටමත් ලියාපදිංචියි. ඇතුළු වන්න.", "lostLogin": "නැවත ඇතුළු වන්න.", "passIsPw": "ගමන් බලපත්‍ර අංකය ඇතුළු වීමේ මුරපදය ද වේ.", "doneLogin": "ඊළඟ වතාවේ: ID = ගමන් බලපත්‍රයේ ඉංග්‍රීසි නම, මුරපදය = ගමන් බලපත්‍ර අංකය."},
+bn:{"loginBtn": "আমি আগেই নিবন্ধন করেছি · লগইন", "loginTitle": "লগইন", "loginSub": "পাসপোর্টে যেমন আছে তেমন ইংরেজি নাম ও পাসপোর্ট নম্বর লিখুন।", "fLoginName": "ইংরেজি নাম (পাসপোর্টের মতো)", "fLoginPass": "পাসপোর্ট নম্বর", "loginGo": "লগইন", "errLoginFail": "নাম বা পাসপোর্ট নম্বর মেলেনি।", "errLoginLocked": "অনেকবার ভুল হয়েছে। ৩০ মিনিট বন্ধ। কোম্পানির ম্যানেজারের সাথে যোগাযোগ করুন।", "errPassExists": "এই পাসপোর্ট আগেই নিবন্ধিত। লগইন করুন।", "lostLogin": "আবার লগইন করুন।", "passIsPw": "পাসপোর্ট নম্বরই লগইনের পাসওয়ার্ড।", "doneLogin": "পরের বার লগইন: আইডি = পাসপোর্টের ইংরেজি নাম, পাসওয়ার্ড = পাসপোর্ট নম্বর।"}};
+for (const l in STR_LOGIN) Object.assign(STR[l], STR_LOGIN[l]);
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -758,7 +771,7 @@ function topbar(back) {
 function progress(n) { return h('div', { class: 'prog', 'aria-hidden': 'true' }, [1, 2, 3].map(i => h('i', { class: i <= n ? 'on' : '' }))); }
 function errText(code) {
   return ({ network: t('errNet'), phone_exists: t('errPhone'), bad_image: t('errImage'), bad_image_size: t('errImage'),
-    missing_fields: t('errMissing'), consent_required: t('errMissing') })[code] || t('errGeneric');
+    missing_fields: t('errMissing'), consent_required: t('errMissing'), login_fail: t('errLoginFail'), login_locked: t('errLoginLocked'), passport_exists: t('errPassExists') })[code] || t('errGeneric');
 }
 const COUNTRIES = ['vn', 'th', 'id', 'ph', 'np', 'kh', 'mm', 'lk', 'bd'];
 const COUNTRY_EN = { vn: 'Vietnam', th: 'Thailand', id: 'Indonesia', ph: 'Philippines', np: 'Nepal', kh: 'Cambodia', mm: 'Myanmar', lk: 'Sri Lanka', bd: 'Bangladesh' };
@@ -789,7 +802,7 @@ async function api(action, { method = 'POST', body } = {}) {
   let j = null; try { j = await r.json(); } catch (e) {}
   if (!r.ok || !j || j.ok === false) {
     const code = (j && j.error) || ('http_' + r.status);
-    if (r.status === 401 && (code === 'bad_token' || code === 'no_token') && S.token) { await clearToken(); S.lostNote = true; go(screenWelcome); }
+    if (r.status === 401 && (code === 'bad_token' || code === 'no_token') && (S.token || S.profile)) { await clearToken(); S.lostNote = true; go(screenLogin); }
     throw { code, status: r.status };
   }
   return j;
@@ -914,7 +927,34 @@ function screenWelcome() {
       S.lostNote ? h('div', { class: 'note', style: 'margin-top:24px', role: 'status' }, icon('info'), h('div', { text: t('lostNote') })) : null),
     h('div', { class: 'footer stack' },
       h('button', { class: 'btn btn-primary', onclick: startSignup }, t('signup'), icon('chevRight')),
+      h('button', { class: 'btn btn-secondary', onclick: () => go(screenLogin) }, t('loginBtn')),
       (!isStandalone() && S.installEvt) ? h('button', { class: 'btn btn-secondary', onclick: doInstall }, icon('download'), t('install')) : null));
+}
+/* log in again: English name + passport number (사장님 10-27) */
+function screenLogin() {
+  const F = S.login || (S.login = { name: '', pass: '' });
+  const inp = (key, label, attrs) => {
+    const el = h('input', Object.assign({ class: 'input', id: 'l_' + key, value: F[key], autocapitalize: 'characters', autocomplete: 'off', oninput: (e) => { F[key] = e.target.value; el.classList.remove('bad'); } }, attrs));
+    return h('div', { class: 'field' }, h('label', { class: 'label', for: 'l_' + key }, t(label)), el);
+  };
+  const btn = h('button', { class: 'btn btn-primary', onclick: go_ }, t('loginGo'), icon('chevRight'));
+  async function go_() {
+    if (F.name.trim().length < 2 || F.pass.trim().length < 5) { toast(t('errMissing')); return; }
+    btn.disabled = true;
+    try {
+      const j = await api('login', { body: { name: F.name, passport_number: F.pass } });
+      await saveToken(j.token); S.profile = j.profile; cacheProfile(); S.login = null; S.lostNote = false;
+      if (!j.profile.consent_current) go(screenReconsent); else goHome();
+    } catch (e) { btn.disabled = false; toast(errText(e.code)); }
+  }
+  return h('div', { class: 'screen' }, topbar(() => go(screenWelcome)),
+    h('div', { class: 'content' },
+      h('h1', { text: t('loginTitle') }),
+      S.lostNote ? h('div', { class: 'note', role: 'status' }, icon('info'), h('div', { text: t('lostLogin') })) : null,
+      h('p', { class: 'lead', text: t('loginSub') }),
+      inp('name', 'fLoginName', { maxlength: '80' }),
+      inp('pass', 'fLoginPass', { maxlength: '20' })),
+    h('div', { class: 'footer' }, btn));
 }
 /* first run: pick your language (welcome then shows in it; top-right button still changes it) */
 function screenLangPick() {
@@ -1157,6 +1197,8 @@ function screenInfo() {
     F.name = F.name.trim();
     let first = null;
     if (!F.name) { const el = document.getElementById('f_name'); el.classList.add('bad'); first = first || el; }
+    F.passport_number = String(F.passport_number || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (F.passport_number.length < 5) { const el = document.getElementById('f_passport_number'); el.classList.add('bad'); first = first || el; }
     if (!F.country) { sel.classList.add('bad'); first = first || sel; }
     if (first) { toast(t('errMissing')); first.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => first.focus({ preventScroll: true }), 300); return; }
     go(screenCamera, 'selfie');
@@ -1173,7 +1215,7 @@ function screenInfo() {
       field('name', 'fName', { required: true, attrs: { autocomplete: 'name', autocapitalize: 'characters', maxlength: '80' } }),
       h('div', { class: 'field' },
         h('label', { class: 'label', for: 'f_country' }, t('fCountry'), h('span', { class: 'tag req', text: t('req') })), sel),
-      field('passport_number', 'fPassport', { attrs: { autocapitalize: 'characters', maxlength: '20' } }),
+      field('passport_number', 'fPassport', { required: true, hint: 'passIsPw', attrs: { autocapitalize: 'characters', maxlength: '20' } }),
       field('birth_date', 'fBirth', { type: 'date' }),
       field('phone', 'fPhone', { type: 'tel', hint: 'fPhoneHint', attrs: { inputmode: 'tel', autocomplete: 'tel', maxlength: '30' } })),
     h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: submitInfo }, t('next'), icon('chevRight'))));
@@ -1315,13 +1357,14 @@ function screenSubmit() {
     .catch((e) => {
       const code = e.code;
       const imageErr = code === 'bad_image' || code === 'bad_image_size';
-      const fieldErr = code === 'missing_fields' || code === 'consent_required' || code === 'phone_exists';
+      const fieldErr = code === 'missing_fields' || code === 'consent_required' || code === 'phone_exists' || code === 'passport_exists';
       body.replaceChildren(
         h('div', { class: 'badge bad' }, icon('alert')),
         h('h1', { style: 'font-size:24px', text: errText(code) }),
         h('div', { class: 'stack', style: 'width:100%;margin-top:28px' },
           (!imageErr && !fieldErr) ? h('button', { class: 'btn btn-primary', onclick: () => go(screenSubmit) }, icon('chevRight'), t('retry')) : null,
           imageErr ? h('button', { class: 'btn btn-primary', onclick: () => { S.selfie = S.passport = null; S.mrz = null; go(screenCamera, 'passport'); } }, t('retake')) : null,
+          code === 'passport_exists' ? h('button', { class: 'btn btn-primary', onclick: () => go(screenLogin) }, t('loginTitle')) : null,
           h('button', { class: 'btn btn-secondary', onclick: () => go(code === 'consent_required' ? screenSignup : screenInfo) }, t('back'))));
     });
   return root;
@@ -1372,6 +1415,7 @@ function screenDone() {
       h('h1', { text: t('doneTitle') }),
       h('p', { class: 'lead', text: t('doneSub') }),
       (S.perm && S.perm.loc === 'no') ? h('div', { class: 'note warn', style: 'margin-top:22px;text-align:left' }, icon('alert'), h('div', { lang: 'ko', text: tk('locDenied') })) : null,
+      h('div', { class: 'note', style: 'margin-top:22px;text-align:left' }, icon('info'), h('div', { text: t('doneLogin') })),
       null),
     h('div', { class: 'footer' }, h('button', { class: 'btn btn-primary', onclick: () => { S.perm = null; pushQuiet(); goHome('home'); } }, t('start'), icon('chevRight'))));
 }
@@ -1670,6 +1714,12 @@ function screenLoading() { return h('div', { class: 'screen' }, h('div', { class
     }
     return;
   }
+  try {  // the phone lost its stored key but the login cookie may still be there (home-screen app)
+    const j = await api('me', { method: 'GET' });
+    S.profile = j.profile; cacheProfile();
+    if (!j.profile.consent_current) go(screenReconsent); else goHome();
+    return;
+  } catch (e) {}
   go(saved ? screenWelcome : screenLangPick);
 })();
 </script>

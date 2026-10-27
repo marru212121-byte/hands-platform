@@ -7,6 +7,10 @@ const REQUIRED = ['terms', 'privacy', 'sensitive', 'location'];
 const COUNTRY_KO = { vn: '베트남', th: '태국', id: '인도네시아', ph: '필리핀', np: '네팔', kh: '캄보디아', mm: '미얀마', lk: '스리랑카', bd: '방글라데시', other: '기타' };
 
 const nowIso = () => new Date().toISOString();
+// 로그인 = 여권 영문 이름(띄어쓰기·기호 무시) + 여권번호 (사장님 10-27)
+const normName = (x) => String(x || '').toUpperCase().replace(/[^A-Z]/g, '');
+const normPass = (x) => String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const loginFails = new Map();
 // 카카오맵 (관리자 지도와 같은 지도). 이름은 핀 이름표로 뜸
 const mapLink = (lat, lng, name) => `https://map.kakao.com/link/map/${encodeURIComponent(String(name || 'HANDS').replace(/,/g, ' '))},${lat},${lng}`;
 const adminLink = (id) => `https://hands-platform.vercel.app/admin#/members/${encodeURIComponent(id)}`;
@@ -142,6 +146,10 @@ module.exports = L.handler({
     const name = clean(b.name, 80);
     const country = clean(b.country, 10);
     if (!name || !country) throw new HttpError(400, 'missing_fields');
+    const passNo = normPass(b.passport_number);
+    if (passNo.length < 5) throw new HttpError(400, 'missing_fields');
+    const dup = await db(`members?select=id&passport_number=eq.${encodeURIComponent(passNo)}&limit=1`);
+    if (dup.length) throw new HttpError(409, 'passport_exists');
     const selfie = L.imageFromDataUrl(b.selfie);
     const passport = L.imageFromDataUrl(b.passport);
 
@@ -152,7 +160,7 @@ module.exports = L.handler({
       body: {
         name, country,
         phone: clean(b.phone, 30),
-        passport_number: clean(b.passport_number, 30),
+        passport_number: passNo,
         birth_date: clean(b.birth_date, 10),
         gender: clean(b.gender, 10),
         company: clean(b.company, 80),
@@ -174,12 +182,33 @@ module.exports = L.handler({
       throw e;
     }
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { selfie_photo_path: sp, passport_photo_path: pp, selfie_photo_url: null, passport_photo_url: null } });
-    return { ok: true, token, profile: publicProfile({ ...m, selfie_photo_path: sp }) };
+    return { ok: true, token, profile: publicProfile({ ...m, selfie_photo_path: sp }), __setCookie: L.workerCookie(token) };
+  },
+
+  // 다시 로그인: 영문 이름 + 여권번호 → 같은 계정으로 이어짐 (새 열쇠, 옛 폰은 끊김)
+  async login(req, b) {
+    if (req.method !== 'POST') throw new HttpError(405, 'post_only');
+    const passNo = normPass(b.passport_number), nm = normName(b.name);
+    if (passNo.length < 5 || nm.length < 2) throw new HttpError(400, 'missing_fields');
+    const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'x';
+    const key = ip + '|' + passNo, now = Date.now();
+    const fails = (loginFails.get(key) || []).filter((t) => now - t < 30 * 60000);
+    if (fails.length >= 5) throw new HttpError(429, 'login_locked');
+    const rows = await db(`members?select=*&passport_number=eq.${encodeURIComponent(passNo)}&limit=1`);
+    const m = rows[0];
+    if (!m || normName(m.name) !== nm) { fails.push(now); loginFails.set(key, fails); throw new HttpError(401, 'login_fail'); }
+    if (m.is_active === false) throw new HttpError(403, 'inactive');
+    loginFails.delete(key);
+    const token = L.newToken(), t = nowIso();
+    await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { device_token_hash: L.sha256(token), last_login_at: t, last_seen_at: t } });
+    await L.telegram(tgCard('[HANDS 다시 로그인]', `${m.name} 님이 이름·여권번호로 다시 로그인했습니다`,
+      [`시각: ${kstText()}`], { id: m.id })).catch(() => {});
+    return { ok: true, token, profile: publicProfile(m), __setCookie: L.workerCookie(token) };
   },
 
   async me(req) {
     const m = await L.workerFromReq(req);
-    return { ok: true, profile: publicProfile(m) };
+    return { ok: true, profile: publicProfile(m), __setCookie: L.workerCookie(L.workerTokenFromReq(req)) };
   },
 
   async language(req, b) {

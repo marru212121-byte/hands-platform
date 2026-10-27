@@ -62,9 +62,18 @@ function imageFromDataUrl(s) {
   return { buf, type: m[1] };
 }
 
-// 근로자: 기기에 심은 열쇠로 본인 확인
+// 근로자: 로그인 쿠키(홈 화면 앱에서 오래 유지) 또는 폰 저장 열쇠로 본인 확인
+const WORKER_COOKIE = 'hands_w';
+function workerTokenFromReq(req) {
+  const h = req.headers['x-hands-token'];
+  if (h) return String(h);
+  const m = /(?:^|;\s*)hands_w=([A-Za-z0-9_-]+)/.exec(String(req.headers.cookie || ''));
+  return m ? m[1] : '';
+}
+// 400일(브라우저가 허용하는 최대). HttpOnly 라 화면 글이 못 읽음.
+function workerCookie(token) { return `${WORKER_COOKIE}=${token}; Path=/; Max-Age=34560000; HttpOnly; Secure; SameSite=Lax`; }
 async function workerFromReq(req) {
-  const tok = req.headers['x-hands-token'];
+  const tok = workerTokenFromReq(req);
   if (!tok || String(tok).length < 20) throw new HttpError(401, 'no_token');
   const rows = await db(`members?select=*&device_token_hash=eq.${sha256(tok)}&limit=1`);
   if (!rows.length) throw new HttpError(401, 'bad_token');
@@ -186,5 +195,5 @@ function webpush() {
   return _wp;
 }
 
-module.exports = { webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
+module.exports = { workerTokenFromReq, workerCookie, webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
   handler, HttpError, sha256, newToken, newCode, clean, num };
