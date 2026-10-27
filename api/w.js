@@ -28,9 +28,14 @@ async function kmaCall(op, q) {
   if (!key) throw new HttpError(503, 'weather_unavailable');
   const u = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/${op}?serviceKey=${encodeURIComponent(key)}&pageNo=1&numOfRows=1000&dataType=JSON&${new URLSearchParams(q)}`;
   const r = await fetch(u);
-  const j = await r.json().catch(() => null);
+  const txt = await r.text();
+  let j = null; try { j = JSON.parse(txt); } catch (e) {}
   const items = j && j.response && j.response.body && j.response.body.items && j.response.body.items.item;
-  if (!items) throw new HttpError(502, 'weather_unavailable');
+  if (!items) {  // 기상청이 준 이유를 기록(열쇠 값은 안 남김) — 새 열쇠 등록 전 오류, 열쇠 종류 섞임 등
+    const why = (j && j.response && j.response.header && (j.response.header.resultCode + ' ' + j.response.header.resultMsg)) || (txt.match(/<returnAuthMsg>([^<]*)/) || [])[1] || txt.slice(0, 160);
+    console.error('kma', op, r.status, why);
+    throw new HttpError(502, 'weather_unavailable');
+  }
   return items;
 }
 const wxCache = new Map(), placeCache = new Map();
