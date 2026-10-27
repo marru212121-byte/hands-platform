@@ -232,6 +232,9 @@ textarea.input{min-height:160px;resize:vertical;line-height:1.6}
 .wxmeta div{font-size:12px;color:var(--ink3)} .wxmeta b{display:block;font-size:16px;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
 .wxplace{display:flex;align-items:center;gap:6px;color:var(--ink2);font-size:15px;font-weight:600;margin-top:6px}
 .wxplace .ic{width:18px;height:18px;color:var(--navy)}
+.wxpick{position:relative;display:inline-flex;padding:8px 12px;margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:999px}
+.wxpick .ic:last-of-type{width:14px;height:14px;color:var(--ink3)}
+.wxpick select{position:absolute;inset:0;opacity:0;width:100%;font-size:16px}
 .wxhours{display:flex;gap:8px;overflow-x:auto;margin-top:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .wxh{flex:none;width:64px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
 .wxh .tm{font-size:12px;color:var(--ink3)} .wxh .ic{width:24px;height:24px;margin:6px auto;color:var(--navy)} .wxh b{display:block;font-size:16px} .wxh .pp{font-size:11px;color:#2563EB;margin-top:2px}
@@ -681,6 +684,8 @@ my:{"wxClear": "ကြည်လင်", "wxPartly": "တိမ်အနည်း
 si:{"wxClear": "පැහැදිලි", "wxPartly": "අර්ධ වශයෙන් වලාකුළු", "wxCloudy": "වලාකුළු සහිත", "wxRain": "වැසි", "wxRainSnow": "වැසි සහ හිම", "wxSnow": "හිම", "wxShower": "ඉඳහිට වැසි", "wxHumidity": "ආර්ද්‍රතාව", "wxWind": "සුළඟ", "wxRain1h": "වර්ෂාපතනය (පැය 1)", "wxPop": "වැසි සම්භාවිතාව", "wxToday": "අද", "wxTomorrow": "හෙට", "wxDayAfter": "අනිද්දා", "wxSource": "{t} වන විට · මූලාශ්‍රය: කොරියානු කාලගුණ විද්‍යා පරිපාලනය", "wxNeedLoc": "ඔබ සිටින තැන කාලගුණය බැලීමට ස්ථානය සක්‍රිය කරන්න."},
 bn:{"wxClear": "পরিষ্কার", "wxPartly": "আংশিক মেঘলা", "wxCloudy": "মেঘলা", "wxRain": "বৃষ্টি", "wxRainSnow": "বৃষ্টি ও তুষার", "wxSnow": "তুষার", "wxShower": "ঝাপটা বৃষ্টি", "wxHumidity": "আর্দ্রতা", "wxWind": "বাতাস", "wxRain1h": "বৃষ্টিপাত (১ ঘণ্টা)", "wxPop": "বৃষ্টির সম্ভাবনা", "wxToday": "আজ", "wxTomorrow": "আগামীকাল", "wxDayAfter": "পরশু", "wxSource": "{t} অনুযায়ী · উৎস: কোরিয়া আবহাওয়া প্রশাসন", "wxNeedLoc": "আপনি যেখানে আছেন সেখানকার আবহাওয়া দেখতে লোকেশন চালু করুন।"}};
 for (const l in STR_WX) Object.assign(STR[l], STR_WX[l]);
+const STR_WX2 = {"en": "My location", "ko": "내 위치", "vi": "Vị trí của tôi", "id": "Lokasi saya", "th": "ตำแหน่งของฉัน", "tl": "Aking lokasyon", "ne": "मेरो स्थान", "km": "ទីតាំងរបស់ខ្ញុំ", "my": "ကျွန်ုပ်၏ တည်နေရာ", "si": "මගේ ස්ථානය", "bn": "আমার অবস্থান"};
+for (const l in STR_WX2) STR[l].wxMyLoc = STR_WX2[l];
 
 /* inquiry strings (job / ship) */
 const STR3 = {
@@ -1157,7 +1162,6 @@ function screenSignup() {
   const consentHost = h('div');
   const renderConsent = () => { consentHost.replaceChildren(consentBlock(renderConsent)); nextBtn.disabled = !requiredOk(); };
   renderConsent();
-  loadTess().catch(() => {});  // warm up the passport reader while they read
   return h('div', { class: 'screen' }, topbar(() => go(screenWelcome)),
     h('div', { class: 'content' },
       progress(1),
@@ -1287,8 +1291,8 @@ function startMRZ() {
     Object.keys(r).forEach((k) => { if (!r[k]) delete r[k]; });
     return Object.keys(r).length ? r : null;
   });
-  // 하이쿠가 20초 안에 답이 없으면 폰 안 판독으로 넘어감 (사장님 10-27) — 그동안에도 직접 입력 가능
-  Promise.race([viaVision(), new Promise((_, rej) => setTimeout(() => rej(new Error('vision_timeout')), 20000))]).catch(() => readMRZ(url)).then((r) => {
+  // 하이쿠가 안 되거나 20초 안에 답이 없으면 바로 「직접 입력」 — 폰 안 무료 판독기는 뺌(잘 안 되고 시간만 끎, 사장님 10-27). 그동안에도 직접 입력 가능
+  Promise.race([viaVision(), new Promise((_, rej) => setTimeout(() => rej(new Error('vision_timeout')), 20000))]).catch(() => null).then((r) => {
     if (!S.mrz || S.mrz.url !== url) return;
     S.mrz.state = r ? 'ok' : 'fail';
     if (r) {
@@ -1519,7 +1523,6 @@ function screenPerm() {
       }
     })();
   }
-  loadTess().catch(() => {});
   return h('div', { class: 'screen' }, topbar(() => { S.perm = null; go(screenSignup); }),
     h('div', { class: 'content', lang: 'ko' },
       progress(1),
@@ -1651,9 +1654,9 @@ function prefetchHome() {
   api('notices', { method: 'GET' }).then((j) => { S.noticeCache = j.notices; S.noticeLang = S.lang; }).catch(() => {});
   api('contacts', { method: 'GET' }).then((j) => { S.contactCache = j.contacts; }).catch(() => {});
   (async () => {  // 날씨도 위치가 있으면 미리 (권한 창은 띄우지 않음)
-    const p = S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null);
-    if (p && !(S.wxCache && S.wxCache.lang === S.lang && Date.now() - S.wxCache.at < 20 * 60000))
-      api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }).then((w) => { S.wxCache = { at: Date.now(), lang: S.lang, w }; }).catch(() => {});
+    const p = await wxPos(), key = S.lang + '|' + (lsGet('hands_wx_city') || '');
+    if (p && !(S.wxCache && S.wxCache.key === key && Date.now() - S.wxCache.at < 20 * 60000))
+      api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }).then((w) => { S.wxCache = { at: Date.now(), key, w }; }).catch(() => {});
   })();
   if (!S.fxCache || Date.now() - S.fxCache.at > 3 * 3600000) api('fx', { method: 'GET' }).then((j) => { S.fxCache = { at: Date.now(), j }; }).catch(() => {});
 }
@@ -1713,6 +1716,18 @@ function sosTile() {
   return btn;
 }
 /* ---------- notices · weather · manager contacts (사장님 10-27) ---------- */
+// 날씨 위치 고르기 (사장님 10-27): 내 위치 + 시·도. 도는 대표 도시
+const WX_CITIES = [['서울', 'Seoul', 37.5665, 126.978], ['부산', 'Busan', 35.1796, 129.0756], ['대구', 'Daegu', 35.8714, 128.6014], ['인천', 'Incheon', 37.4563, 126.7052],
+  ['광주', 'Gwangju', 35.1595, 126.8526], ['대전', 'Daejeon', 36.3504, 127.3845], ['울산', 'Ulsan', 35.5384, 129.3114], ['세종', 'Sejong', 36.48, 127.289],
+  ['경기 (수원)', 'Gyeonggi (Suwon)', 37.2636, 127.0286], ['강원 (춘천)', 'Gangwon (Chuncheon)', 37.8813, 127.7298], ['충북 (청주)', 'Chungbuk (Cheongju)', 36.6424, 127.489],
+  ['충남 (천안)', 'Chungnam (Cheonan)', 36.8151, 127.1139], ['전북 (전주)', 'Jeonbuk (Jeonju)', 35.8242, 127.148], ['전남 (목포)', 'Jeonnam (Mokpo)', 34.8118, 126.3922],
+  ['경북 (포항)', 'Gyeongbuk (Pohang)', 36.019, 129.3435], ['경남 (창원)', 'Gyeongnam (Changwon)', 35.228, 128.6811], ['제주', 'Jeju', 33.4996, 126.5312]];
+const cityName = (c) => S.lang === 'ko' ? c[0] : c[1];
+async function wxPos() {  // 고른 시·도가 있으면 그곳, 없으면 내 위치
+  const c = WX_CITIES.find((x) => x[1] === lsGet('hands_wx_city'));
+  if (c) return { lat: c[2], lng: c[3], city: c };
+  return S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null);
+}
 function openWeather() { go(screenWeather); }
 // 앱 안 날씨 (사장님 10-27): 기상청 단기예보, 지금 있는 동네, 근로자 말로
 function wxKind(sky, pty) { pty = { 5: 1, 6: 2, 7: 3 }[pty] || pty;
@@ -1735,8 +1750,13 @@ function screenWeather() {
     const hoursBox = h('div', { class: 'wxhours' }, w.hours.filter((x) => x.date === sel).map((x) => { const [k2, i2] = wxKind(x.sky, x.pty);
       return h('div', { class: 'wxh', 'aria-label': t(k2) }, h('div', { class: 'tm', text: kstDate(x.date, x.time).toLocaleTimeString(loc, { hour: 'numeric', timeZone: 'Asia/Seoul' }) }), icon(i2), h('b', { text: Math.round(x.tmp) + '°' }),
         h('div', { class: 'pp', text: x.pop ? x.pop + '%' : '' }), pcp(x.pcp) ? h('div', { class: 'pp', style: 'font-weight:700', text: pcp(x.pcp) }) : null); }));
+    const cur = lsGet('hands_wx_city') || '';
+    const pick = h('select', { 'aria-label': t('weather'), onchange: (e) => { lsSet('hands_wx_city', e.target.value); S.wxCache = null; box.replaceChildren(h('div', { class: 'loading' }, h('div', { class: 'spin' }))); load(); } },
+      h('option', { value: '', text: t('wxMyLoc') }), WX_CITIES.map((c) => h('option', { value: c[1], text: cityName(c) })));
+    pick.value = cur;
+    const city = WX_CITIES.find((x) => x[1] === cur);
     box.replaceChildren(...[
-      w.place ? h('div', { class: 'wxplace' }, icon('pin'), w.place) : null,
+      h('label', { class: 'wxplace wxpick' }, icon('pin'), h('span', { text: city ? cityName(city) : (w.place || t('wxMyLoc')) }), icon('chevDown'), pick),
       h('div', { class: 'wxnow' },
         h('div', { class: 'wxtop' }, h('span', { class: 'wi' }, icon(ci)), h('div', {}, h('div', { class: 'wxtemp', text: Math.round(w.now.tmp) + '°' }), h('div', { class: 'wxcond', text: t(ck) }))),
         h('div', { class: 'wxmeta' }, h('div', {}, t('wxHumidity'), h('b', { text: w.now.reh + '%' })), h('div', {}, t('wxWind'), h('b', { text: w.now.wsd + ' m/s' })), h('div', {}, t('wxRain1h'), h('b', { text: rn })))),
@@ -1746,14 +1766,15 @@ function screenWeather() {
           h('span', { class: 'mm' }, h('span', { text: Math.round(d.min) + '° / ' }), Math.round(d.max) + '°')); })),
       h('p', { class: 'fxnote' }, h('b', { text: t('wxSource').replace('{t}', fmtDate(new Date(w.base).toISOString(), true)) }), h('br'), h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener', text: '© OpenStreetMap' }))].filter(Boolean));
   };
-  (async () => {
-    const c = S.wxCache;
-    if (c && c.lang === S.lang && Date.now() - c.at < 20 * 60000) return show(c.w);  // 홈에서 미리 받은 것 바로
-    const p = S.lastPos || ((await locGranted()) ? await getPos(10000, false) : null) || await getPos(10000, false);
+  const load = async () => {
+    const key = S.lang + '|' + (lsGet('hands_wx_city') || ''), c = S.wxCache;
+    if (c && c.key === key && Date.now() - c.at < 20 * 60000) return show(c.w);  // 홈에서 미리 받은 것 바로
+    const p = (await wxPos()) || await getPos(10000, false);
     if (!p) return box.replaceChildren(h('p', { class: 'lead', text: t('wxNeedLoc') }));
-    try { const w = await api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }); S.wxCache = { at: Date.now(), lang: S.lang, w }; show(w); }
+    try { const w = await api('weather', { body: { lat: p.lat, lng: p.lng, lang: S.lang } }); S.wxCache = { at: Date.now(), key, w }; show(w); }
     catch (e) { box.replaceChildren(h('p', { class: 'lead', text: e.code === 'bad_location' ? t('wxNeedLoc') : errText(e.code) })); }
-  })();
+  };
+  load();
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('weather') }), box));
 }
 // 환율 계산기 (사장님 10-27): 위 = 한화, 아래 = 가입 때 고른 나라 통화(바꿀 수 있음), 치는 대로 바로 변환. 하루 1번 갱신 자료라 「오늘 기준」
