@@ -467,7 +467,7 @@ function renderQr() {
       <div class="qr-tools-btns"><button class="btn btn-secondary" id="qrCopy">${ico('copy', 'sm')}주소 복사</button><button class="btn btn-primary" id="qrPrint">${ico('printer', 'sm')}인쇄</button></div>
     </div>
     <article class="poster" id="poster">
-      <header class="poster-head"><img class="brand-logo lg" src="/lic-logo.jpeg" alt=""><div><div class="poster-title">위해 외국인선원관리업체</div><div class="poster-tag">외국인 근로자 생활 안전 앱</div></div></header>
+      <header class="poster-head"><img class="brand-logo lg" src="/lic-logo.jpeg" alt=""><div><div class="poster-title">위해연교 외국인선원관리업체</div><div class="poster-tag">외국인 근로자 생활 안전 앱</div></div></header>
       <div class="poster-lead">어서 오세요.<br>QR을 찍어서 앱으로 이동 후 설치를 해주세요.</div>
       <div class="qr-box"><div id="qrCode" role="img" aria-label="가입 QR 코드"></div></div>
       <div class="poster-url mono">${url}</div>
@@ -1281,7 +1281,7 @@ async function renderPush() {
     <aside class="push-preview-wrap">
       <div class="push-preview-label">휴대폰 미리보기</div>
       <div class="phone-mock"><div class="phone-time num" id="pvClock"></div><div class="phone-date" id="pvDate"></div>
-        <div class="notif"><div class="notif-top"><img class="brand-logo notif-ico" src="/lic-logo.jpeg" alt=""><span class="notif-app">위해</span><span class="notif-when">지금</span></div>
+        <div class="notif"><div class="notif-top"><img class="brand-logo notif-ico" src="/lic-logo.jpeg" alt=""><span class="notif-app">위해연교</span><span class="notif-when">지금</span></div>
           <div class="notif-title" id="pvTitle"></div><div class="notif-body" id="pvBody"></div></div>
       </div>
     </aside>
