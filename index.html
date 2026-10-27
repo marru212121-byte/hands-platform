@@ -1642,6 +1642,14 @@ function placeTile([k, ic, q]) {
   return h('a', { class: 'tile', href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), target: '_blank', rel: 'noopener' },
     h('span', { class: 'bubble' }, icon(ic)), h('span', { class: 't', text: t(k) }));
 }
+// 홈을 열 때 공지·담당자를 미리 받아 둠 → 누르면 바로 뜸 (사장님 10-27). 1분에 한 번만
+function prefetchHome() {
+  if (!S.token || Date.now() - (S.prefetchAt || 0) < 60000) return;
+  S.prefetchAt = Date.now();
+  api('notices', { method: 'GET' }).then((j) => { S.noticeCache = j.notices; S.noticeLang = S.lang; }).catch(() => {});
+  api('contacts', { method: 'GET' }).then((j) => { S.contactCache = j.contacts; }).catch(() => {});
+  if (!S.fxCache || Date.now() - S.fxCache.at > 3 * 3600000) api('fx', { method: 'GET' }).then((j) => { S.fxCache = { at: Date.now(), j }; }).catch(() => {});
+}
 function screenHome() {
   const p = S.profile || {};
   const tabs = [['home', 'home', 'home'], ['places', 'map', 'places'], ['my', 'user', 'myInfo']];
@@ -1651,6 +1659,7 @@ function screenHome() {
   const head = h('div', { class: 'homehead' },
     h('div', { class: 'bar1' }, h('div', { class: 'brand' }, h('img', { src: 'lic-logo.jpeg', alt: '' }), brandText()), langBtn()));
   if (S.tab === 'home') {
+    prefetchHome();
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
     page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push && S.push !== 'on' && S.push !== 'unsupported' && pushSupported() ? 'margin-top:14px' : '' },
@@ -1800,17 +1809,18 @@ function screenFx() {
   }
   const keys = h('div', { class: 'fxkeys' }, ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'C', '0', 'del'].map((k) =>
     h('button', { class: k === 'C' ? 'fxc' : '', 'aria-label': k === 'del' ? 'Delete' : k, onclick: () => key(k) }, k === 'del' ? '⌫' : k)));
-  api('fx', { method: 'GET' }).then((j) => { data = j; draw(); }).catch((e) => note.replaceChildren(errText(e.code)));
+  if (S.fxCache) data = S.fxCache.j;  // 홈에서 미리 받은 하루치 환율로 바로 (사장님 10-27)
+  if (!S.fxCache || Date.now() - S.fxCache.at > 3 * 3600000) api('fx', { method: 'GET' }).then((j) => { S.fxCache = { at: Date.now(), j }; data = j; draw(); }).catch((e) => { if (!data) note.replaceChildren(errText(e.code)); });
   draw();
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('fx') }), h('div', { class: 'fxbox' }, rowK, rowF), keys, note));
 }
 function screenNotices() {
   const list = h('div', { class: 'stack', style: 'margin-top:12px' }, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
-  api('notices', { method: 'GET' }).then((j) => {
-    S.noticeCache = j.notices;
-    list.replaceChildren(...(j.notices.length ? j.notices.map((n) => h('button', { class: 'irow', style: 'flex-direction:column;align-items:flex-start;gap:4px;text-align:left', onclick: () => go(screenNotice, n.id) },
+  const draw = (ns) => list.replaceChildren(...(ns.length ? ns.map((n) => h('button', { class: 'irow', style: 'flex-direction:column;align-items:flex-start;gap:4px;text-align:left', onclick: () => go(screenNotice, n.id) },
       h('b', { text: n.title }), h('span', { class: 'muted small', text: fmtDate(n.created_at, true) }))) : [h('p', { class: 'lead', text: t('noNotices') })]));
-  }).catch((e) => list.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })));
+  if (S.noticeCache && S.noticeLang === S.lang) draw(S.noticeCache);  // 홈에서 미리 받은 것 바로 (사장님 10-27)
+  api('notices', { method: 'GET' }).then((j) => { S.noticeCache = j.notices; S.noticeLang = S.lang; draw(j.notices); })
+    .catch((e) => { if (!S.noticeCache) list.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); });
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('notices') }), h('div', { class: 'rows' }, list)));
 }
 function screenNotice(id) {
@@ -1825,11 +1835,12 @@ function screenNotice(id) {
 }
 function screenContacts() {
   const list = h('div', {}, h('div', { class: 'loading' }, h('div', { class: 'spin' })));
-  api('contacts', { method: 'GET' }).then((j) => {
-    list.replaceChildren(...(j.contacts.length ? j.contacts.map((c) => h('a', { class: 'irow', href: 'tel:' + c.phone.replace(/[^0-9+]/g, '') },
+  const draw = (cs) => list.replaceChildren(...(cs.length ? cs.map((c) => h('a', { class: 'irow', href: 'tel:' + c.phone.replace(/[^0-9+]/g, '') },
       h('span', { class: 'k', style: 'color:var(--ink);font-weight:650;max-width:none' }, c.name + (c.role ? ' · ' + c.role : '')),
       h('span', { class: 'v', style: 'color:var(--teal);font-weight:700' }, icon('phone'), c.phone))) : [h('p', { class: 'lead', text: t('noContacts') })]));
-  }).catch((e) => list.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })));
+  if (S.contactCache) draw(S.contactCache);  // 홈에서 미리 받은 것 바로 (사장님 10-27)
+  api('contacts', { method: 'GET' }).then((j) => { S.contactCache = j.contacts; draw(j.contacts); })
+    .catch((e) => { if (!S.contactCache) list.replaceChildren(h('p', { class: 'lead', text: errText(e.code) })); });
   return h('div', { class: 'screen' }, topbar(() => goHome('home')), h('div', { class: 'content' }, h('h1', { text: t('contacts') }), h('div', { class: 'rows', style: 'margin-top:12px' }, list)));
 }
 /* ---------- inquiries (job / ship) ---------- */
