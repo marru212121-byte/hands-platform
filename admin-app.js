@@ -1364,9 +1364,10 @@ async function renderPush() {
     if (P.target === 'country' || P.target === 'watch') fillAll();
     sync();
   };
-  const row = (m) => html`<label class="prow"><input type="checkbox" data-id="${m.id}" ${P.picked.has(m.id) ? 'checked' : ''}>
-    <span class="prow-main"><b>${m.name || '-'}</b> <span class="muted">· ${countryName(m.country)}${m.company ? ` · ${m.company}` : ''}</span>${m.watch ? html` <span class="badge warn">집중 관리</span>` : ''}</span>
-    <span class="prow-push ${m.push ? 'on' : ''}">${m.push ? '알림 켬' : '알림 꺼짐'}</span></label>`;
+  // 이름을 누르면 얼굴·여권 사진과 여권 정보 (사장님 10-28: 보내기 전에 그 사람이 맞는지 확인), 체크칸은 담기·빼기
+  const row = (m) => html`<div class="prow"><input type="checkbox" data-id="${m.id}" ${P.picked.has(m.id) ? 'checked' : ''} aria-label="${m.name || '-'} 담기">
+    <span class="prow-main"><button type="button" class="pwho" data-who="${m.id}">${m.name || '-'}</button> <span class="muted">· ${countryName(m.country)}${m.company ? ` · ${m.company}` : ''}</span>${m.watch ? html` <span class="badge warn">집중 관리</span>` : ''}</span>
+    <span class="prow-push ${m.push ? 'on' : ''}">${m.push ? '알림 켬' : '알림 꺼짐'}</span></div>`;
   const sync = () => {
     $$('#pTarget button').forEach((b) => b.classList.toggle('on', b.dataset.t === P.target));
     const t0 = P.target;
@@ -1391,9 +1392,10 @@ async function renderPush() {
     }
     const picked = [...P.picked.values()], on = picked.filter((m) => m.push).length;
     $('#pChipN').textContent = picked.length ? `${fmtNum(picked.length)}명 · 알림 켬 ${fmtNum(on)}명` : '';
-    setHTML($('#pChips'), picked.length ? html`${picked.map((m) => html`<span class="pchip">${m.name || '-'} <span class="muted">· ${countryName(m.country)}</span><button type="button" data-un="${m.id}" aria-label="빼기">${ico('x', 'xs')}</button></span>`)}`
+    setHTML($('#pChips'), picked.length ? html`${picked.map((m) => html`<span class="pchip"><button type="button" class="pwho" data-who="${m.id}">${m.name || '-'}</button> <span class="muted">· ${countryName(m.country)}</span><button type="button" data-un="${m.id}" aria-label="빼기">${ico('x', 'xs')}</button></span>`)}`
       : html`<span class="muted">${t0 === 'pick' ? '위에서 찾아 담으세요' : t0 === 'country' ? (P.country ? '아래에서 고르세요' : '국적을 먼저 고르세요') : '아래에서 고르세요'}</span>`);
     $$('#pChips [data-un]').forEach((b) => b.addEventListener('click', () => { P.picked.delete(b.dataset.un); sync(); }));
+    $$('#pList [data-who], #pChips [data-who]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); whoModal(b.dataset.who); }));
     const t = $('#pTitle').value, b = $('#pBody').value;
     $('#cTitle').textContent = `${t.length}/80`; $('#cBody').textContent = `${b.length}/300`;
     // 실제로 폰에 뜨는 알림 (api/a.js NOTICE_HEAD·NOTICE_MSG, 사장님 10-28): 공지사항 → 새로운 공지가 도착했습니다 → 쓴 내용. 외국 근로자는 자기 말 + 아래 한국어
@@ -1445,6 +1447,25 @@ async function renderPush() {
   $('#phReload').addEventListener('click', loadPushHistory);
   sync();
   loadPushHistory();
+}
+// 본인 확인 창: 얼굴·여권 사진(10분 링크, 누르면 크게) + 이름·국적·여권번호·생년월일·근무처·전화. 열람은 서버가 기록 (사장님 10-28)
+function whoModal(id) {
+  modal({ title: '본인 확인', icon: 'eye', body: html`<div class="who-box"><span class="skel" style="width:60%"></span><span class="skel" style="width:40%;margin-top:10px"></span></div>`,
+    actions: [{ label: '닫기', cls: 'btn-primary' }],
+    onMount: async (back) => {
+      const box = $('.who-box', back);
+      try {
+        const j = await api('member', { params: { id } });
+        const m = j.member || {}, ph = j.photos || {};
+        const pic = (url, label) => url ? html`<button type="button" class="who-ph" data-z="${label}"><img src="${url}" alt="${label}" referrerpolicy="no-referrer"><span>${label}</span></button>`
+          : html`<div class="who-ph none"><span>${label} 없음</span></div>`;
+        setHTML(box, html`<div class="who-phs">${pic(ph.selfie, '얼굴 사진')}${pic(ph.passport, '여권 사진')}</div>
+          <dl class="kv"><dt>이름</dt><dd><b>${m.name || '-'}</b></dd><dt>국적</dt><dd>${countryName(m.country)}</dd><dt>여권번호</dt><dd class="num">${m.passport_number || '-'}</dd>
+          <dt>생년월일</dt><dd class="num">${m.birth_date || '-'}</dd><dt>근무처</dt><dd>${m.company || '-'}</dd><dt>전화</dt><dd class="num">${m.phone || '-'}</dd></dl>
+          <div class="muted" style="font-size:12px;margin-top:8px">사진 링크는 10분 동안만 열립니다 · 열람은 기록됩니다</div>`);
+        $$('[data-z]', box).forEach((b) => b.addEventListener('click', () => lightbox(b.querySelector('img').src, b.dataset.z, m.name)));
+      } catch (err) { setHTML(box, html`<div class="muted">${errText(err)}</div>`); }
+    } });
 }
 async function loadPushHistory() {
   try {
