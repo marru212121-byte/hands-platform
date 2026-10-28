@@ -1,4 +1,5 @@
 // HANDS 서비스워커 — 설치(홈 화면) + 푸시 알림. 캐시하지 않음(항상 최신)
+// badge = 안드로이드 윗줄 작은 아이콘: 투명 바탕 흰 위해연교 마크 모양만 (색 있는 네모는 덩어리·H 로 보임, 사장님 10-28)
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', () => {});
@@ -6,7 +7,7 @@ self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { title: '위해연교', body: e.data ? e.data.text() : '' }; }
   e.waitUntil(self.registration.showNotification(d.title || '위해연교', {
-    body: d.body || '', icon: '/icon-192.png', badge: '/icon-192.png', data: { url: d.url || '/' },
+    body: d.body || '', icon: '/icon-192.png', badge: '/badge-96.png', data: { url: d.url || '/' },
   }));
 });
 self.addEventListener('notificationclick', (e) => {
