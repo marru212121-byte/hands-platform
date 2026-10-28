@@ -760,5 +760,11 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
   .panel-body table.inner { table-layout: fixed; font-size: 13px; }
   .panel-body table.inner th, .panel-body table.inner td { white-space: normal !important; word-break: break-word; padding-left: 4px; padding-right: 4px; }
   .panel-body table.inner a.ext { white-space: normal; display: inline; }
-  .panel-body table.inner th.right:last-child, .panel-body table.inner td.right:last-child { display: none; }  /* 위치 표 정확도 칸은 폰에선 뺌 */
+}
+
+/* 근로자 목록(폰): 이름·여권번호·국적 크게 (사장님 10-28) */
+@media (max-width: 768px) {
+  #mbody td.card-title .cell-main { font-size: 20px; font-weight: 700; }
+  #mbody td.card-title .cell-sub { font-size: 16px; font-weight: 600; color: var(--text-2); margin-top: 4px; letter-spacing: .02em; }
+  #mbody td[data-label="국적"] .flag { font-size: 16px; font-weight: 700; padding: 4px 12px; }
 }

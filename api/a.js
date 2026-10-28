@@ -143,7 +143,7 @@ module.exports = L.handler({
     all.forEach((m) => keys(m).forEach((k) => { keyCount[k] = (keyCount[k] || 0) + 1; }));
     return { ok: true, members: rows.map(m => ({ ...m,
       dup: keys(m).some((k) => keyCount[k] > 1),
-      passport_number: m.passport_number ? '•••' + String(m.passport_number).slice(-4) : null,
+      // 여권번호 전체 (사장님 10-27: 매니저도 전체·사진 봄 / 10-28: 목록에서도 전체가 보여야)
       ...(me.role === 'admin' ? { location: byId[m.id] || null } : { location: null, watch: null }) })) };
   },
 
