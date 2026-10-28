@@ -1040,6 +1040,17 @@ async function sendAppOpenLocation() {
   // always tell the server the app opened (집중 관리 alert), with the position when we have one
   if (S.token) api('location', { body: { ...(pos || {}), source: 'app_open' } }).catch(() => {});
 }
+/* 다시 로그인(사장님 10-28): 이 기기에서 위치를 허락받은 적이 없을 때만(새 폰·다른 기기) 한 번 묻는다. 같은 기기는 안 묻는다 */
+function askLocAfterLogin() {
+  setTimeout(async () => {
+    if (!S.token || await locGranted()) return;
+    const pos = await getPos(12000, true);
+    if (!pos || !S.token) return;
+    lsSet('hands_loc_at', String(Date.now())); lastLocSent = Date.now();
+    api('location', { body: { ...pos, source: 'app_open' } }).catch(() => {});
+    startWatch();
+  }, 800);
+}
 /* every main button tap (home tiles, place tiles, bottom tabs): at most once per 60 s, shared with the app-open send; never blocks */
 let lastLocSent = 0;
 async function tapLocation() {
@@ -1120,6 +1131,7 @@ function screenLogin() {
       const j = await api('login', { body: { id: F.name, password: F.pass } });
       await saveToken(j.token); S.profile = j.profile; cacheProfile(); S.login = null; S.lostNote = false;
       if (!j.profile.consent_current) go(screenReconsent); else goHome('home');
+      askLocAfterLogin();
     } catch (e) { btn.disabled = false; toast(errText(e.code)); }
   }
   return h('div', { class: 'screen' }, topbar(() => go(screenWelcome)),
