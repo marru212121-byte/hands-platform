@@ -798,3 +798,7 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
 .map-trail-bar b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .map-trail-bar .btn { flex: none; }
 .map-layout.one .map-area { height: 100%; min-height: 0; }
+/* 지도가 화면을 꽉 채우면 손가락이 지도만 움직여 아래로 못 내림 → 아래에 이름·여권번호 띠가 보이게 지도를 줄임 (사장님 10-28) */
+.map-layout.one { height: calc(100vh - var(--top-h) - 58px - 132px); }
+@media (max-width: 768px) { .map-layout.one { height: calc(100vh - var(--top-h) - var(--tab-h) - 58px - 132px - env(safe-area-inset-bottom)); } }
+.trail-info { padding-top: 14px; }
