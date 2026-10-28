@@ -948,6 +948,13 @@ function createMap(el, engine, { zoom = 11, wheel = true } = {}) {
 }
 const engineNote = (engine) => engine === 'leaflet' ? html`<div class="map-note">카카오맵을 불러오지 못해 OpenStreetMap으로 표시 중입니다.</div>` : '';
 
+// 지도 점 누르면: 무엇(앱 실행·닫음…) / 10월 28일 / 오후 12:05 · 2시간 전 / 오차 — 연도 빼고 줄 바꿔 (사장님 10-28)
+function pointPop(h) {
+  const d = toDate(h.recorded_at);
+  const day = d ? d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', timeZone: 'Asia/Seoul' }) : '-';
+  const tm = d ? d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Seoul' }) : '';
+  return html`<div class="pop-name">${SOURCE[h.source] || h.source || '위치'}</div><div class="pop-day">${day}</div><div class="pop-time">${tm} <span class="muted">· ${relText(h.recorded_at) || ''}</span></div>${h.accuracy != null ? html`<div class="pop-sub">오차 ${Math.round(h.accuracy)}m</div>` : ''}<a class="pop-btn ghost" href="${gdir(h.lat, h.lng)}" target="_blank" rel="noopener noreferrer">길찾기</a>`;
+}
 async function drawMiniMap(hist) {
   const el = $('#miniMap'); if (!el) return;
   const engine = await mapEngine();
@@ -963,7 +970,7 @@ async function drawMiniMap(hist) {
   pts.slice().reverse().forEach((h, i, arr) => {
     const latest = i === arr.length - 1;
     map.marker(h.lat, h.lng, { cls: 'hist' + (h.source === 'sos' ? ' sos' : '') + (latest ? ' latest' : ''), size: latest ? 16 : 12, z: latest ? 1000 : 0,
-      title: `${fmtDT(h.recorded_at)} · ${SOURCE[h.source] || h.source || ''}` });
+      popup: pointPop(h), title: `${fmtDT(h.recorded_at)} · ${SOURCE[h.source] || h.source || ''}` });
   });
   map.fit(ll, 24, 15);
 }
@@ -1080,7 +1087,7 @@ async function drawTrail(map, id, token) {
     pts.slice().reverse().forEach((h, i, arr) => {
       const latest = i === arr.length - 1;
       map.marker(h.lat, h.lng, { cls: 'hist' + (h.source === 'sos' ? ' sos' : '') + (latest ? ' latest' : ''), size: latest ? 20 : 12, z: latest ? 2000 : 100,
-        popup: html`<div class="pop-name">${fmtDT(h.recorded_at)}</div><div class="pop-sub">${SOURCE[h.source] || h.source || ''}${h.accuracy != null ? ` · 오차 ${Math.round(h.accuracy)}m` : ''}</div><a class="pop-btn ghost" href="${gdir(h.lat, h.lng)}" target="_blank" rel="noopener noreferrer">길찾기</a>`,
+        popup: pointPop(h),
         title: `${fmtDT(h.recorded_at)} · ${SOURCE[h.source] || h.source || ''}` });
     });
     if (first) { map.fit(ll, 48, 16); first = false; }

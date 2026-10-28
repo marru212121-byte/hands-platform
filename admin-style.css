@@ -802,3 +802,6 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
 .map-layout.one { height: calc(100vh - var(--top-h) - 58px - 132px); }
 @media (max-width: 768px) { .map-layout.one { height: calc(100vh - var(--top-h) - var(--tab-h) - 58px - 132px - env(safe-area-inset-bottom)); } }
 .trail-info { padding-top: 14px; }
+
+.pop-day { font-size: 15px; font-weight: 700; margin-top: 4px; }
+.pop-time { font-size: 15px; margin-bottom: 2px; }
