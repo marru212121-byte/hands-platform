@@ -31,7 +31,7 @@ async function translate(title, body, lang) {
   return { title: String(r.title || '').slice(0, 120), body: String(r.body || '').slice(0, 600) };
 }
 
-// 공지 알림 문구 (사장님 10-27): 알림엔 「새 공지 도착」만 근로자 말 + 아래 한국어, 내용은 앱 안 공지(번역본)에서
+// 공지 알림 문구 (사장님 10-27, 10-28 내용도 알림에): [0] = 둘째 줄 「새 공지 도착」, [1] 은 이제 안 씀
 const NOTICE_MSG = {
   ko: ['새로운 공지가 도착했습니다', '지금 앱을 열어 확인해 주세요.'], en: ['A new notice has arrived', 'Open the app now to check it.'],
   vi: ['Có thông báo mới', 'Hãy mở ứng dụng để xem ngay.'], id: ['Ada pengumuman baru', 'Buka aplikasi sekarang untuk melihatnya.'],
@@ -39,6 +39,8 @@ const NOTICE_MSG = {
   ne: ['नयाँ सूचना आएको छ', 'हेर्न अहिले एप खोल्नुहोस्।'], km: ['មានសេចក្តីជូនដំណឹងថ្មី', 'សូមបើកកម្មវិធីឥឡូវនេះដើម្បីមើល។'],
   my: ['အသိပေးချက်အသစ် ရောက်ရှိလာပါပြီ', 'ကြည့်ရန် အက်ပ်ကို ယခုဖွင့်ပါ။'], si: ['නව දැනුම්දීමක් ලැබී ඇත', 'බැලීමට දැන් යෙදුම විවෘත කරන්න.'],
   bn: ['নতুন নোটিশ এসেছে', 'দেখতে এখনই অ্যাপটি খুলুন।'] };
+// 공지 알림 맨 윗줄 (사장님 10-28)
+const NOTICE_HEAD = { ko: '공지사항', en: 'Notice', vi: 'Thông báo', id: 'Pengumuman', th: 'ประกาศ', tl: 'Abiso', ne: 'सूचना', km: 'សេចក្តីជូនដំណឹង', my: 'အသိပေးချက်', si: 'දැනුම්දීම', bn: 'নোটিশ' };
 // 월급날 알림 (사장님 10-27): 크론(아침 9시)에서 그날이 월급날인 근로자에게. 그 달에 날짜가 없으면(31일 등) 마지막 날에
 const PAY_MSG = {
   ko: ['오늘은 월급날입니다', '오늘 환율을 확인해 보세요.'], en: ['Today is payday', 'Check today\'s exchange rate.'],
@@ -302,8 +304,10 @@ module.exports = L.handler({
     const wp = L.webpush();
     let sent = 0, failed = 0; const gone = [];
     await Promise.all(subs.map(async (s) => {
-      const lang = s.member.language || 'en', [nt, nb] = NOTICE_MSG[lang] || NOTICE_MSG.en;
-      const payload = JSON.stringify({ title: nt, body: lang === 'ko' ? nb : nb + '\n\n[한국어] ' + NOTICE_MSG.ko[0] + '. ' + NOTICE_MSG.ko[1], url: '/?notice=' + msgId });
+      // 사장님 10-28: 맨 위 「공지사항」 → 「새로운 공지가 도착했습니다」 → 그 밑에 쓴 내용(근로자 말 번역), 아래 한국어 같은 순서
+      const lang = NOTICE_HEAD[s.member.language] ? s.member.language : 'en';
+      const nt = NOTICE_HEAD[lang], nb = NOTICE_MSG[lang][0] + '\n' + (lang === 'ko' ? body : ((i18n[lang] && i18n[lang].body) || body));
+      const payload = JSON.stringify({ title: nt, body: lang === 'ko' ? nb : nb + '\n\n[한국어] ' + NOTICE_HEAD.ko + ' · ' + NOTICE_MSG.ko[0] + '\n' + body, url: '/?notice=' + msgId });
       try { await wp.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 86400 }); sent++; }
       catch (e) { failed++; if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
     }));

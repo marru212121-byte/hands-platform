@@ -1358,8 +1358,8 @@ async function renderPush() {
     if (P.member) $('#pClear').addEventListener('click', () => { P.member = null; sync(); $('#pMemberQ').focus(); });
     const t = $('#pTitle').value, b = $('#pBody').value;
     $('#cTitle').textContent = `${t.length}/80`; $('#cBody').textContent = `${b.length}/300`;
-    // 실제로 폰에 뜨는 알림은 이 두 줄(근로자 말 + 한국어) — 쓴 내용은 앱 공지사항에서 근로자 말로 봄 (api/a.js NOTICE_MSG)
-    $('#pvTitle').textContent = '새로운 공지가 도착했습니다'; $('#pvBody').textContent = '지금 앱을 열어 확인해 주세요.';
+    // 실제로 폰에 뜨는 알림 (api/a.js NOTICE_HEAD·NOTICE_MSG, 사장님 10-28): 공지사항 → 새로운 공지가 도착했습니다 → 쓴 내용. 외국 근로자는 자기 말 + 아래 한국어
+    $('#pvTitle').textContent = '공지사항'; $('#pvBody').textContent = '새로운 공지가 도착했습니다\n' + (b.trim() || '내용을 쓰면 여기에 보입니다');
     $('#pWho').textContent = P.target === 'all' ? `알림 받는 근로자 전체${P.subs != null ? ` ${fmtNum(P.subs)}명` : ''}`
       : P.target === 'country' ? (P.country ? `${countryName(P.country)} 국적 근로자` : '국적을 선택하세요')
       : (P.member ? `${P.member.name || '근로자'} 님 1명` : '근로자를 선택하세요');
