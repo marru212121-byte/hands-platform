@@ -768,3 +768,18 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
   #mbody td.card-title .cell-sub { font-size: 16px; font-weight: 600; color: var(--text-2); margin-top: 4px; letter-spacing: .02em; }
   #mbody td[data-label="국적"] .flag { font-size: 16px; font-weight: 700; padding: 4px 12px; }
 }
+
+/* 지도: 한 근로자 이전 위치 보기 띠 (사장님 10-28) */
+.map-trail-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.map-trail-bar b { font-size: 16px; }
+.map-trail-bar .muted { font-size: 13px; flex: 1 1 100%; }
+@media (min-width: 769px) { .map-trail-bar .muted { flex: 1; } }
+
+.map-layout.one .map-side, .map-layout.one .map-legend { display: none !important; }
+.map-layout.one .map-area { flex: 1; width: 100%; }
+.map-big-btn { width: 100%; justify-content: center; margin: -4px 0 14px; }
+.map-layout.one { grid-template-columns: 1fr; grid-template-rows: 1fr; height: calc(100vh - var(--top-h) - 64px); min-height: 0; }
+@media (max-width: 768px) { .map-layout.one { height: calc(100vh - var(--top-h) - var(--tab-h) - 96px); } .map-layout.one .map-area { min-height: 0; } }
+.view-map { flex-direction: column; }
+.map-trail-bar { flex: none; }
+.map-trail-bar .muted { flex: 1 1 100%; order: 3; }

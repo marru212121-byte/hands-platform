@@ -105,8 +105,10 @@ function safeEq(a, b) {
 }
 
 function adminCookie(id, role = 'admin', name = '관리자') {
-  const payload = Buffer.from(JSON.stringify({ id, role, name, exp: Date.now() + ADMIN_HOURS * 3600000 })).toString('base64url');
-  return `${ADMIN_COOKIE}=${payload}.${hmac(payload)}; Path=/; Max-Age=${ADMIN_HOURS * 3600}; HttpOnly; Secure; SameSite=Strict`;
+  // 관리자(사장님·지인 둘)는 로그아웃 안 하면 계속 유지 — 400일 (사장님 10-28: 근로자 위급할 때 바로 봐야). 매니저는 12시간 그대로. 같은 계정 동시 로그인은 원래 됨(서버에 한 사람만 기억하지 않음)
+  const hours = role === 'admin' ? 400 * 24 : ADMIN_HOURS;
+  const payload = Buffer.from(JSON.stringify({ id, role, name, exp: Date.now() + hours * 3600000 })).toString('base64url');
+  return `${ADMIN_COOKIE}=${payload}.${hmac(payload)}; Path=/; Max-Age=${hours * 3600}; HttpOnly; Secure; SameSite=Strict`;
 }
 const clearAdminCookie = () => `${ADMIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
 

@@ -277,6 +277,10 @@ function stopTimers() { S.timers.forEach(clearInterval); S.timers = []; }
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach((ev) =>
   window.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true, capture: true }));
 function tickIdle() {
+  if (!MGR()) {  // 관리자는 자동 로그아웃 없음 (사장님 10-28)
+    $('#idleLeft').textContent = '없음'; $('#moreIdle').textContent = '없음';
+    if (S.detail) tickPhotoExpiry(); return;
+  }
   const left = IDLE_MS - (Date.now() - lastActivity);
   if (left <= 0) { logout('idle'); return; }
   const h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000), s = Math.floor((left % 60000) / 1000);
@@ -663,7 +667,7 @@ function drawDetail() {
       </section>
       ${MGR() ? '' : html`<section class="sec">
         <div class="sec-head"><h3>위치 기록</h3><div class="right">최근 ${fmtNum(hist.length)}건</div></div>
-        <div class="sec-body">${hist.length ? html`${lastLoc ? html`<div class="mini-map" id="miniMap"></div>` : ''}
+        <div class="sec-body">${hist.length ? html`${lastLoc ? html`<div class="mini-map" id="miniMap"></div><a class="btn btn-secondary map-big-btn" href="#/map/${encodeURIComponent(m.id)}">${ico('map', 'sm')}지도 크게 보기 · 이전 위치 · 30초 갱신</a>` : ''}
           <table class="inner"><thead><tr><th>시각</th><th>경로</th><th>좌표</th><th class="right">정확도</th></tr></thead><tbody>
           ${hist.slice(0, 15).map((h) => html`<tr><td class="num nowrap">${fmtDT(h.recorded_at)}</td>
             <td>${h.source === 'sos' ? html`<span class="badge danger">SOS</span>` : html`<span class="badge">${SOURCE[h.source] || h.source || '-'}</span>`}</td>
@@ -967,7 +971,8 @@ async function drawMiniMap(hist) {
 /* ───────── 3. 지도 ───────── */
 async function renderMap() {
   const v = $('#view');
-  setHTML(v, html`<div class="map-layout">
+  const fid = S.mapFocus;
+  setHTML(v, html`${fid ? html`<div class="map-trail-bar"><a class="btn btn-secondary btn-sm" href="#/members/${encodeURIComponent(fid)}">${ico('back', 'sm')}근로자 상세로</a><b id="trailName"></b><span class="muted" id="trailAt"></span><a class="btn btn-ghost btn-sm" href="#/map">전체 지도</a></div>` : ''}<div class="map-layout${fid ? ' one' : ''}">
     <div class="map-area"><div id="bigMap"><div class="map-loading"><div class="spinner"></div></div></div>
       <div class="map-legend"><span><i class="lg-dot" style="background:var(--red)"></i>SOS 요청 중</span><span><i class="lg-dot" style="background:var(--teal)"></i>1시간 이내</span><span><i class="lg-dot" style="background:#94A3B8"></i>1시간 이상 경과</span></div>
       <div id="mapNote"></div>
@@ -988,6 +993,7 @@ async function renderMap() {
   const map = createMap(el, engine, { zoom: 11 });
   S.bigMap = map;
   setHTML($('#mapNote'), engineNote(engine));
+  if (fid) drawTrail(map, fid, token);  // 목록 자료가 안 와도 그 사람 내역은 그림
   if (res.e) { setHTML($('#mapList'), html`<li style="cursor:default">${errorBox(res.e)}</li>`); bindRetry($('#mapList'), () => { S.view = null; route(); }); return; }
   stamp();
   let locs = res.j.locations || [];
@@ -1035,7 +1041,33 @@ async function renderMap() {
   $('#mfWatch').addEventListener('click', () => { S.mapF.watch = !S.mapF.watch; drawList(); });
   $('#mfLoc').addEventListener('click', () => { S.mapF.loc = !S.mapF.loc; drawList(); });
   drawList();
-  setTimeout(() => { map.relayout(); if (S.mapFocus) focusMapMember(S.mapFocus); }, 150);
+  setTimeout(() => { map.relayout(); if (S.mapFocus && !fid) focusMapMember(S.mapFocus); }, 150);
+}
+
+// 한 근로자: 이전 위치 내역을 선·점으로 + 30초마다 새 위치 (사장님 10-28: 실종·이탈 때 폰으로 보며 찾아가게)
+async function drawTrail(map, id, token) {
+  let lastKey = '', first = true;
+  const tick = async () => {
+    if (S.view !== 'map' || S.mapToken !== token || !document.getElementById('bigMap')) { clearInterval(timer); return; }
+    let j; try { j = await api('member', { params: { id } }); } catch (e) { return; }
+    const m = j.member || {}, pts = (j.history || []).filter((h) => h.lat != null && h.lng != null);
+    if ($('#trailName')) $('#trailName').textContent = (m.name || '') + (m.passport_number ? ' · ' + m.passport_number : '');
+    if ($('#trailAt')) $('#trailAt').textContent = pts.length ? `마지막 위치 ${fmtDT(pts[0].recorded_at)} (${relText(pts[0].recorded_at)}) · 30초마다 갱신` : '위치 기록 없음';
+    const key = pts.length ? pts[0].recorded_at + pts.length : '';
+    if (!pts.length || key === lastKey) return;
+    lastKey = key;
+    const ll = pts.map((h) => [h.lat, h.lng]);
+    map.line(ll.slice().reverse());
+    pts.slice().reverse().forEach((h, i, arr) => {
+      const latest = i === arr.length - 1;
+      map.marker(h.lat, h.lng, { cls: 'hist' + (h.source === 'sos' ? ' sos' : '') + (latest ? ' latest' : ''), size: latest ? 20 : 12, z: latest ? 2000 : 100,
+        popup: html`<div class="pop-name">${fmtDT(h.recorded_at)}</div><div class="pop-sub">${SOURCE[h.source] || h.source || ''}${h.accuracy != null ? ` · 오차 ${Math.round(h.accuracy)}m` : ''}</div><a class="pop-btn ghost" href="${gdir(h.lat, h.lng)}" target="_blank" rel="noopener noreferrer">길찾기</a>`,
+        title: `${fmtDT(h.recorded_at)} · ${SOURCE[h.source] || h.source || ''}` });
+    });
+    if (first) { map.fit(ll, 48, 16); first = false; }
+  };
+  const timer = setInterval(tick, 30000); S.timers.push(timer);
+  tick();
 }
 
 function focusMapMember(id) {
