@@ -1126,6 +1126,8 @@ function screenLogin() {
   const btn = h('button', { class: 'btn btn-primary', onclick: go_ }, t('loginGo'), icon('chevRight'));
   async function go_() {
     if (F.name.trim().length < 5 || !F.pass.trim()) { toast(t('errMissing')); return; }
+    // 다시 깐 앱·새 폰: 로그인 단추를 누른 이 순간에 폰 자체 알림 허용 창 (아이폰은 누른 순간에만 뜸, 사장님 10-28)
+    try { if (pushSupported() && Notification.permission === 'default' && !S.pushAsking) { S.pushAsking = true; Promise.resolve(Notification.requestPermission()).then((p) => { S.pushAsking = false; if (p === 'granted') pushQuiet(); }).catch(() => { S.pushAsking = false; }); } } catch (e) {}
     btn.disabled = true;
     try {
       const j = await api('login', { body: { id: F.name, password: F.pass } });
@@ -1654,8 +1656,24 @@ async function pushCheck() {
     if (sub && Notification.permission === 'granted') {
       setPush('on');
       if (!S.pushSynced) { S.pushSynced = true; api('push_subscribe', { body: { subscription: sub.toJSON() } }).catch(() => { S.pushSynced = false; }); }
-    } else setPush('needed');
+    } else if (Notification.permission === 'granted') { setPush('needed'); pushQuiet(); }  // 이미 허용된 폰 → 묻지 않고 조용히 다시 등록
+    else { setPush('needed'); pushAsk(); }  // 이 폰에서 아직 안 물음(다시 깐 앱·새 폰) → 폰 자체 허용 창
   } catch (e) { setPush('needed'); }
+}
+/* 사장님 10-28: 앱 안 「알림 받기」 칸 대신 폰 자체 알림 허용 창(갤럭시·아이폰). 이미 허용한 폰은 안 띄움(로그아웃·다시 로그인도 안 뜸).
+   아이폰은 사람이 화면을 누른 순간에만 창을 띄울 수 있어서 들어와 처음 누를 때, 갤럭시 등은 들어오자마자 */
+function pushAsk() {
+  if (S.pushAskArmed || !pushSupported() || Notification.permission !== 'default') return;
+  S.pushAskArmed = true;
+  const ask = () => {
+    document.removeEventListener('click', ask, true);
+    if (S.pushAsking || Notification.permission !== 'default') return;
+    S.pushAsking = true;
+    Promise.resolve(Notification.requestPermission()).then((p) => { S.pushAsking = false; if (p === 'granted') pushQuiet(); else { S.pushAskArmed = false; pushCheck(); } })
+      .catch(() => { S.pushAsking = false; });
+  };
+  document.addEventListener('click', ask, true);
+  if (!IS_IOS) setTimeout(ask, 600);
 }
 /* must run from a tap (iPhone requires a user gesture) */
 async function pushEnable() {
@@ -1690,7 +1708,7 @@ async function pushQuiet() {
 }
 function pushCard() {
   const st = S.push;
-  if (!pushSupported() || !st || st === 'on' || st === 'unsupported') return null;
+  if (!pushSupported() || st !== 'denied') return null;  // 앱 안 「켜기」 칸은 없앰(사장님 10-28) — 거절한 폰에만 설정에서 켜는 법 안내
   if (st === 'denied') return h('div', { class: 'pushcard denied', role: 'note' }, h('span', { class: 'pi' }, icon('bell')),
     h('div', { class: 'pt' }, h('b', { text: t('pushTitle') }), h('span', { text: t('pushDenied') })));
   return h('div', { class: 'pushcard' }, h('span', { class: 'pi' }, icon('bell')),
@@ -1740,7 +1758,7 @@ function screenHome() {
     prefetchHome();
     head.append(h('div', { class: 'greet' }, h('div', { class: 'hi', text: t('hello') }), h('div', { class: 'nm', text: p.name || '' }), p.company ? h('div', { class: 'co', text: p.company }) : null));
     const toTab = (id) => () => { S.tab = id; rerender(); window.scrollTo(0, 0); };
-    page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push && S.push !== 'on' && S.push !== 'unsupported' && pushSupported() ? 'margin-top:14px' : '' },
+    page.append(pushCard() || '', h('div', { class: 'mgrid', style: S.push === 'denied' && pushSupported() ? 'margin-top:14px' : '' },
         h('button', { class: 'mtile strong wide', onclick: () => go(screenFx) }, h('span', { class: 'mi' }, icon('transfer')), h('span', {}, h('span', { class: 'mt', text: t('fx') }), h('span', { class: 'ms', text: t('fxSub') }))),
         h('button', { class: 'mtile strong', onclick: () => go(screenNotices) }, h('span', { class: 'mi' }, icon('bell')), h('span', {}, h('span', { class: 'mt', text: t('notices') }), h('span', { class: 'ms', text: t('noticesSub') }))),
         h('button', { class: 'mtile strong', onclick: openWeather }, h('span', { class: 'mi' }, icon('sun')), h('span', {}, h('span', { class: 'mt', text: t('weather') }), h('span', { class: 'ms', text: t('weatherSub') }))),
