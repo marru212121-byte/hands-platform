@@ -650,41 +650,17 @@ function drawDetail() {
       <button class="icon-btn close" data-close aria-label="닫기">${ico('x')}</button>
     </div>
     <div class="audit-note">${ico('eye', 'xs')}열람 기록이 남습니다. 업무 목적 외 열람·이용을 금지합니다.</div>
-    <div class="panel-actions">
-      ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
-      <button class="btn btn-secondary btn-sm" data-act="push">${ico('bell', 'sm')}알림 보내기</button>
-      <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
-      <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '관리 중지' : '관리 다시 시작'}</button>
-    </div>
     <div class="panel-body">
-      ${MGR() ? '' : html`<section class="sec watch-sec ${m.watch === true ? 'on' : ''}">
-        <div class="watch-row">
-          <div class="watch-text"><div class="watch-title">${ico('eye', 'sm')}집중 관리</div><div class="watch-desc">앱을 열고 닫을 때 텔레그램 알림</div></div>
-          <button type="button" class="switch" role="switch" aria-checked="${m.watch === true ? 'true' : 'false'}" aria-label="집중 관리" data-act="watch"><span class="switch-knob"></span></button>
-        </div>
-      </section>`}
       <section class="sec">
         <div class="sec-head"><h3>본인 확인 사진</h3><div class="right"><span id="photoLeft" class="num"></span><button class="btn btn-ghost btn-sm" data-act="reload">${ico('refresh', 'sm')}새로고침</button></div></div>
         <div class="sec-body"><div class="photos">${photo(ph.selfie, '얼굴 사진')}${photo(ph.passport, '여권 사진')}</div></div>
       </section>
-
       <section class="sec">
-        <div class="sec-head"><h3>인적 사항</h3></div>
-        <div class="sec-body" id="infoBody">${d.editing ? editForm(m) : infoList(m)}</div>
+        <div class="sec-body"><dl class="dl">
+          <dt>이름</dt><dd><b>${m.name || '-'}</b></dd>
+          <dt>여권번호</dt><dd class="num"><b>${m.passport_number || '-'}</b></dd>
+        </dl></div>
       </section>
-
-      <section class="sec">
-        <div class="sec-head"><h3>동의 기록</h3><div class="right">${c.version || m.consent_version ? html`<span>약관 버전 <b class="num">${c.version || m.consent_version}</b></span>` : ''}</div></div>
-        <div class="sec-body"><table class="inner"><thead><tr><th>항목</th><th>구분</th><th>상태</th><th>버전</th><th>동의 시각</th></tr></thead><tbody>
-          ${CONSENT_ITEMS.map(([k, label, req]) => {
-            const on = c[k] === true;
-            return html`<tr><td>${label}</td><td class="muted">${req ? '필수' : '선택'}</td>
-              <td>${on ? html`<span class="badge ok">${ico('check', 'xs')}동의</span>` : html`<span class="badge off">미동의</span>`}</td>
-              <td class="num">${on ? (c.version || m.consent_version || '-') : '-'}</td><td class="num nowrap">${on ? fmtDT(c.at || m.consent_at) : '-'}</td></tr>`;
-          })}
-        </tbody></table></div>
-      </section>
-
       ${MGR() ? '' : html`<section class="sec">
         <div class="sec-head"><h3>위치 기록</h3><div class="right">최근 ${fmtNum(hist.length)}건</div></div>
         <div class="sec-body">${hist.length ? html`${lastLoc ? html`<div class="mini-map" id="miniMap"></div>` : ''}
@@ -696,6 +672,25 @@ function drawDetail() {
           </tbody></table>${hist.length > 15 ? html`<div class="muted" style="font-size:12px;margin-top:8px">최근 15건만 표시합니다.</div>` : ''}`
           : emptyBox('위치 기록이 없습니다', '근로자가 앱에서 위치 공유를 허용하면 기록됩니다.', 'pin')}</div>
       </section>`}
+      <div class="panel-actions in-body">
+      ${telHref(m.phone) ? html`<a class="btn btn-secondary btn-sm pc-only" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
+      <button class="btn btn-secondary btn-sm" data-act="push">${ico('bell', 'sm')}알림 보내기</button>
+      <button class="btn btn-secondary btn-sm" data-act="edit" ${d.editing ? 'disabled' : ''}>${ico('edit', 'sm')}정보 수정</button>
+      <button class="btn ${active ? 'btn-danger-outline' : 'btn-secondary'} btn-sm" data-act="toggle" style="margin-left:auto">${ico(active ? 'ban' : 'checkCircle', 'sm')}${active ? '관리 중지' : '관리 다시 시작'}</button>
+    </div>
+      ${MGR() ? '' : html`<section class="sec watch-sec ${m.watch === true ? 'on' : ''}">
+        <div class="watch-row">
+          <div class="watch-text"><div class="watch-title">${ico('eye', 'sm')}집중 관리</div><div class="watch-desc">앱을 열고 닫을 때 텔레그램 알림</div></div>
+          <button type="button" class="switch" role="switch" aria-checked="${m.watch === true ? 'true' : 'false'}" aria-label="집중 관리" data-act="watch"><span class="switch-knob"></span></button>
+        </div>
+      </section>`}
+
+      <section class="sec">
+        <div class="sec-head"><h3>인적 사항</h3></div>
+        <div class="sec-body" id="infoBody">${d.editing ? editForm(m) : infoList(m)}</div>
+      </section>
+
+
 
       ${MGR() ? '' : html`<section class="sec">
         <div class="sec-head"><h3>SOS 이력</h3><div class="right">${fmtNum((d.sos || []).length)}건</div></div>
@@ -715,6 +710,18 @@ function drawDetail() {
           <dt>마지막 접속</dt><dd class="num">${fmtDT(m.last_seen_at)} ${m.last_seen_at ? html`<span class="muted">(${relText(m.last_seen_at)})</span>` : ''}</dd>
           <dt>앱 언어</dt><dd>${LANG[m.language] || m.language || '-'}</dd>
         </dl></div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-head"><h3>동의 기록</h3><div class="right">${c.version || m.consent_version ? html`<span>약관 버전 <b class="num">${c.version || m.consent_version}</b></span>` : ''}</div></div>
+        <div class="sec-body"><table class="inner"><thead><tr><th>항목</th><th>구분</th><th>상태</th><th>버전</th><th>동의 시각</th></tr></thead><tbody>
+          ${CONSENT_ITEMS.map(([k, label, req]) => {
+            const on = c[k] === true;
+            return html`<tr><td>${label}</td><td class="muted">${req ? '필수' : '선택'}</td>
+              <td>${on ? html`<span class="badge ok">${ico('check', 'xs')}동의</span>` : html`<span class="badge off">미동의</span>`}</td>
+              <td class="num">${on ? (c.version || m.consent_version || '-') : '-'}</td><td class="num nowrap">${on ? fmtDT(c.at || m.consent_at) : '-'}</td></tr>`;
+          })}
+        </tbody></table></div>
       </section>
     </div>
     <div class="panel-dock ph-only${MGR() ? ' one' : ''}">

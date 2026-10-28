@@ -745,3 +745,20 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
 .dash-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .dash-actions .muted { font-size: 13px; }
 @media (max-width: 768px) { .dash-actions .btn { flex: 1; justify-content: center; } .dash-actions .muted { display: none; } }
+
+/* 근로자 상세: 사진 → 신원·위치(지도) → 단추 순 (사장님 10-28) / 폰에서 내릴 때 옆으로 흔들리던 것 — 가로 스크롤 막기 */
+.panel-actions.in-body { padding: 0; background: none; border: 0; }
+.panel-body { overflow-x: hidden; overscroll-behavior: contain; }
+.panel-body .sec, .panel-body .sec-body { min-width: 0; max-width: 100%; }
+.panel-body table.inner { width: 100%; table-layout: auto; }
+@media (max-width: 768px) {
+  html, body { overflow-x: hidden; }
+  .main-col, .view { overflow-x: hidden; }
+  .panel-actions.in-body { padding: 0; }
+  /* 위치 기록 표가 폰 폭보다 넓어(좌표가 잘림) 옆으로 밀리던 것 — 표를 폭에 맞춰 줄바꿈 */
+  .panel-body .sec-body { overflow-x: hidden; }
+  .panel-body table.inner { table-layout: fixed; font-size: 13px; }
+  .panel-body table.inner th, .panel-body table.inner td { white-space: normal !important; word-break: break-word; padding-left: 4px; padding-right: 4px; }
+  .panel-body table.inner a.ext { white-space: normal; display: inline; }
+  .panel-body table.inner th.right:last-child, .panel-body table.inner td.right:last-child { display: none; }  /* 위치 표 정확도 칸은 폰에선 뺌 */
+}
