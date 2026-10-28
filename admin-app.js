@@ -1296,11 +1296,14 @@ const pushTargetText = (t, names) => {
   if (!t || t === 'all') return '전체';
   if (t.startsWith('country:')) return `국적: ${countryName(t.slice(8))}`;
   if (t.startsWith('member:')) { const id = t.slice(7); return `근로자: ${(names && names[id]) || '1명'}`; }
+  if (t.startsWith('members:')) { const [, n, ...l] = t.split(':'); return `${l.join(':') || '선택'} ${n}명`; }
   return t;
 };
 async function renderPush() {
-  const P = S.push = { target: 'all', country: '', member: null, subs: null };
-  if (S.pushPrefill) { P.target = 'member'; P.member = S.pushPrefill; S.pushPrefill = null; }
+  // 받는 사람 (사장님 10-28): 전체 / 국적별(그 국적만 목록 → 모두 또는 몇 명) / 근로자 고르기(찾아서 여러 명 담기) / 집중 관리(관리자만)
+  const P = S.push = { target: 'all', country: '', picked: new Map(), list: null, q: '', subs: null };
+  if (S.pushPrefill) { P.target = 'pick'; P.picked.set(S.pushPrefill.id, S.pushPrefill); S.pushPrefill = null; }
+  const TARGETS = [['all', '전체'], ['country', '국적별'], ['pick', '근로자 고르기'], ...(MGR() ? [] : [['watch', '집중 관리']])];
   const v = $('#view');
   setHTML(v, html`<div class="push-layout">
     <div class="push-main">
@@ -1313,18 +1316,16 @@ async function renderPush() {
         <div class="card-head"><h2>새 알림</h2></div>
         <div class="card-body push-fields">
           <div class="field"><span class="field-label">대상</span>
-            <div class="seg push-target" id="pTarget">${[['all', '전체'], ['country', '국적 선택'], ['member', '근로자 한 명']].map(([k, l]) => html`<button type="button" data-t="${k}">${l}</button>`)}</div>
+            <div class="seg push-target" id="pTarget">${TARGETS.map(([k, l]) => html`<button type="button" data-t="${k}">${l}</button>`)}</div>
           </div>
           <div class="field" id="pCountryWrap"><span class="field-label">국적</span>
             <select class="select" id="pCountry"><option value="">국적을 선택하세요</option>${Object.entries(COUNTRY).map(([k, l]) => html`<option value="${k}">${l}</option>`)}</select>
           </div>
-          <div class="field" id="pMemberWrap"><span class="field-label">근로자</span>
-            <div id="pMemberChosen"></div>
-            <div class="picker" id="pPicker">
-              <label class="search">${ico('search')}<input id="pMemberQ" type="search" placeholder="이름·전화번호·여권번호·근무처 검색" autocomplete="off" aria-label="근로자 검색"></label>
-              <ul class="picker-list" id="pMemberList" hidden></ul>
-            </div>
+          <div class="field" id="pSearchWrap"><span class="field-label">근로자 찾기</span>
+            <label class="search">${ico('search')}<input id="pMemberQ" type="search" placeholder="이름·전화번호·여권번호·근무처" autocomplete="off" aria-label="근로자 검색"></label>
           </div>
+          <div class="field" id="pListWrap"><div class="plist-head" id="pListHead"></div><div class="plist" id="pList"></div></div>
+          <div class="field" id="pChipsWrap"><span class="field-label">받는 사람 <span class="counter num" id="pChipN"></span></span><div class="pchips" id="pChips"></div></div>
           <label class="field"><span class="field-label">제목 <span class="counter num" id="cTitle">0/80</span></span>
             <input id="pTitle" maxlength="80" placeholder="예) 내일 오전 안전교육 안내" autocomplete="off"></label>
           <label class="field"><span class="field-label">내용 <span class="counter num" id="cBody">0/300</span></span>
@@ -1349,63 +1350,91 @@ async function renderPush() {
   const now = new Date();
   $('#pvClock').textContent = fmtTime(now);
   $('#pvDate').textContent = `${now.getMonth() + 1}월 ${now.getDate()}일 ${'일월화수목금토'[now.getDay()]}요일`;
+  const norm = (x) => String(x || '').toUpperCase().replace(/[\s-]/g, '');
+  const pool = () => (P.list || []).filter((m) => m.is_active !== false);
+  // 지금 대상에서 목록에 보일 사람
+  const shown = () => P.target === 'country' ? pool().filter((m) => m.country === P.country && P.country)
+    : P.target === 'watch' ? pool().filter((m) => m.watch)
+    : P.target === 'pick' ? (P.q ? pool().filter((m) => [m.name, m.phone, m.passport_number, m.company].some((v) => norm(v).includes(norm(P.q)))).slice(0, 30) : []) : [];
+  const fillAll = () => { P.picked = new Map(shown().map((m) => [m.id, m])); };
+  const ensureList = async () => {
+    if (P.list) return;
+    try { const j = await api('members'); P.list = j.members || []; } catch (err) { toast(errText(err), 'err'); P.list = []; }
+    P.picked = new Map([...P.picked].map(([id, m]) => [id, P.list.find((x) => x.id === id) || m]));  // 상세에서 넘어온 사람도 알림 켬 여부 채움
+    if (P.target === 'country' || P.target === 'watch') fillAll();
+    sync();
+  };
+  const row = (m) => html`<label class="prow"><input type="checkbox" data-id="${m.id}" ${P.picked.has(m.id) ? 'checked' : ''}>
+    <span class="prow-main"><b>${m.name || '-'}</b> <span class="muted">· ${countryName(m.country)}${m.company ? ` · ${m.company}` : ''}</span>${m.watch ? html` <span class="badge warn">집중 관리</span>` : ''}</span>
+    <span class="prow-push ${m.push ? 'on' : ''}">${m.push ? '알림 켬' : '알림 꺼짐'}</span></label>`;
   const sync = () => {
     $$('#pTarget button').forEach((b) => b.classList.toggle('on', b.dataset.t === P.target));
-    $('#pCountryWrap').hidden = P.target !== 'country';
-    $('#pMemberWrap').hidden = P.target !== 'member';
-    setHTML($('#pMemberChosen'), P.member ? html`<div class="chosen"><div><b>${P.member.name || '-'}</b> <span class="muted">· ${countryName(P.member.country)}${P.member.company ? ` · ${P.member.company}` : ''}</span><div class="cell-sub num">${P.member.phone || ''}</div></div><button type="button" class="icon-btn" id="pClear" aria-label="선택 해제">${ico('x', 'sm')}</button></div>` : '');
-    $('#pPicker').hidden = !!P.member;
-    if (P.member) $('#pClear').addEventListener('click', () => { P.member = null; sync(); $('#pMemberQ').focus(); });
+    const t0 = P.target;
+    $('#pCountryWrap').hidden = t0 !== 'country';
+    $('#pSearchWrap').hidden = t0 !== 'pick';
+    $('#pListWrap').hidden = t0 === 'all' || (t0 === 'country' && !P.country) || (t0 === 'pick' && !P.q);
+    $('#pChipsWrap').hidden = t0 === 'all';
+    const list = shown();
+    if (!$('#pListWrap').hidden) {
+      if (!P.list) setHTML($('#pList'), html`<div class="plist-empty">불러오는 중…</div>`);
+      else {
+        const allOn = list.length > 0 && list.every((m) => P.picked.has(m.id));
+        setHTML($('#pListHead'), t0 === 'pick' ? html`<span class="muted">찾은 사람 ${fmtNum(list.length)}명 · 눌러서 담기</span>`
+          : html`<label class="prow-all"><input type="checkbox" id="pAll" ${allOn ? 'checked' : ''}> <b>모두 선택</b> <span class="muted">${t0 === 'country' ? countryName(P.country) : '집중 관리'} ${fmtNum(list.length)}명</span></label>`);
+        setHTML($('#pList'), list.length ? html`${list.map(row)}` : html`<div class="plist-empty">${t0 === 'watch' ? '집중 관리로 정한 근로자가 없습니다. 근로자 상세에서 켤 수 있습니다.' : t0 === 'country' ? '이 국적 근로자가 없습니다.' : '찾는 사람이 없습니다.'}</div>`);
+        $$('#pList input[data-id]').forEach((c) => c.addEventListener('change', () => {
+          const m = pool().find((x) => x.id === c.dataset.id); if (!m) return;
+          if (c.checked) P.picked.set(m.id, m); else P.picked.delete(m.id); sync();
+        }));
+        const all = $('#pAll'); if (all) all.addEventListener('change', () => { list.forEach((m) => all.checked ? P.picked.set(m.id, m) : P.picked.delete(m.id)); sync(); });
+      }
+    }
+    const picked = [...P.picked.values()], on = picked.filter((m) => m.push).length;
+    $('#pChipN').textContent = picked.length ? `${fmtNum(picked.length)}명 · 알림 켬 ${fmtNum(on)}명` : '';
+    setHTML($('#pChips'), picked.length ? html`${picked.map((m) => html`<span class="pchip">${m.name || '-'} <span class="muted">· ${countryName(m.country)}</span><button type="button" data-un="${m.id}" aria-label="빼기">${ico('x', 'xs')}</button></span>`)}`
+      : html`<span class="muted">${t0 === 'pick' ? '위에서 찾아 담으세요' : t0 === 'country' ? (P.country ? '아래에서 고르세요' : '국적을 먼저 고르세요') : '아래에서 고르세요'}</span>`);
+    $$('#pChips [data-un]').forEach((b) => b.addEventListener('click', () => { P.picked.delete(b.dataset.un); sync(); }));
     const t = $('#pTitle').value, b = $('#pBody').value;
     $('#cTitle').textContent = `${t.length}/80`; $('#cBody').textContent = `${b.length}/300`;
     // 실제로 폰에 뜨는 알림 (api/a.js NOTICE_HEAD·NOTICE_MSG, 사장님 10-28): 공지사항 → 새로운 공지가 도착했습니다 → 쓴 내용. 외국 근로자는 자기 말 + 아래 한국어
     $('#pvTitle').textContent = '공지사항'; $('#pvBody').textContent = '새로운 공지가 도착했습니다\n' + (b.trim() || '내용을 쓰면 여기에 보입니다');
-    $('#pWho').textContent = P.target === 'all' ? `알림 받는 근로자 전체${P.subs != null ? ` ${fmtNum(P.subs)}명` : ''}`
-      : P.target === 'country' ? (P.country ? `${countryName(P.country)} 국적 근로자` : '국적을 선택하세요')
-      : (P.member ? `${P.member.name || '근로자'} 님 1명` : '근로자를 선택하세요');
+    $('#pWho').textContent = t0 === 'all' ? `알림 받는 근로자 전체${P.subs != null ? ` ${fmtNum(P.subs)}명` : ''}`
+      : picked.length ? `${fmtNum(picked.length)}명에게 · 그중 알림 켬 ${fmtNum(on)}명이 받습니다` : '받는 사람을 고르세요';
   };
-  $$('#pTarget button').forEach((b) => b.addEventListener('click', () => { P.target = b.dataset.t; sync(); }));
-  $('#pCountry').addEventListener('change', (e) => { P.country = e.target.value; sync(); });
+  $$('#pTarget button').forEach((b) => b.addEventListener('click', () => {
+    if (P.target === b.dataset.t) return;
+    P.target = b.dataset.t; P.picked = new Map(); P.q = ''; $('#pMemberQ').value = '';
+    if (P.target === 'country' || P.target === 'watch') fillAll();
+    sync(); if (P.target !== 'all') ensureList();
+  }));
+  $('#pCountry').addEventListener('change', (e) => { P.country = e.target.value; fillAll(); sync(); });
   $('#pTitle').addEventListener('input', sync); $('#pBody').addEventListener('input', sync);
-  let qt = null, qreq = 0;
-  $('#pMemberQ').addEventListener('input', (e) => {
-    clearTimeout(qt); const q = e.target.value.trim(); const list = $('#pMemberList');
-    if (!q) { list.hidden = true; return; }
-    qt = setTimeout(async () => {
-      const my = ++qreq;
-      try {
-        const j = await api('members', { params: { q } });
-        if (my !== qreq || S.view !== 'push') return;
-        const rows = (j.members || []).filter((m) => m.is_active !== false).slice(0, 8);
-        list.hidden = false;
-        setHTML(list, rows.length ? html`${rows.map((m) => html`<li><button type="button" data-pick="${m.id}"><b>${m.name || '-'}</b> <span class="muted">· ${countryName(m.country)}${m.company ? ` · ${m.company}` : ''}</span><span class="cell-sub num">${m.phone || ''}</span></button></li>`)}`
-          : html`<li class="picker-empty">검색 결과가 없습니다</li>`);
-        $$('[data-pick]', list).forEach((b) => b.addEventListener('click', () => {
-          const m = rows.find((x) => x.id === b.dataset.pick);
-          P.member = { id: m.id, name: m.name, country: m.country, phone: m.phone, company: m.company };
-          $('#pMemberQ').value = ''; list.hidden = true; sync();
-        }));
-      } catch (err) { if (my === qreq) toast(errText(err), 'err'); }
-    }, 300);
-  });
+  let qt = null;
+  $('#pMemberQ').addEventListener('input', (e) => { clearTimeout(qt); qt = setTimeout(() => { P.q = e.target.value.trim(); sync(); }, 150); });
+  if (P.target !== 'all') ensureList();
   $('#pushForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const title = $('#pTitle').value.trim(), body = $('#pBody').value.trim();
+    const picked = [...P.picked.values()], on = picked.filter((m) => m.push).length;
     if (P.target === 'country' && !P.country) { toast('국적을 선택해 주세요.', 'err'); return; }
-    if (P.target === 'member' && !P.member) { toast('알림을 받을 근로자를 선택해 주세요.', 'err'); return; }
+    if (P.target !== 'all' && !picked.length) { toast('받는 사람을 골라 주세요.', 'err'); return; }
     if (!title) { toast('제목을 입력해 주세요.', 'err'); $('#pTitle').focus(); return; }
     if (!body) { toast('내용을 입력해 주세요.', 'err'); $('#pBody').focus(); return; }
+    // 국적 전원이면 「국적」으로, 아니면 고른 사람만
+    const countryAll = P.target === 'country' && shown().every((m) => P.picked.has(m.id)) && picked.length === shown().length;
+    const label = P.target === 'country' ? `국적 ${countryName(P.country)}` : P.target === 'watch' ? '집중 관리' : '선택';
     const who = P.target === 'all' ? (P.subs != null ? `${fmtNum(P.subs)}명에게 보냅니다.` : '알림 받는 근로자 전체에게 보냅니다.')
-      : P.target === 'country' ? `${countryName(P.country)} 국적 근로자 중 알림을 받는 사람에게 보냅니다.`
-      : `${P.member.name || '근로자'} 님 1명에게 보냅니다.`;
+      : `${fmtNum(picked.length)}명 중 알림을 켠 ${fmtNum(on)}명에게 보냅니다.`;
+    const names = picked.slice(0, 8).map((m) => m.name || '-').join(', ') + (picked.length > 8 ? ` 외 ${fmtNum(picked.length - 8)}명` : '');
     confirmDialog({
       title: '알림을 보낼까요?', okLabel: '보내기',
-      details: html`<dl class="kv"><dt>대상</dt><dd>${P.target === 'all' ? '전체' : P.target === 'country' ? `국적: ${countryName(P.country)}` : `${P.member.name || '-'} · ${countryName(P.member.country)}`}</dd><dt>제목</dt><dd>${title}</dd><dt>내용</dt><dd style="white-space:pre-wrap">${body}</dd></dl>`,
+      details: html`<dl class="kv"><dt>대상</dt><dd>${P.target === 'all' ? '전체' : `${label} · ${fmtNum(picked.length)}명`}</dd>${P.target === 'all' ? '' : html`<dt>받는 사람</dt><dd>${names}</dd>`}<dt>제목</dt><dd>${title}</dd><dt>내용</dt><dd style="white-space:pre-wrap">${body}</dd></dl>`,
       message: who + ' 보낸 알림은 취소할 수 없습니다.',
       run: async () => {
-        const payload = { target: P.target, title, body };
-        if (P.target === 'country') payload.country = P.country;
-        if (P.target === 'member') payload.member_id = P.member.id;
+        const payload = P.target === 'all' ? { target: 'all', title, body }
+          : countryAll ? { target: 'country', country: P.country, title, body }
+          : picked.length === 1 ? { target: 'member', member_id: picked[0].id, title, body }
+          : { target: 'members', member_ids: picked.map((m) => m.id), label, title, body };
         const r = await api('push_send', { body: payload });
         toast(`보냄 ${fmtNum(r.sent)} · 실패 ${fmtNum(r.failed)}`, r.failed > 0 && !r.sent ? 'err' : '');
         $('#pTitle').value = ''; $('#pBody').value = ''; sync();
@@ -1425,7 +1454,7 @@ async function loadPushHistory() {
     S.push.subs = Number(j.subscribed_members) || 0;
     $('#pushSubs').textContent = fmtNum(S.push.subs);
     const names = Object.fromEntries((S.members || []).map((m) => [m.id, m.name]));
-    if (S.push.member) names[S.push.member.id] = S.push.member.name;
+    if (S.push.picked) S.push.picked.forEach((m, id) => { names[id] = m.name; });
     const list = j.messages || [];
     $('#phCount').textContent = `${fmtNum(list.length)}건`;
     setHTML($('#phBody'), html`${list.map((m) => html`<tr>

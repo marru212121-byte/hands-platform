@@ -133,10 +133,12 @@ module.exports = L.handler({
       filter = `&or=(name.ilike.${s},phone.ilike.${s},passport_number.ilike.${s},company.ilike.${s})`;
     }
     const rows = await db(`members?select=id,name,phone,country,company,created_at,last_seen_at,last_checkin_at,is_active,watch,passport_number&order=created_at.desc&limit=500${filter}`);
-    const [locs, all] = await Promise.all([
+    const [locs, all, subs] = await Promise.all([
       db(`locations?select=member_id,lat,lng,updated_at,sos_active`),
       db(`members?select=id,name,birth_date,passport_number&limit=5000`),
+      db('push_subscriptions?select=member_id'),
     ]);
+    const pushOn = new Set(subs.map((x) => x.member_id));  // 알림 받는 사람 (알림 보내기에서 받는 사람 고를 때 표시, 사장님 10-28)
     const byId = Object.fromEntries(locs.map(l => [l.member_id, l]));
     // 중복 가입 의심: 같은 여권번호, 또는 같은 이름+생년월일 (아이폰 사파리↔홈 화면 앱 등으로 다시 가입한 경우)
     const keyCount = {};
@@ -144,7 +146,7 @@ module.exports = L.handler({
       m.name && m.birth_date && 'n:' + String(m.name).toUpperCase().replace(/\s+/g, ' ').trim() + '|' + m.birth_date].filter(Boolean);
     all.forEach((m) => keys(m).forEach((k) => { keyCount[k] = (keyCount[k] || 0) + 1; }));
     return { ok: true, members: rows.map(m => ({ ...m,
-      dup: keys(m).some((k) => keyCount[k] > 1),
+      dup: keys(m).some((k) => keyCount[k] > 1), push: pushOn.has(m.id),
       // 여권번호 전체 (사장님 10-27: 매니저도 전체·사진 봄 / 10-28: 목록에서도 전체가 보여야)
       ...(me.role === 'admin' ? { location: byId[m.id] || null } : { location: null, watch: null }) })) };
   },
@@ -291,8 +293,13 @@ module.exports = L.handler({
     } else if (b.target === 'country') {
       const c = clean(b.country, 10); if (!c) throw new HttpError(400, 'missing_fields');
       filter = `&member.country=eq.${encodeURIComponent(c)}`;
+    } else if (b.target === 'members') {  // 여러 명 골라 담기·국적 중 몇 명·집중 관리 (사장님 10-28)
+      const ids = [...new Set((Array.isArray(b.member_ids) ? b.member_ids : []).map(String))].filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 500);
+      if (!ids.length) throw new HttpError(400, 'missing_fields');
+      b.member_ids = ids; filter = `&member_id=in.(${ids.join(',')})`;
     }
-    const target = b.target === 'member' ? 'member:' + b.member_id : b.target === 'country' ? 'country:' + b.country : 'all';
+    const target = b.target === 'member' ? 'member:' + b.member_id : b.target === 'country' ? 'country:' + b.country
+      : b.target === 'members' ? `members:${b.member_ids.length}:${clean(b.label, 30) || '선택'}` : 'all';
     const subs = await db(`push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,country,language,is_active)&member.is_active=eq.true${filter}`);
     const rows = await db('push_messages', { method: 'POST', prefer: 'return=representation', body: { admin_email: a.email, target, title, body, sent: 0, failed: 0 } });
     const msgId = rows[0].id;
