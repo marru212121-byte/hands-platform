@@ -140,6 +140,16 @@ async function adminOnly(req) {
   return a;
 }
 
+// 자동 알림 크론마다 언제·몇 명 보냈는지 남김 (사장님 10-28: 매일 빠짐없이 가는지 확인) — app_settings.cron_log { 이름: [최근 30회] }
+async function cronLog(name, result) {
+  try {
+    const rows = await db('app_settings?select=value&key=eq.cron_log');
+    const v = (rows[0] && rows[0].value) || {};
+    v[name] = [{ at: new Date().toISOString(), ...result }, ...(v[name] || [])].slice(0, 30);
+    await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'cron_log', value: v, updated_at: new Date().toISOString() } });
+  } catch (e) {}
+  return result;
+}
 async function logAccess(admin, memberId, action) {
   try { await db('access_logs', { method: 'POST', body: { admin_email: admin.email, member_id: memberId, action } }); } catch (_) {}
 }
@@ -217,5 +227,5 @@ function webpush() {
   return _wp;
 }
 
-module.exports = { adminOnly, pwHash, pwCheck, workerTokenFromReq, workerCookie, webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
+module.exports = { cronLog, adminOnly, pwHash, pwCheck, workerTokenFromReq, workerCookie, webpush, telegramApi, telegramChats, db, upload, signedUrl, imageFromDataUrl, workerFromReq, adminFromReq, adminCookie, clearAdminCookie, checkAdminLogin, logAccess, telegram,
   handler, HttpError, sha256, newToken, newCode, clean, num };

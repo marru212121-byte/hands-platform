@@ -653,7 +653,7 @@ module.exports = L.handler({
       catch (e) { if (e.statusCode === 404 || e.statusCode === 410) gone.push(s.id); }
     }
     if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
-    return { ok: true, sent, count, grids: kindFor.size };
+    return L.cronLog('weather11', { ok: true, people: subs.length, sent, count, grids: kindFor.size });
   },
 
   // 30분마다(버셀 크론): 기상특보 새로 내려진 것만 그 지역 근로자에게. 처음 한 번은 지금 걸린 특보를 「본 것」으로만 저장(밤새 쌓인 특보를 한꺼번에 보내지 않음)
@@ -666,7 +666,7 @@ module.exports = L.handler({
     const ok = prev.length && prev[0].value && prev[0].value.v === 2;  // 저장 모양이 바뀌면(v) 그 회차는 저장만 — 이름 바뀐 특보를 새 특보로 보내지 않게
     const fresh = ok ? all.filter((w) => !seen.has(w.key)) : [];
     await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'wx_warn_seen', value: { v: 2, keys: all.map((w) => w.key), tmFc: st.tmFc || null, t6: st.t6 || '' }, updated_at: nowIso() } });
-    if (!fresh.length) return { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: 0, sent: 0 };
+    if (!fresh.length) return L.cronLog('warn30', { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: 0, sent: 0 });
     const subs = await db('push_subscriptions?select=id,endpoint,p256dh,auth,member:members!inner(id,language,is_active)&member.is_active=eq.true');
     if (!subs.length) return { ok: true, fresh: fresh.length, sent: 0 };
     const ids = [...new Set(subs.map((x) => x.member.id))];
@@ -689,7 +689,7 @@ module.exports = L.handler({
     if (gone.length) await db(`push_subscriptions?id=in.(${gone.join(',')})`, { method: 'DELETE' }).catch(() => {});
     if (Object.keys(cache).length !== n0) await db('app_settings?on_conflict=key', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { key: 'geo_ko_cache', value: cache, updated_at: nowIso() } }).catch(() => {});
     console.log('wrncron', st.tmFc, 'fresh', fresh.map((w) => w.key).join(' / '), 'sent', sent, 'people', done.size);
-    return { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: fresh.length, sent, count };
+    return L.cronLog('warn30', { ok: true, tmFc: st.tmFc || null, active: all.length, fresh: fresh.length, sent, count });
   },
 
   async posts(req) {

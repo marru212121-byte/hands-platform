@@ -383,9 +383,9 @@ module.exports = L.handler({
     await db(`location_history?recorded_at=lt.${encodeURIComponent(daysAgo(180))}`, { method: 'DELETE' }).catch(() => {});
     const pay = await paydayPush().catch((e) => ({ error: String(e && e.message || e) }));
     const rows = await db(`members?select=name,phone,country,last_seen_at&is_active=eq.true&last_seen_at=lt.${encodeURIComponent(daysAgo(3))}&order=last_seen_at.asc&limit=50`);
-    if (!rows.length) return { ok: true, sent: false, pay };
+    if (!rows.length) return L.cronLog('daily09', { ok: true, silent: 0, pay });
     const lines = rows.map(m => `- ${m.name} (${m.phone || '-'}) 마지막 접속 ${new Date(m.last_seen_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}`);
     const sent = await L.telegram([`[HANDS] 3일 넘게 앱을 열지 않은 근로자 ${rows.length}명`, ...lines].join('\n'));
-    return { ok: true, sent, pay };
+    return L.cronLog('daily09', { ok: true, silent: rows.length, telegram: sent, pay });
   },
 });
