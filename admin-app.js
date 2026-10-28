@@ -731,17 +731,6 @@ function drawDetail() {
   });
   $('[data-act="edit"]', p).addEventListener('click', () => { d.editing = true; drawInfo(); $('[data-act="edit"]', p).disabled = true; });
   $('[data-act="toggle"]', p).addEventListener('click', () => toggleActive(m));
-  $('[data-act="pw"]', p).addEventListener('click', () => modal({
-    title: '근로자 앱 비밀번호', icon: 'lock',
-    body: html`<p>아이디는 여권번호(<b class="num">${m.passport_number || '-'}</b>)입니다. 비밀번호는 지금 <b>${m.custom_pw ? '따로 정한 비밀번호' : '여권번호(처음 그대로)'}</b>입니다.</p>
-      <p class="muted" style="font-size:13px">새 비밀번호를 넣으면 바뀝니다. 비워 두고 저장하면 여권번호로 되돌립니다. 대소문자는 구분하지 않습니다.</p>
-      <input class="input" id="pwNew" type="text" autocomplete="off" maxlength="40" placeholder="새 비밀번호 (4자 이상)" style="width:100%;margin-top:8px">`,
-    actions: [{ label: '취소' }, { label: '저장', cls: 'btn-primary', run: async (el) => {
-      const pw = $('#pwNew', el).value.trim();
-      await api('member_password', { body: { id: m.id, password: pw } });
-      m.custom_pw = !!pw; toast(pw ? '비밀번호를 바꿨습니다.' : '비밀번호를 여권번호로 되돌렸습니다.');
-    } }],
-  }));
   if ($('[data-act="watch"]', p)) $('[data-act="watch"]', p).addEventListener('click', async (e) => {
     const sw = e.currentTarget; const next = m.watch !== true;
     sw.disabled = true; sw.setAttribute('aria-checked', String(next)); sw.closest('.watch-sec').classList.toggle('on', next);
