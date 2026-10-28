@@ -783,3 +783,18 @@ tr.expanded .post-body { -webkit-line-clamp: unset; display: block; }
 .view-map { flex-direction: column; }
 .map-trail-bar { flex: none; }
 .map-trail-bar .muted { flex: 1 1 100%; order: 3; }
+
+/* 한 사람 지도: 처음엔 지도만 가득, 내리면 신원·좌표·알림 보내기 (사장님 10-28) */
+.view-map:has(.trail-info) { overflow-y: auto; }
+.map-layout.one { flex: none; height: calc(100vh - var(--top-h) - 58px); }
+@media (max-width: 768px) { .map-layout.one { height: calc(100vh - var(--top-h) - var(--tab-h) - 58px - env(safe-area-inset-bottom)); } }
+.trail-info { padding: 20px 16px 32px; background: var(--bg); display: flex; flex-direction: column; gap: 14px; }
+.trail-info .ti-name { font-size: 22px; font-weight: 800; }
+.trail-info .ti-pass { font-size: 18px; font-weight: 700; margin: 2px 0 4px; }
+.trail-info .ti-actions { display: flex; flex-direction: column; gap: 8px; }
+.trail-info .ti-actions .btn { width: 100%; justify-content: center; height: 48px; }
+@media (min-width: 769px) { .trail-info { max-width: 720px; margin: 0 auto; } .trail-info .ti-actions { flex-direction: row; } }
+.map-trail-bar { flex-wrap: nowrap; height: 58px; box-sizing: border-box; padding: 8px 12px; }
+.map-trail-bar b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.map-trail-bar .btn { flex: none; }
+.map-layout.one .map-area { height: 100%; min-height: 0; }

@@ -972,7 +972,7 @@ async function drawMiniMap(hist) {
 async function renderMap() {
   const v = $('#view');
   const fid = S.mapFocus;
-  setHTML(v, html`${fid ? html`<div class="map-trail-bar"><a class="btn btn-secondary btn-sm" href="#/members/${encodeURIComponent(fid)}">${ico('back', 'sm')}근로자 상세로</a><b id="trailName"></b><span class="muted" id="trailAt"></span><a class="btn btn-ghost btn-sm" href="#/map">전체 지도</a></div>` : ''}<div class="map-layout${fid ? ' one' : ''}">
+  setHTML(v, html`${fid ? html`<div class="map-trail-bar"><a class="btn btn-secondary btn-sm" href="#/members/${encodeURIComponent(fid)}">${ico('back', 'sm')}근로자 상세로</a><b id="trailName"></b><a class="btn btn-ghost btn-sm" href="#/map" style="margin-left:auto">전체 지도</a></div>` : ''}<div class="map-layout${fid ? ' one' : ''}">
     <div class="map-area"><div id="bigMap"><div class="map-loading"><div class="spinner"></div></div></div>
       <div class="map-legend"><span><i class="lg-dot" style="background:var(--red)"></i>SOS 요청 중</span><span><i class="lg-dot" style="background:var(--teal)"></i>1시간 이내</span><span><i class="lg-dot" style="background:#94A3B8"></i>1시간 이상 경과</span></div>
       <div id="mapNote"></div>
@@ -984,7 +984,7 @@ async function renderMap() {
         <button class="chip" id="mfWatch" aria-pressed="false">집중 관리만</button>
         <button class="chip" id="mfLoc" aria-pressed="false" title="최근 ${LOC_ACTIVE_HOURS}시간 안에 위치가 잡힌 근로자">위치 활성만</button></div>
       <ul class="map-list" id="mapList"></ul>
-    </aside></div>`);
+    </aside></div>${fid ? html`<section class="trail-info" id="trailInfo"></section>` : ''}`);
   const token = {}; S.mapToken = token;
   const [engine, res] = await Promise.all([mapEngine(), api('map').then((j) => ({ j }), (e) => ({ e }))]);
   if (S.view !== 'map' || S.mapToken !== token) return;
@@ -1051,8 +1051,27 @@ async function drawTrail(map, id, token) {
     if (S.view !== 'map' || S.mapToken !== token || !document.getElementById('bigMap')) { clearInterval(timer); return; }
     let j; try { j = await api('member', { params: { id } }); } catch (e) { return; }
     const m = j.member || {}, pts = (j.history || []).filter((h) => h.lat != null && h.lng != null);
-    if ($('#trailName')) $('#trailName').textContent = (m.name || '') + (m.passport_number ? ' · ' + m.passport_number : '');
-    if ($('#trailAt')) $('#trailAt').textContent = pts.length ? `마지막 위치 ${fmtDT(pts[0].recorded_at)} (${relText(pts[0].recorded_at)}) · 30초마다 갱신` : '위치 기록 없음';
+    if ($('#trailName')) $('#trailName').textContent = m.name || '';
+    const box = $('#trailInfo');
+    if (box) {
+      const p0 = pts[0];
+      setHTML(box, html`<div class="ti-who"><div class="ti-name">${m.name || '-'}</div><div class="ti-pass num">${m.passport_number || '-'}</div><div class="muted">${countryName(m.country)}${m.company ? ' · ' + m.company : ''}${m.phone ? ' · ' + m.phone : ''}</div></div>
+        <dl class="dl">
+          <dt>마지막 위치</dt><dd class="num">${p0 ? html`${fmtDT(p0.recorded_at)} <span class="muted">(${relText(p0.recorded_at)})</span>` : '기록 없음'}</dd>
+          ${p0 ? html`<dt>좌표</dt><dd class="num"><a class="ext" href="${gmaps(p0.lat, p0.lng)}" target="_blank" rel="noopener noreferrer">${coord(p0.lat, p0.lng)}${ico('external', 'xs')}</a>${p0.accuracy != null ? html` <span class="muted">· 오차 ${Math.round(p0.accuracy)}m</span>` : ''}</dd>
+          <dt>경로</dt><dd>${SOURCE[p0.source] || p0.source || '-'}</dd>` : ''}
+          <dt>갱신</dt><dd class="muted">30초마다 새 위치를 불러옵니다 · 최근 ${fmtNum(pts.length)}건</dd>
+        </dl>
+        <div class="ti-actions">
+          <button class="btn btn-primary" id="tiPush">${ico('bell', 'sm')}이 근로자에게 알림 보내기</button>
+          ${telHref(m.phone) ? html`<a class="btn btn-secondary" href="${telHref(m.phone)}">${ico('phone', 'sm')}전화 걸기</a>` : ''}
+          ${p0 ? html`<a class="btn btn-secondary" href="${gdir(p0.lat, p0.lng)}" target="_blank" rel="noopener noreferrer">${ico('map', 'sm')}길찾기</a>` : ''}
+        </div>`);
+      $('#tiPush', box).addEventListener('click', () => {
+        S.pushPrefill = { id: m.id, name: m.name, country: m.country, phone: m.phone, company: m.company };
+        location.hash = '#/push';
+      });
+    }
     const key = pts.length ? pts[0].recorded_at + pts.length : '';
     if (!pts.length || key === lastKey) return;
     lastKey = key;
