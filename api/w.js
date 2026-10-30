@@ -365,7 +365,8 @@ module.exports = L.handler({
       },
     }).catch(e => { if (e.detail && e.detail.code === '23505') throw new HttpError(409, 'phone_exists'); throw e; });
     const m = rows[0];
-    const sp = `${m.id}/selfie_${Date.now()}.jpg`, pp = `${m.id}/passport_${Date.now()}.jpg`;
+    const ext = (t) => (t === 'image/webp' ? 'webp' : t === 'image/png' ? 'png' : 'jpg');  // 실제 형식대로 이름(10-30 WebP 압축)
+    const sp = `${m.id}/selfie_${Date.now()}.${ext(selfie.type)}`, pp = `${m.id}/passport_${Date.now()}.${ext(passport.type)}`;
     try {
       await L.upload(sp, selfie.buf, selfie.type);
       await L.upload(pp, passport.buf, passport.type);

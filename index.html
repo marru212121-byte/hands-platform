@@ -1514,6 +1514,25 @@ async function compress(src, w, hgt, crop) {
   return url;
 }
 
+function shrinkUpload(url, max) {
+  return new Promise((res) => {
+    if (!url) return res(url);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+        const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+        let out = c.toDataURL('image/webp', 0.55);
+        if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/jpeg', 0.6);  // 아이폰 등 WebP 못 만드는 브라우저
+        res(out.length < url.length ? out : url);
+      } catch (e) { res(url); }
+    };
+    img.onerror = () => res(url);
+    img.src = url;
+  });
+}
+
 function screenPreview(kind) {
   const selfie = kind === 'selfie';
   const url = selfie ? S.selfie : S.passport;
@@ -1542,7 +1561,8 @@ function screenSubmit() {
     language: S.lang, consents: { ...S.consents }, selfie: S.selfie, passport: S.passport
   };
   const setP = (p) => { const v = Math.round(p * 100); bar.style.width = v + '%'; pct.textContent = v + '%'; };
-  postWithProgress('signup', payload, (p) => setP(p * 0.92))
+  // 서버 저장 용량 줄이기(사장님 10-30): 보내기 직전에만 줄임 — 여권 긴 변 1200·얼굴 800, WebP 품질 0.55(안 되는 폰은 JPEG). 여권 글자·번호·얼굴 대조는 그대로 보임(비교 그림 확인)
+  Promise.all([shrinkUpload(S.selfie, 800), shrinkUpload(S.passport, 1200)]).then(([sf, pp]) => { payload.selfie = sf; payload.passport = pp; return postWithProgress('signup', payload, (p) => setP(p * 0.92)); })
     .then(async (j) => {
       setP(1);
       await saveToken(j.token); S.profile = j.profile; cacheProfile();
