@@ -886,6 +886,9 @@ function mapEngine() {
   });
   return enginePromise;
 }
+// 카카오맵은 한국 밖을 하얗게 그린다 — 점이 하나라도 한국 밖이면 OpenStreetMap(세계 지도)으로 (사장님 10-30, 인도네시아 좌표)
+const inKorea = (lat, lng) => lat >= 32.5 && lat <= 39.5 && lng >= 124 && lng <= 132;
+const engineFor = (engine, pts) => (engine === 'kakao' && typeof L !== 'undefined' && pts.some((p) => !inKorea(p[0], p[1]))) ? 'leaflet' : engine;
 const lfZoomToKakao = (z) => Math.max(1, Math.min(14, 20 - z));
 const mkEl = (cls, title) => { const d = document.createElement('div'); d.className = 'mk ' + cls; if (title) d.title = title; return d; };
 
@@ -946,7 +949,7 @@ function createMap(el, engine, { zoom = 11, wheel = true } = {}) {
     destroy() { map.remove(); },
   };
 }
-const engineNote = (engine) => engine === 'leaflet' ? html`<div class="map-note">카카오맵을 불러오지 못해 OpenStreetMap으로 표시 중입니다.</div>` : '';
+const engineNote = (engine, abroad) => engine === 'leaflet' ? html`<div class="map-note">${abroad ? '한국 밖 위치가 있어 세계 지도(OpenStreetMap)로 표시 중입니다.' : '카카오맵을 불러오지 못해 OpenStreetMap으로 표시 중입니다.'}</div>` : '';
 
 // 지도 점 누르면: 무엇(앱 실행·닫음…) / 10월 28일 / 오후 12:05 · 2시간 전 / 오차 — 연도 빼고 줄 바꿔 (사장님 10-28)
 function pointPop(h) {
@@ -962,7 +965,7 @@ async function drawMiniMap(hist) {
   if (S.miniMap) { S.miniMap.destroy(); S.miniMap = null; }
   if (!engine) { setHTML(el, errorBox({ code: 'network' })); return; }
   const pts = hist.filter((h) => h.lat != null && h.lng != null);
-  const map = createMap(el, engine, { zoom: 11, wheel: false });
+  const map = createMap(el, engineFor(engine, pts.map((h) => [h.lat, h.lng])), { zoom: 11, wheel: false });
   S.miniMap = map;
   if (!pts.length) return;
   const ll = pts.map((h) => [h.lat, h.lng]);
@@ -997,9 +1000,11 @@ async function renderMap() {
   if (S.view !== 'map' || S.mapToken !== token) return;
   const el = $('#bigMap'); el.innerHTML = '';
   if (!engine) { setHTML(el, errorBox({ code: 'network' })); return; }
-  const map = createMap(el, engine, { zoom: 11 });
+  const allPts = ((res.j && res.j.locations) || []).filter((l) => l.lat != null && l.lng != null).map((l) => [l.lat, l.lng]);
+  const eng = engineFor(engine, allPts);
+  const map = createMap(el, eng, { zoom: 11 });
   S.bigMap = map;
-  setHTML($('#mapNote'), engineNote(engine));
+  setHTML($('#mapNote'), engineNote(eng, eng !== engine));
   if (fid) drawTrail(map, fid, token);  // 목록 자료가 안 와도 그 사람 내역은 그림
   if (res.e) { setHTML($('#mapList'), html`<li style="cursor:default">${errorBox(res.e)}</li>`); bindRetry($('#mapList'), () => { S.view = null; route(); }); return; }
   stamp();
