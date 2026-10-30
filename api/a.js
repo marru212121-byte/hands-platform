@@ -390,8 +390,7 @@ module.exports = L.handler({
   // 매일 아침(버셀 크론) — 3일 넘게 앱을 안 연 사람을 텔레그램으로
   async cron(req) {
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}` || !process.env.CRON_SECRET) throw new HttpError(401, 'no');
-    // 위치 기록 보관 6개월(약관 위치정보 항목)
-    await db(`location_history?recorded_at=lt.${encodeURIComponent(daysAgo(180))}`, { method: 'DELETE' }).catch(() => {});
+    // 위치 기록 자동 삭제 해제 — 영구 보관(사장님 10-30: 기간은 미팅·법률 조언 뒤 다시 정함). 약관의 「6개월」 문구는 실제 근로자 가입 전에 맞출 것
     const pay = await paydayPush().catch((e) => ({ error: String(e && e.message || e) }));
     const rows = await db(`members?select=name,phone,country,last_seen_at&is_active=eq.true&last_seen_at=lt.${encodeURIComponent(daysAgo(3))}&order=last_seen_at.asc&limit=50`);
     if (!rows.length) return L.cronLog('daily09', { ok: true, silent: 0, pay });
