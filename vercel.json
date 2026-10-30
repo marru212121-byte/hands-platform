@@ -59,5 +59,10 @@
       "source": "/admin",
       "destination": "/admin.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/app.js": {
+      "includeFiles": "api/_admin_app.txt"
+    }
+  }
 }
