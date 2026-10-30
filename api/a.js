@@ -369,7 +369,7 @@ module.exports = L.handler({
 
   async telegram_test(req) {
     await L.adminOnly(req);
-    const sent = await L.telegram('[HANDS] 텔레그램 연결 시험입니다. 이 메시지가 보이면 SOS·문의 알림이 이 방으로 옵니다.');
+    const sent = await L.telegram('[위해연교] 텔레그램 연결 시험입니다. 이 메시지가 보이면 SOS·문의 알림이 이 방으로 옵니다.');
     return { ok: true, sent };
   },
 
@@ -396,7 +396,7 @@ module.exports = L.handler({
     const rows = await db(`members?select=name,phone,country,last_seen_at&is_active=eq.true&last_seen_at=lt.${encodeURIComponent(daysAgo(3))}&order=last_seen_at.asc&limit=50`);
     if (!rows.length) return L.cronLog('daily09', { ok: true, silent: 0, pay });
     const lines = rows.map(m => `- ${m.name} (${m.phone || '-'}) 마지막 접속 ${new Date(m.last_seen_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}`);
-    const sent = await L.telegram([`[HANDS] 3일 넘게 앱을 열지 않은 근로자 ${rows.length}명`, ...lines].join('\n'));
+    const sent = await L.telegram([`[위해연교] 3일 넘게 앱을 열지 않은 근로자 ${rows.length}명`, ...lines].join('\n'));
     return L.cronLog('daily09', { ok: true, silent: rows.length, telegram: sent, pay });
   },
 });

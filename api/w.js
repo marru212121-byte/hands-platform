@@ -256,7 +256,7 @@ async function watchAlert(m, b, kind) {
   const recent = await db(`location_history?select=id&member_id=eq.${m.id}&source=eq.${kind}&recorded_at=gt.${encodeURIComponent(since)}&limit=1`).catch(() => []);
   if (recent.length) return;
   const lat = num(b.lat), lng = num(b.lng);
-  await L.telegram(tgCard('[HANDS 집중 관리]', `${m.name} 님 앱이 ${kind === 'app_open' ? '열렸습니다' : '닫혔습니다'}`,
+  await L.telegram(tgCard('[위해연교 집중 관리]', `${m.name} 님 앱이 ${kind === 'app_open' ? '열렸습니다' : '닫혔습니다'}`,
     [`시각: ${kstText()}`], { lat, lng, name: m.name, id: m.id })).catch(() => {});
 }
 
@@ -399,7 +399,7 @@ module.exports = L.handler({
     loginFails.delete(key);
     const token = L.newToken(), t = nowIso();
     await db(`members?id=eq.${m.id}`, { method: 'PATCH', body: { device_token_hash: L.sha256(token), last_login_at: t, last_seen_at: t } });
-    await L.telegram(tgCard('[HANDS 다시 로그인]', `${m.name} 님이 여권번호로 다시 로그인했습니다`,
+    await L.telegram(tgCard('[위해연교 다시 로그인]', `${m.name} 님이 여권번호로 다시 로그인했습니다`,
       [`시각: ${kstText()}`], { id: m.id })).catch(() => {});
     return { ok: true, token, profile: publicProfile(m), __setCookie: L.workerCookie(token) };
   },
@@ -472,7 +472,7 @@ module.exports = L.handler({
       accuracy: num(b.accuracy) == null ? null : Math.round(num(b.accuracy)), status: 'pending' } });
     if (hasLoc) await saveLocation(m, { lat, lng, accuracy: b.accuracy, source: 'sos' }).catch(() => {});
     await db(`locations?member_id=eq.${m.id}`, { method: 'PATCH', body: { sos_active: true } }).catch(() => {});
-    const notified = await L.telegram(tgCard('[HANDS 긴급 SOS]', `${m.name} 님이 SOS를 눌렀습니다`, [
+    const notified = await L.telegram(tgCard('[위해연교 긴급 SOS]', `${m.name} 님이 SOS를 눌렀습니다`, [
       `국적: ${COUNTRY_KO[m.country] || m.country || '-'}`,
       `전화: ${m.phone || '-'}`,
       m.company ? `근무처: ${m.company}` : null,
@@ -492,7 +492,7 @@ module.exports = L.handler({
     await db('inquiries', { method: 'POST', body: { member_id: m.id, category, title, body, body_lang: m.language, status: 'open' } });
     const label = category === 'job' ? '일자리 찾기' : category === 'ship' ? '선박 문의' : '문의';
     const last = (await db(`locations?select=lat,lng&member_id=eq.${m.id}&limit=1`).catch(() => []))[0] || {};
-    await L.telegram(tgCard(`[HANDS ${label}]`, `${m.name} 님이 ${label} 글을 보냈습니다`, [
+    await L.telegram(tgCard(`[위해연교 ${label}]`, `${m.name} 님이 ${label} 글을 보냈습니다`, [
       `국적: ${COUNTRY_KO[m.country] || m.country || '-'}`,
       m.phone ? `전화: ${m.phone}` : null,
       `시각: ${kstText()}`,
